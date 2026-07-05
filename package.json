@@ -1,0 +1,60 @@
+{
+  "name": "codex-limits",
+  "version": "0.1.0",
+  "description": "A polished TUI dashboard for checking Codex usage limits, reset times, and reset-credit coupons.",
+  "type": "module",
+  "bin": {
+    "codex-limits": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    ".env.example",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "bun build src/cli.ts --target=node --outfile=dist/cli.js",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "check": "bun run typecheck && bun test && bun run build"
+  },
+  "keywords": [
+    "codex",
+    "openai",
+    "cli",
+    "terminal",
+    "typescript",
+    "bun",
+    "npm",
+    "developer-tools",
+    "rate-limits",
+    "usage-tracker"
+  ],
+  "author": "Simone Siega",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonesiega/codex-limits.git"
+  },
+  "bugs": {
+    "url": "https://github.com/simonesiega/codex-limits/issues"
+  },
+  "homepage": "https://github.com/simonesiega/codex-limits",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "bun@1.3.14",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.17",
+    "bun-types": "^1.1.42",
+    "ink-testing-library": "^4.0.0",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "ink": "^7.1.0",
+    "react": "^19.2.7",
+    "react-devtools-core": "^7.0.1"
+  }
+}

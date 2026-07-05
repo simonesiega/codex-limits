@@ -1,0 +1,40 @@
+import { Box, Text } from "ink";
+import type { ReactElement } from "react";
+import { theme } from "../../theme";
+
+const BLOCK_TITLE = [
+  " ██████╗ ██████╗ ██████╗ ███████╗██╗  ██╗    ██╗     ██╗███╗   ███╗██╗████████╗███████╗ ",
+  "██╔════╝██╔═══██╗██╔══██╗██╔════╝╚██╗██╔╝    ██║     ██║████╗ ████║██║╚══██╔══╝██╔════╝ ",
+  "██║     ██║   ██║██║  ██║█████╗   ╚███╔╝     ██║     ██║██╔████╔██║██║   ██║   ███████╗ ",
+  "██║     ██║   ██║██║  ██║██╔══╝   ██╔██╗     ██║     ██║██║╚██╔╝██║██║   ██║   ╚════██║ ",
+  "╚██████╗╚██████╔╝██████╔╝███████╗██╔╝ ██╗    ███████╗██║██║ ╚═╝ ██║██║   ██║   ███████║ ",
+  " ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝    ╚══════╝╚═╝╚═╝     ╚═╝╚═╝   ╚═╝   ╚══════╝ ",
+] as const;
+
+/** Props for the TUI title component. */
+export interface TitleProps {
+  /** Terminal width used to center the title. */
+  width: number;
+}
+
+/**
+ * Renders the centered static CODEX LIMITS title.
+ *
+ * @param props - Title layout props.
+ * @returns Ink title element.
+ */
+export function Title({ width }: TitleProps): ReactElement {
+  return (
+    <Box flexDirection="column" marginBottom={1} width={width}>
+      {BLOCK_TITLE.map((line, index) => (
+        <Box key={`${index}-${line}`} justifyContent="center" width={width}>
+          <Text bold color={theme.title}>{line}</Text>
+          
+        </Box>
+      ))}
+      <Box justifyContent="center" marginTop={0} width={width}>
+        <Text color={theme.muted}>Codex usage windows and reset credits</Text>
+      </Box>
+    </Box>
+  );
+}
