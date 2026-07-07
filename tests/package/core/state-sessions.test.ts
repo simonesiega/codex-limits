@@ -2,9 +2,9 @@ import { expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readCodexSessions } from "../../src/core/codex/session-reader";
-import { readCodexState } from "../../src/core/codex/state-reader";
-import { parseUsageFromSessions } from "../../src/core/usage/normalizer";
+import { readCodexSessions } from "../../../src/package/core/codex/session-reader";
+import { readCodexState } from "../../../src/package/core/codex/state-reader";
+import { parseUsageFromSessions } from "../../../src/package/core/usage/normalizer";
 
 test("readCodexState reads safe JSON and skips sensitive files", async () => {
   const home = await mkdtemp(join(tmpdir(), "codex-limits-state-"));

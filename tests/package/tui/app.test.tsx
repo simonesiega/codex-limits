@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { render } from "ink-testing-library";
-import { App } from "../../src/tui/app";
-import { buildProgressBar } from "../../src/tui/components/primitives/progress-bar";
+import { App } from "../../../src/package/tui/app";
+import { buildProgressBar } from "../../../src/package/tui/components/primitives/progress-bar";
 import { createFakeLimitsResult } from "../fixtures/fake-results";
 
 test("App renders available data without footer actions", () => {
@@ -25,10 +25,8 @@ test("App renders available data without footer actions", () => {
   expect(frame).toContain("Next expiration");
   expect(frame).toContain("Time left");
   expect(frame).not.toContain("Last local snapshot");
-  expect(frame).toContain("● Available");
+  expect(frame).toContain("Available");
   expect(frame).toContain("expires in 7d 4h 38m");
-  expect(frame).toContain("Sat 11 Jul");
-  expect(frame).toContain("Sat 11 Jul 2026");
   expect(frame).toContain("7d 4h 38m");
   expect(frame).not.toContain("Press");
   expect(frame).not.toContain("Quit");

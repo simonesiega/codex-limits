@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
-import { formatDuration } from "../../src/core/utils/date-time";
-import { redactSensitiveText } from "../../src/core/utils/redact";
-import type { CodexStateReadResult } from "../../src/core/types";
-import { parseUsageFromState, unavailableLocalUsage } from "../../src/core/usage/normalizer";
+import { formatDuration } from "../../../src/package/core/utils/date-time";
+import { redactSensitiveText } from "../../../src/package/core/utils/redact";
+import type { CodexStateReadResult } from "../../../src/package/core/types";
+import { parseUsageFromState, unavailableLocalUsage } from "../../../src/package/core/usage/normalizer";
 
 test("parseUsageFromState normalizes remaining and used percentages", () => {
   const result = parseUsageFromState(stateFromJson({
@@ -39,12 +39,6 @@ test("date and redaction helpers avoid seconds and secrets", () => {
   expect(redactSensitiveText("Authorization: Bearer fake-secret-token")).not.toContain("fake-secret-token");
 });
 
-/**
- * Creates a fake state read result from one JSON value.
- *
- * @param json - Parsed JSON fixture.
- * @returns State read result fixture.
- */
 function stateFromJson(json: unknown): CodexStateReadResult {
   return {
     homePath: "fake-home",

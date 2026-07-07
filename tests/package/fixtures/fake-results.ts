@@ -1,10 +1,5 @@
-import type { CodexLimitsResult, CouponResult } from "../../src/core/types";
+import type { CodexLimitsResult, CouponResult } from "../../../src/package/core/types";
 
-/**
- * Creates a complete fake Codex limits result for command and TUI tests.
- *
- * @returns Normalized fake dashboard result.
- */
 export function createFakeLimitsResult(): CodexLimitsResult {
   return {
     windows: {
@@ -29,11 +24,6 @@ export function createFakeLimitsResult(): CodexLimitsResult {
   };
 }
 
-/**
- * Creates fake live reset-coupon data for tests.
- *
- * @returns Normalized fake coupon result.
- */
 export function createFakeCouponResult(): CouponResult {
   return {
     status: "available",

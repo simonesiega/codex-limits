@@ -6,18 +6,27 @@
   "bin": {
     "codex-limits": "./dist/cli.js"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
   "files": [
     "dist",
+    "scripts/postinstall.cjs",
+    "README.md",
     "CHANGELOG.md",
     ".env.example",
     "LICENSE"
   ],
   "scripts": {
-    "dev": "bun run src/cli.ts",
-    "build": "bun build src/cli.ts --target=node --outfile=dist/cli.js",
+    "dev": "bun run src/package/cli.ts",
+    "build": "bun build src/package/cli.ts --target=node --outfile=dist/cli.js && bun build src/agents/opencode/plugin.tsx --target=node --external \"@opentui/*\" --outfile=dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "check": "bun run typecheck && bun test && bun run build"
+    "check": "bun run typecheck && bun test && bun run build",
+    "prepack": "bun run check",
+    "postinstall": "node ./scripts/postinstall.cjs"
   },
   "keywords": [
     "codex",
@@ -46,6 +55,7 @@
   },
   "packageManager": "bun@1.3.14",
   "devDependencies": {
+    "@opencode-ai/plugin": "^1.15.4",
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.17",
     "bun-types": "^1.1.42",
@@ -54,7 +64,6 @@
   },
   "dependencies": {
     "ink": "^7.1.0",
-    "react": "^19.2.7",
-    "react-devtools-core": "^7.0.1"
+    "react": "^19.2.7"
   }
 }

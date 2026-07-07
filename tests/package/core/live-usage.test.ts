@@ -3,9 +3,9 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getUsageLimits } from "../../src/core/limits";
-import { getLiveUsage } from "../../src/core/usage/live";
-import type { FetchLike } from "../../src/core/types";
+import { getUsageLimits } from "../../../src/package/core/limits";
+import { getLiveUsage } from "../../../src/package/core/usage/live";
+import type { FetchLike } from "../../../src/package/core/types";
 
 test("getLiveUsage fetches current usage with Codex credentials", async () => {
   const calls: Array<{ url: string; authorization: string; accountId: string }> = [];

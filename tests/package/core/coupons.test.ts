@@ -2,8 +2,8 @@ import { expect, test } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { getCouponCredentialStatus, getResetCoupons } from "../../src/core/coupons/reset-coupons";
-import type { FetchLike } from "../../src/core/types";
+import { getCouponCredentialStatus, getResetCoupons } from "../../../src/package/core/coupons/reset-coupons";
+import type { FetchLike } from "../../../src/package/core/types";
 
 test("getResetCoupons fetches live coupons with explicit env credentials", async () => {
   const calls: Array<{ authorization: string; accountId: string }> = [];

@@ -9,3 +9,5 @@ All notable changes to codex-limits are documented in this file.
 - Added the shared core API for Codex usage limits and reset-credit coupons.
 - Added the read-only Ink terminal dashboard with usage limit cards and reset coupon panels.
 - Added non-interactive `status`, `coupons`, and JSON command output.
+- Added an opencode plugin that registers `/codex-limits` without sending a prompt to the LLM.
+- Added `codex-limits init` and npm postinstall setup for optional agent integrations.

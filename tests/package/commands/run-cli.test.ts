@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
-import { runCli } from "../../src/commands/run-cli";
-import { formatCoupons } from "../../src/commands/coupons";
-import { formatStatus } from "../../src/commands/status";
-import { unavailableCoupons } from "../../src/core/coupons/reset-coupons";
+import { runCli } from "../../../src/package/commands/run-cli";
+import { formatCoupons } from "../../../src/package/commands/coupons";
+import { formatStatus } from "../../../src/package/commands/status";
+import { unavailableCoupons } from "../../../src/package/core/coupons/reset-coupons";
 import { createFakeCouponResult, createFakeLimitsResult } from "../fixtures/fake-results";
 
 test("runCli renders TUI for the default command", async () => {
@@ -52,6 +52,14 @@ test("runCli prints status coupons help and version", async () => {
   expect(couponsOutput.join("")).toContain("Reset Coupons");
   expect(helpOutput.join("")).toContain("codex-limits status");
   expect(versionOutput.join("")).toBe("9.9.9\n");
+});
+
+test("runCli delegates init help", async () => {
+  const output: string[] = [];
+  const exitCode = await runCli(["init", "--help"], { stdout: (text) => output.push(text) });
+
+  expect(exitCode).toBe(0);
+  expect(output.join("")).toContain("Install optional agent integrations");
 });
 
 test("runCli returns non-zero for unknown commands", async () => {

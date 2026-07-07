@@ -1,9 +1,10 @@
-import packageJson from "../../package.json";
+import packageJson from "../../../package.json";
 import { getResetCoupons } from "../core/coupons/reset-coupons";
 import { getCodexLimits } from "../core/limits";
 import type { CodexLimitsResult, CouponResult, CouponSummary } from "../core/types";
 import { formatCoupons } from "./coupons";
 import { formatJson } from "./format-json";
+import { runInit } from "./init";
 import { formatStatus } from "./status";
 
 type WriteOutput = (text: string) => void;
@@ -33,6 +34,7 @@ Usage:
   codex-limits              Open the terminal UI
   codex-limits status       Print a plain usage summary
   codex-limits coupons      Print reset-credit coupon information
+  codex-limits init         Install optional agent integrations
   codex-limits --json       Print JSON only
   codex-limits --help       Print this help text
   codex-limits --version    Print the package version
@@ -40,6 +42,7 @@ Usage:
 Commands:
   status      Print a non-interactive usage summary
   coupons     Print reset-credit coupon information
+  init        Install optional agent integrations
 
 Options:
   --json          Print JSON only
@@ -76,12 +79,15 @@ export async function runCli(args: string[], options: RunCliOptions = {}): Promi
     return 0;
   }
 
-  // Handle the conversion of the CLI commands to JSON output
   if (args.length === 1 && args[0] === "--json") {
     stdout(formatJson(formatLimitsData(await getLimits())));
     return 0;
   }
-  
+
+  if (args[0] === "init") {
+    return runInit(args.slice(1), { stdout, stderr });
+  }
+
   if (args.length === 1 && args[0] === "status") {
     stdout(formatStatus(await getLimits()));
     return 0;
