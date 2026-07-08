@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/npm/v/codex-limits?label=npm" alt="npm version" />
+  <img src="https://img.shields.io/npm/v/@simonesiega/codex-limits?label=npm" alt="npm version" />
   <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Bun-runtime-black?logo=bun" alt="Bun" />
 </p>
@@ -96,7 +96,7 @@ Environment variables are only used as a fallback when automatic discovery is no
 Install **`codex-limits`** globally from npm:
 
 ```bash
-npm install -g codex-limits
+npm install -g @simonesiega/codex-limits
 ```
 
 Then run it from any terminal:
