@@ -1,4 +1,4 @@
-import { installOpencodePlugin } from "./opencode/install";
+import {installOpencodePlugin} from "./opencode/install";
 
 export interface AgentIntegration {
   /** Stable integration id used by the init command. */
@@ -8,7 +8,7 @@ export interface AgentIntegration {
   /** Short explanation shown during setup. */
   description: string;
   /** Installs or enables the integration. */
-  install: () => Promise<{ changed: boolean; configPaths?: string[] }>;
+  install: () => Promise<{changed: boolean; configPaths?: string[]}>;
 }
 
 export const AGENT_INTEGRATIONS: AgentIntegration[] = [

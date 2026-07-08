@@ -1,10 +1,12 @@
-import { expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import {expect, test} from "bun:test";
+import {readFile} from "node:fs/promises";
+import {resolve} from "node:path";
 
 test("package metadata publishes types for the root plugin export", async () => {
-  const packageJson = JSON.parse(await readFile(resolve(import.meta.dir, "../../package.json"), "utf8")) as {
-    exports: { ".": { import: string; types: string } };
+  const packageJson = JSON.parse(
+    await readFile(resolve(import.meta.dir, "../../package.json"), "utf8")
+  ) as {
+    exports: {".": {import: string; types: string}};
     files: string[];
     types: string;
   };
@@ -16,7 +18,9 @@ test("package metadata publishes types for the root plugin export", async () => 
 });
 
 test("package metadata includes README image assets", async () => {
-  const packageJson = JSON.parse(await readFile(resolve(import.meta.dir, "../../package.json"), "utf8")) as {
+  const packageJson = JSON.parse(
+    await readFile(resolve(import.meta.dir, "../../package.json"), "utf8")
+  ) as {
     files: string[];
   };
 

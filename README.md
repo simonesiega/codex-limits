@@ -74,8 +74,8 @@ It also includes plain-text commands for quick checks, JSON output for scripts a
 
 ### Supported agents
 
-| Agent | Status | Agent command | Init command | Description |
-| --- | --- | --- | --- | --- |
+| Agent    | Status    | Agent command   | Init command                   | Description                                                                                                     |
+| -------- | --------- | --------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
 | OpenCode | Supported | `/codex-limits` | `codex-limits init --opencode` | Opens a fast, read-only Codex limits dashboard directly inside OpenCode without sending the request to the LLM. |
 
 Agent integrations are not enabled automatically during package installation. The package export is reserved for agent plugin entries that supported agents load after you run the matching `codex-limits init` command.
@@ -83,6 +83,7 @@ Agent integrations are not enabled automatically during package installation. Th
 ### Selected agent integration screenshots
 
 #### OpenCode
+
 The OpenCode integration adds a `/codex-limits` command that opens a compact modal inside the agent interface. It gives a quick read-only summary of the current 5-hour limit, weekly limit, and reset-credit coupons, then lets you close the view and return immediately to the conversation.
 
 <p align="center">
@@ -99,14 +100,14 @@ See the [Contributing](./CONTRIBUTING.md) guide if you want to add support for a
 
 **`codex-limits`** is built around a shared core with different output surfaces on top of it.
 
-| Area | Path | Purpose |
-| --- | --- | --- |
-| CLI entry | `src/package/cli.ts` | Starts the `codex-limits` command and routes to the dashboard, plain-text commands, JSON output, and `init`. |
-| Core logic | `src/package/core` | Detects Codex data, reads local usage, fetches optional live information, normalizes usage windows, and keeps sensitive values out of the output. |
-| CLI commands | `src/package/commands` | Handles the dashboard, `status`, `coupons`, `--json`, and `init` commands. |
-| Terminal UI | `src/package/tui` | Renders the clean Ink-based dashboard from normalized usage data. |
-| Agent integrations | `src/agents` | Contains optional coding-agent adapters that users install with `codex-limits init`. |
-| Tests | `tests` | Contains the test suite used to validate core behavior, CLI output, safety rules, and integration logic. |
+| Area               | Path                   | Purpose                                                                                                                                           |
+| ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CLI entry          | `src/package/cli.ts`   | Starts the `codex-limits` command and routes to the dashboard, plain-text commands, JSON output, and `init`.                                      |
+| Core logic         | `src/package/core`     | Detects Codex data, reads local usage, fetches optional live information, normalizes usage windows, and keeps sensitive values out of the output. |
+| CLI commands       | `src/package/commands` | Handles the dashboard, `status`, `coupons`, `--json`, and `init` commands.                                                                        |
+| Terminal UI        | `src/package/tui`      | Renders the clean Ink-based dashboard from normalized usage data.                                                                                 |
+| Agent integrations | `src/agents`           | Contains optional coding-agent adapters that users install with `codex-limits init`.                                                              |
+| Tests              | `tests`                | Contains the test suite used to validate core behavior, CLI output, safety rules, and integration logic.                                          |
 
 This structure keeps the project easy to extend: the core decides what the data means, while the CLI, TUI, and agents only decide how that information is shown.
 
@@ -116,25 +117,25 @@ This structure keeps the project easy to extend: the core decides what the data 
 
 Environment variables are only used as a fallback when automatic discovery is not enough, or when you want to override the default behavior.
 
-| Variable | Purpose |
-| --- | --- |
-| `CODEX_LIMITS_HOME` | Manually sets the local Codex data directory when it cannot be detected automatically. |
-| `CODEX_LIMITS_ACCESS_TOKEN` | Manually provides an access token for live reset-credit coupon data. |
-| `CODEX_LIMITS_ACCOUNT_ID` | Manually provides the account ID used for live reset-credit coupon data. |
-| `CODEX_LIMITS_USAGE_ENDPOINT` | Overrides the live usage endpoint, mainly for testing or advanced setups. |
+| Variable                      | Purpose                                                                                |
+| ----------------------------- | -------------------------------------------------------------------------------------- |
+| `CODEX_LIMITS_HOME`           | Manually sets the local Codex data directory when it cannot be detected automatically. |
+| `CODEX_LIMITS_ACCESS_TOKEN`   | Manually provides an access token for live reset-credit coupon data.                   |
+| `CODEX_LIMITS_ACCOUNT_ID`     | Manually provides the account ID used for live reset-credit coupon data.               |
+| `CODEX_LIMITS_USAGE_ENDPOINT` | Overrides the live usage endpoint, mainly for testing or advanced setups.              |
 
 ## Usage
 
-| Command | Description |
-| --- | --- |
-| `codex-limits` | Opens the interactive terminal dashboard. |
-| `codex-limits status` | Prints a plain usage summary. |
-| `codex-limits coupons` | Prints reset-credit coupon information. |
-| `codex-limits --json` | Prints machine-readable usage data for scripts and automation. |
-| `codex-limits init` | Installs optional agent integrations. |
-| `codex-limits init --opencode` | Installs the OpenCode integration directly. |
-| `codex-limits --help` | Prints the help text. |
-| `codex-limits --version` | Prints the installed package version. |
+| Command                        | Description                                                    |
+| ------------------------------ | -------------------------------------------------------------- |
+| `codex-limits`                 | Opens the interactive terminal dashboard.                      |
+| `codex-limits status`          | Prints a plain usage summary.                                  |
+| `codex-limits coupons`         | Prints reset-credit coupon information.                        |
+| `codex-limits --json`          | Prints machine-readable usage data for scripts and automation. |
+| `codex-limits init`            | Installs optional agent integrations.                          |
+| `codex-limits init --opencode` | Installs the OpenCode integration directly.                    |
+| `codex-limits --help`          | Prints the help text.                                          |
+| `codex-limits --version`       | Prints the installed package version.                          |
 
 ## Local development
 
@@ -147,12 +148,14 @@ bun run dev
 
 Useful development commands:
 
-| Command | Description |
-| --- | --- |
-| `bun run dev` | Runs the CLI in development mode. |
-| `bun run check` | Runs type checking, tests, and build validation. |
-| `bun test` | Runs the test suite. |
-| `bun run build` | Builds the package. |
+| Command                | Description                                      |
+| ---------------------- | ------------------------------------------------ |
+| `bun run dev`          | Runs the CLI in development mode.                |
+| `bun run check`        | Runs type checking, tests, and build validation. |
+| `bun test`             | Runs the test suite.                             |
+| `bun run build`        | Builds the package.                              |
+| `bun run format`       | Formats the repository with Prettier.            |
+| `bun run format:check` | Checks formatting without changing files.        |
 
 ## Security
 

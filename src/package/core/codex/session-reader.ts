@@ -1,9 +1,9 @@
-import type { Dirent } from "node:fs";
-import { createReadStream } from "node:fs";
-import { readdir, stat } from "node:fs/promises";
-import { join, relative } from "node:path";
-import { createInterface } from "node:readline";
-import type { CodexSessionFile, CodexSessionReadResult, CodexSessionSnapshot } from "../types";
+import type {Dirent} from "node:fs";
+import {createReadStream} from "node:fs";
+import {readdir, stat} from "node:fs/promises";
+import {join, relative} from "node:path";
+import {createInterface} from "node:readline";
+import type {CodexSessionFile, CodexSessionReadResult, CodexSessionSnapshot} from "../types";
 
 const MAX_SESSION_DEPTH = 8;
 const MAX_SESSION_FILES_TO_PARSE = 20;
@@ -28,20 +28,26 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
 
     if (candidate.size > MAX_SESSION_FILE_BYTES) {
       warnings.push(`Skipped ${relativePath} because it is too large to inspect safely.`);
-      files.push(toSessionFile(candidate.path, relativePath, candidate.modifiedAtMs, false, "too-large"));
+      files.push(
+        toSessionFile(candidate.path, relativePath, candidate.modifiedAtMs, false, "too-large")
+      );
       continue;
     }
 
     try {
       const snapshot = await extractSnapshotFromSessionFile(homePath, candidate.path);
-      files.push(toSessionFile(candidate.path, relativePath, candidate.modifiedAtMs, snapshot !== null, null));
+      files.push(
+        toSessionFile(candidate.path, relativePath, candidate.modifiedAtMs, snapshot !== null, null)
+      );
 
       if (snapshot && !latestSnapshot) {
         latestSnapshot = snapshot;
       }
     } catch {
       warnings.push(`Could not inspect ${relativePath}.`);
-      files.push(toSessionFile(candidate.path, relativePath, candidate.modifiedAtMs, false, "read-error"));
+      files.push(
+        toSessionFile(candidate.path, relativePath, candidate.modifiedAtMs, false, "read-error")
+      );
     }
 
     if (latestSnapshot) {
@@ -50,14 +56,16 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
   }
 
   if (candidates.length > MAX_SESSION_FILES_TO_PARSE) {
-    warnings.push(`Skipped ${candidates.length - MAX_SESSION_FILES_TO_PARSE} older session files to keep inspection small.`);
+    warnings.push(
+      `Skipped ${candidates.length - MAX_SESSION_FILES_TO_PARSE} older session files to keep inspection small.`
+    );
   }
 
   if (candidates.length > 0 && !latestSnapshot) {
     warnings.push("No token-count rate-limit snapshot was found in local Codex session logs.");
   }
 
-  return { homePath, sessionsRoot, files, latestSnapshot, warnings };
+  return {homePath, sessionsRoot, files, latestSnapshot, warnings};
 }
 
 /**
@@ -71,14 +79,14 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
 async function findSessionFiles(
   homePath: string,
   sessionsRoot: string,
-  warnings: string[],
-): Promise<Array<{ path: string; modifiedAtMs: number; size: number }>> {
+  warnings: string[]
+): Promise<Array<{path: string; modifiedAtMs: number; size: number}>> {
   const files: string[] = [];
   await walkSessions(homePath, sessionsRoot, 0, files, warnings);
 
-  const candidates = (await Promise.all(files.map((path) => statSessionFile(homePath, path, warnings)))).filter(
-    isSessionCandidate,
-  );
+  const candidates = (
+    await Promise.all(files.map((path) => statSessionFile(homePath, path, warnings)))
+  ).filter(isSessionCandidate);
 
   return candidates.sort((left, right) => right.modifiedAtMs - left.modifiedAtMs);
 }
@@ -94,11 +102,11 @@ async function findSessionFiles(
 async function statSessionFile(
   homePath: string,
   path: string,
-  warnings: string[],
-): Promise<{ path: string; modifiedAtMs: number; size: number } | null> {
+  warnings: string[]
+): Promise<{path: string; modifiedAtMs: number; size: number} | null> {
   try {
     const details = await stat(path);
-    return { path, modifiedAtMs: details.mtimeMs, size: details.size };
+    return {path, modifiedAtMs: details.mtimeMs, size: details.size};
   } catch {
     warnings.push(`Could not inspect ${relative(homePath, path)}.`);
     return null;
@@ -111,7 +119,9 @@ async function statSessionFile(
  * @param value - Candidate metadata or null.
  * @returns True when candidate metadata is present.
  */
-function isSessionCandidate(value: { path: string; modifiedAtMs: number; size: number } | null): value is { path: string; modifiedAtMs: number; size: number } {
+function isSessionCandidate(
+  value: {path: string; modifiedAtMs: number; size: number} | null
+): value is {path: string; modifiedAtMs: number; size: number} {
   return value !== null;
 }
 
@@ -125,14 +135,20 @@ function isSessionCandidate(value: { path: string; modifiedAtMs: number; size: n
  * @param warnings - Mutable warning list for non-fatal inspection problems.
  * @returns Nothing; file and warning lists are updated in place.
  */
-async function walkSessions(homePath: string, currentPath: string, depth: number, files: string[], warnings: string[]): Promise<void> {
+async function walkSessions(
+  homePath: string,
+  currentPath: string,
+  depth: number,
+  files: string[],
+  warnings: string[]
+): Promise<void> {
   if (depth > MAX_SESSION_DEPTH) {
     return;
   }
 
   let entries: Array<Dirent<string>>;
   try {
-    entries = await readdir(currentPath, { withFileTypes: true });
+    entries = await readdir(currentPath, {withFileTypes: true});
   } catch {
     if (depth > 0) {
       warnings.push(`Could not inspect ${relative(homePath, currentPath)}.`);
@@ -160,10 +176,13 @@ async function walkSessions(homePath: string, currentPath: string, depth: number
  * @param sessionFile - Rollout JSONL file to stream.
  * @returns Latest snapshot in the file, or null when none is present.
  */
-async function extractSnapshotFromSessionFile(homePath: string, sessionFile: string): Promise<CodexSessionSnapshot | null> {
+async function extractSnapshotFromSessionFile(
+  homePath: string,
+  sessionFile: string
+): Promise<CodexSessionSnapshot | null> {
   const relativePath = relative(homePath, sessionFile);
   const reader = createInterface({
-    input: createReadStream(sessionFile, { encoding: "utf8" }),
+    input: createReadStream(sessionFile, {encoding: "utf8"}),
     crlfDelay: Infinity,
   });
   let threadId: string | null = null;
@@ -260,8 +279,14 @@ function readRateLimits(entry: Record<string, unknown>): Record<string, unknown>
  * @param error - Stable error code when inspection failed.
  * @returns Safe session file metadata.
  */
-function toSessionFile(path: string, relativePath: string, modifiedAtMs: number, hasSnapshot: boolean, error: string | null): CodexSessionFile {
-  return { path, relativePath, modifiedAtMs, hasSnapshot, error };
+function toSessionFile(
+  path: string,
+  relativePath: string,
+  modifiedAtMs: number,
+  hasSnapshot: boolean,
+  error: string | null
+): CodexSessionFile {
+  return {path, relativePath, modifiedAtMs, hasSnapshot, error};
 }
 
 /**

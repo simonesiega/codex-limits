@@ -1,8 +1,15 @@
-import { getCodexCredentialStatus, resolveCodexCredentials } from "../auth/codex-auth";
-import { formatDuration, formatLongDate, parseDateValue } from "../utils/date-time";
-import type { CouponCredentialStatus, CouponItem, CouponOptions, CouponResult, FetchLike } from "../types";
+import {getCodexCredentialStatus, resolveCodexCredentials} from "../auth/codex-auth";
+import {formatDuration, formatLongDate, parseDateValue} from "../utils/date-time";
+import type {
+  CouponCredentialStatus,
+  CouponItem,
+  CouponOptions,
+  CouponResult,
+  FetchLike,
+} from "../types";
 
-export const LIVE_RESET_COUPONS_ENDPOINT = "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits";
+export const LIVE_RESET_COUPONS_ENDPOINT =
+  "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 
@@ -24,7 +31,9 @@ export async function getResetCoupons(options: CouponOptions = {}): Promise<Coup
 
   const fetchImplementation = options.fetch ?? globalThis.fetch;
   if (!fetchImplementation) {
-    return unavailableCoupons(endpoint, ["This runtime does not provide fetch for live reset coupon lookup."]);
+    return unavailableCoupons(endpoint, [
+      "This runtime does not provide fetch for live reset coupon lookup.",
+    ]);
   }
 
   const controller = new AbortController();
@@ -43,7 +52,9 @@ export async function getResetCoupons(options: CouponOptions = {}): Promise<Coup
     });
 
     if (!response.ok) {
-      return unavailableCoupons(endpoint, [`Live reset coupon endpoint returned HTTP ${response.status}.`]);
+      return unavailableCoupons(endpoint, [
+        `Live reset coupon endpoint returned HTTP ${response.status}.`,
+      ]);
     }
 
     const payload = await response.json();
@@ -62,7 +73,10 @@ export async function getResetCoupons(options: CouponOptions = {}): Promise<Coup
  * @param warnings - Non-sensitive warnings explaining why data is unavailable.
  * @returns Normalized unavailable reset-coupon result.
  */
-export function unavailableCoupons(endpoint = LIVE_RESET_COUPONS_ENDPOINT, warnings: string[] = []): CouponResult {
+export function unavailableCoupons(
+  endpoint = LIVE_RESET_COUPONS_ENDPOINT,
+  warnings: string[] = []
+): CouponResult {
   return {
     status: "unavailable",
     available: null,
@@ -85,7 +99,9 @@ export function unavailableCoupons(endpoint = LIVE_RESET_COUPONS_ENDPOINT, warni
  * @param options - Environment and auth-file lookup options.
  * @returns Credential configuration status.
  */
-export async function getCouponCredentialStatus(options: CouponOptions = {}): Promise<CouponCredentialStatus> {
+export async function getCouponCredentialStatus(
+  options: CouponOptions = {}
+): Promise<CouponCredentialStatus> {
   return getCodexCredentialStatus(options);
 }
 
@@ -99,7 +115,9 @@ export async function getCouponCredentialStatus(options: CouponOptions = {}): Pr
  */
 function parseResetCouponsPayload(payload: unknown, endpoint: string, now: Date): CouponResult {
   if (!isRecord(payload)) {
-    return unavailableCoupons(endpoint, ["Live reset coupon endpoint returned an unexpected payload."]);
+    return unavailableCoupons(endpoint, [
+      "Live reset coupon endpoint returned an unexpected payload.",
+    ]);
   }
 
   const rawCredits = readArray(payload, ["credits", "reset_credits", "items"]);
@@ -107,13 +125,18 @@ function parseResetCouponsPayload(payload: unknown, endpoint: string, now: Date)
     .map((credit, index) => parseCouponItem(credit, index + 1, now))
     .filter((credit): credit is CouponItem => credit !== null)
     .sort(compareCouponsByExpiry)
-    .map((credit, index) => ({ ...credit, index: index + 1 }));
+    .map((credit, index) => ({...credit, index: index + 1}));
   const nextExpiring = items.find((item) => item.status === "available") ?? items[0] ?? null;
 
   return {
     status: "available",
     available: readNumber(payload, ["available_count", "availableCount", "available"]),
-    earnedThisPeriod: readNumber(payload, ["total_earned_count", "earned_this_period", "earnedThisPeriod", "totalEarnedCount"]),
+    earnedThisPeriod: readNumber(payload, [
+      "total_earned_count",
+      "earned_this_period",
+      "earnedThisPeriod",
+      "totalEarnedCount",
+    ]),
     nextExpirationDate: nextExpiring?.expirationDate ?? null,
     nextExpirationIn: nextExpiring?.expiresIn ?? null,
     items,

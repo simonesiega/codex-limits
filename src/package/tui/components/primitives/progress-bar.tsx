@@ -1,6 +1,6 @@
-import { Text } from "ink";
-import type { ReactElement } from "react";
-import { theme, type TuiTone } from "../../theme";
+import {Text} from "ink";
+import type {ReactElement} from "react";
+import {theme, type TuiTone} from "../../theme";
 
 /** Props for the smooth progress bar component. */
 export interface ProgressBarProps {
@@ -18,7 +18,7 @@ export interface ProgressBarProps {
  * @param props - Progress percentage, width, and tone.
  * @returns Ink text element containing the progress bar.
  */
-export function ProgressBar({ percent, width, tone }: ProgressBarProps): ReactElement {
+export function ProgressBar({percent, width, tone}: ProgressBarProps): ReactElement {
   const bar = buildProgressBar(percent, width);
   return <Text color={theme[tone]}>{bar}</Text>;
 }

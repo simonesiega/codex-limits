@@ -1,6 +1,6 @@
-import type { TuiCommand, TuiPluginApi, TuiPluginModule } from "@opencode-ai/plugin/tui";
-import { getCodexLimits } from "../../package/core/limits";
-import { formatOpencodeLimits } from "./format";
+import type {TuiCommand, TuiPluginApi, TuiPluginModule} from "@opencode-ai/plugin/tui";
+import {getCodexLimits} from "../../package/core/limits";
+import {formatOpencodeLimits} from "./format";
 
 const TITLE = "Codex Limits";
 const DESCRIPTION = "Check Codex limits, resets, and credits.";
@@ -9,7 +9,10 @@ const module: TuiPluginModule = {
   id: "codex-limits",
   tui: async (api) => {
     const command = createCommand(api);
-    const disposes = [api.command?.register(() => [command]), registerCommandLayer(api, command)].filter(isDispose);
+    const disposes = [
+      api.command?.register(() => [command]),
+      registerCommandLayer(api, command),
+    ].filter(isDispose);
 
     if (disposes.length > 0) {
       api.lifecycle.onDispose(() => {
@@ -27,7 +30,7 @@ function createCommand(api: TuiPluginApi): TuiCommand {
     value: "codex-limits.show",
     description: DESCRIPTION,
     category: "Codex",
-    slash: { name: "codex-limits" },
+    slash: {name: "codex-limits"},
     onSelect: async (dialog) => {
       dialog?.clear();
       api.ui.dialog.clear();
@@ -42,7 +45,7 @@ function createCommand(api: TuiPluginApi): TuiCommand {
         target.replace(() => alert(api, formatOpencodeLimits(result)));
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not load Codex limits.";
-        api.ui.toast({ variant: "error", title: TITLE, message });
+        api.ui.toast({variant: "error", title: TITLE, message});
         target.replace(() => alert(api, message));
       }
     },
@@ -50,8 +53,14 @@ function createCommand(api: TuiPluginApi): TuiCommand {
 }
 
 function registerCommandLayer(api: TuiPluginApi, command: TuiCommand): void | (() => void) {
-  const keymap = (api as { keymap?: { registerLayer?: (layer: { commands: TuiCommand[]; bindings: never[] }) => void | (() => void) } }).keymap;
-  return keymap?.registerLayer?.({ commands: [command], bindings: [] });
+  const keymap = (
+    api as {
+      keymap?: {
+        registerLayer?: (layer: {commands: TuiCommand[]; bindings: never[]}) => void | (() => void);
+      };
+    }
+  ).keymap;
+  return keymap?.registerLayer?.({commands: [command], bindings: []});
 }
 
 function isDispose(value: void | (() => void)): value is () => void {
@@ -59,7 +68,7 @@ function isDispose(value: void | (() => void)): value is () => void {
 }
 
 function alert(api: TuiPluginApi, message: string) {
-  return api.ui.DialogAlert({ title: TITLE, message });
+  return api.ui.DialogAlert({title: TITLE, message});
 }
 
 function nextFrame(): Promise<void> {

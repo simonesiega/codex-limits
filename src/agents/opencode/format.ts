@@ -1,4 +1,4 @@
-import type { CodexLimitsResult, UsageWindow } from "../../package/core/types";
+import type {CodexLimitsResult, UsageWindow} from "../../package/core/types";
 
 const BAR_WIDTH = 22;
 
@@ -42,7 +42,9 @@ function progressBar(value: number | null): string {
 function formatCredits(result: CodexLimitsResult): string[] {
   const available = result.coupons?.available;
   const expires = formatExpiration(result);
-  const lines = [`Reset credits  ${available === null || available === undefined ? "Unknown" : creditLabel(available)}`];
+  const lines = [
+    `Reset credits  ${available === null || available === undefined ? "Unknown" : creditLabel(available)}`,
+  ];
 
   if (expires !== "unknown") {
     lines.push(`Next expires   ${expires}`);

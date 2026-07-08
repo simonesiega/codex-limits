@@ -1,12 +1,14 @@
-import { expect, test } from "bun:test";
-import { render } from "ink-testing-library";
-import { App } from "../../../src/package/tui/app";
-import { buildProgressBar } from "../../../src/package/tui/components/primitives/progress-bar";
-import { createFakeLimitsResult } from "../fixtures/fake-results";
+import {expect, test} from "bun:test";
+import {render} from "ink-testing-library";
+import {App} from "../../../src/package/tui/app";
+import {buildProgressBar} from "../../../src/package/tui/components/primitives/progress-bar";
+import {createFakeLimitsResult} from "../fixtures/fake-results";
 
 test("App renders available data without footer actions", () => {
   const result = createFakeLimitsResult();
-  const instance = render(<App result={result} width={100} now={new Date("2026-07-05T10:00:30.000Z")} />);
+  const instance = render(
+    <App result={result} width={100} now={new Date("2026-07-05T10:00:30.000Z")} />
+  );
   const frame = instance.lastFrame() ?? "";
 
   expect(frame).toContain("█████");
@@ -38,11 +40,13 @@ test("App renders available data without footer actions", () => {
 test("App renders missing data fallbacks without secrets", () => {
   const result = {
     ...createFakeLimitsResult(),
-    windows: { fiveHour: null, weekly: null },
+    windows: {fiveHour: null, weekly: null},
     coupons: null,
     warnings: ["Bearer fake-secret-token"],
   };
-  const instance = render(<App result={result} width={72} now={new Date("2026-07-05T10:00:30.000Z")} />);
+  const instance = render(
+    <App result={result} width={72} now={new Date("2026-07-05T10:00:30.000Z")} />
+  );
   const frame = instance.lastFrame() ?? "";
 
   expect(frame).toContain("Unknown remaining");
@@ -58,7 +62,9 @@ test("Reset Coupons panel strips seconds from TUI durations", () => {
   const result = createFakeLimitsResult();
   result.coupons!.nextExpirationIn = "7d 4h 38m 40s";
   result.coupons!.items[0]!.expiresIn = "7d 4h 38m 40s";
-  const instance = render(<App result={result} width={100} now={new Date("2026-07-05T10:00:30.000Z")} />);
+  const instance = render(
+    <App result={result} width={100} now={new Date("2026-07-05T10:00:30.000Z")} />
+  );
   const frame = instance.lastFrame() ?? "";
 
   expect(frame).toContain("7d 4h 38m");

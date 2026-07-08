@@ -18,23 +18,23 @@
 
 If you are new to the project, read [`README.md`](README.md) first, then choose one focused issue or improvement.
 
-| Step | Action |
-| --- | --- |
-| 1 | Fork the repository. |
-| 2 | Create a branch from `main`. |
-| 3 | Make one focused change. |
-| 4 | Run the local checks. |
-| 5 | Open a Pull Request with context and rationale. |
+| Step | Action                                          |
+| ---- | ----------------------------------------------- |
+| 1    | Fork the repository.                            |
+| 2    | Create a branch from `main`.                    |
+| 3    | Make one focused change.                        |
+| 4    | Run the local checks.                           |
+| 5    | Open a Pull Request with context and rationale. |
 
 ## Branch naming
 
-| Type | Pattern | Example |
-| --- | --- | --- |
-| Feature | `feat/` | `feat/add-agent-adapter` |
-| Bug fix | `fix/` | `fix/usage-window-reset` |
-| Docs | `docs/` | `docs/update-agent-guide` |
+| Type        | Pattern  | Example                     |
+| ----------- | -------- | --------------------------- |
+| Feature     | `feat/`  | `feat/add-agent-adapter`    |
+| Bug fix     | `fix/`   | `fix/usage-window-reset`    |
+| Docs        | `docs/`  | `docs/update-agent-guide`   |
 | Maintenance | `chore/` | `chore/update-build-config` |
-| Tests | `test/` | `test/add-coupon-coverage` |
+| Tests       | `test/`  | `test/add-coupon-coverage`  |
 
 ## Issues
 
@@ -42,13 +42,13 @@ Before opening a new issue, check existing [Issues](../../issues) to avoid dupli
 
 Please include:
 
-| Field | Why it matters |
-| --- | --- |
-| Expected behavior | Explains what should happen. |
-| Actual behavior | Shows what currently happens. |
-| Reproduction steps | Makes the issue easier to verify. |
-| Environment | Helps isolate OS, Node, Bun, or Codex-specific behavior. |
-| Logs or screenshots | Clarifies terminal, CLI, or agent output. |
+| Field               | Why it matters                                           |
+| ------------------- | -------------------------------------------------------- |
+| Expected behavior   | Explains what should happen.                             |
+| Actual behavior     | Shows what currently happens.                            |
+| Reproduction steps  | Makes the issue easier to verify.                        |
+| Environment         | Helps isolate OS, Node, Bun, or Codex-specific behavior. |
+| Logs or screenshots | Clarifies terminal, CLI, or agent output.                |
 
 For architecture-level changes, open an issue first so the design can be discussed before implementation.
 
@@ -88,13 +88,13 @@ bun run build
 
 Keep changes small, readable, and easy to review.
 
-| Area | Guideline |
-| --- | --- |
-| Core logic | Keep usage detection, normalization, and safety rules inside `src/package/core`. |
-| CLI commands | Keep command handling inside `src/package/commands` and avoid duplicating parsing logic. |
-| Terminal UI | Keep Ink rendering inside `src/package/tui`; components should receive display-ready data. |
+| Area               | Guideline                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------- |
+| Core logic         | Keep usage detection, normalization, and safety rules inside `src/package/core`.            |
+| CLI commands       | Keep command handling inside `src/package/commands` and avoid duplicating parsing logic.    |
+| Terminal UI        | Keep Ink rendering inside `src/package/tui`; components should receive display-ready data.  |
 | Agent integrations | Keep adapters thin and reuse the shared core instead of reimplementing Codex limit parsing. |
-| Tests | Add or update tests when behavior, safety rules, or output formatting changes. |
+| Tests              | Add or update tests when behavior, safety rules, or output formatting changes.              |
 
 ## Safety rules
 
@@ -115,14 +115,14 @@ If a change touches local data discovery, live coupon data, warnings, output for
 
 New agents should be added with a small adapter and registered explicitly.
 
-| Step | Action |
-| --- | --- |
-| 1 | Create a folder under `src/agents/<agent-name>`. |
-| 2 | Keep the adapter focused on the target agent API. |
-| 3 | Reuse the shared package core for Codex limit data. |
-| 4 | Register the adapter in `src/agents/index.ts`. |
-| 5 | Add tests or manual validation notes when possible. |
-| 6 | Update the README agent integration table and screenshots. |
+| Step | Action                                                     |
+| ---- | ---------------------------------------------------------- |
+| 1    | Create a folder under `src/agents/<agent-name>`.           |
+| 2    | Keep the adapter focused on the target agent API.          |
+| 3    | Reuse the shared package core for Codex limit data.        |
+| 4    | Register the adapter in `src/agents/index.ts`.             |
+| 5    | Add tests or manual validation notes when possible.        |
+| 6    | Update the README agent integration table and screenshots. |
 
 The goal of every integration is the same: show Codex limit information quickly, safely, and without sending unnecessary work to the LLM.
 

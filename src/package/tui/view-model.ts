@@ -1,6 +1,11 @@
-import { formatShortDateTime, formatTime, isSameLocalDate, parseDateValue } from "../core/utils/date-time";
-import type { CodexLimitsResult, CouponItem, CouponSummary, UsageWindow } from "../core/types";
-import type { TuiTone } from "./theme";
+import {
+  formatShortDateTime,
+  formatTime,
+  isSameLocalDate,
+  parseDateValue,
+} from "../core/utils/date-time";
+import type {CodexLimitsResult, CouponItem, CouponSummary, UsageWindow} from "../core/types";
+import type {TuiTone} from "./theme";
 
 /** One usage card in the usage limits panel. */
 export interface TuiUsageCard {
@@ -68,15 +73,25 @@ export interface TuiViewModel {
  * @param now - Current time used for relative labels.
  * @returns TUI view model with no domain parsing logic.
  */
-export function createTuiViewModel(result: CodexLimitsResult, width: number, now: Date = new Date()): TuiViewModel {
+export function createTuiViewModel(
+  result: CodexLimitsResult,
+  width: number,
+  now: Date = new Date()
+): TuiViewModel {
   return {
     width,
     stacked: width < 86,
     couponsStacked: width < 94,
-    usageCards: [createUsageCard(result.windows.fiveHour, "5-hour usage limit", now), createUsageCard(result.windows.weekly, "Weekly usage limit", now)],
+    usageCards: [
+      createUsageCard(result.windows.fiveHour, "5-hour usage limit", now),
+      createUsageCard(result.windows.weekly, "Weekly usage limit", now),
+    ],
     couponSummary: createCouponSummary(result.coupons),
     couponRows: createCouponRows(result.coupons),
-    couponEmptyLabel: !result.coupons || result.coupons.status === "unavailable" ? "Coupon data unavailable." : "No reset coupons available.",
+    couponEmptyLabel:
+      !result.coupons || result.coupons.status === "unavailable"
+        ? "Coupon data unavailable."
+        : "No reset coupons available.",
   };
 }
 
@@ -88,7 +103,11 @@ export function createTuiViewModel(result: CodexLimitsResult, width: number, now
  * @param now - Current time used for reset labels.
  * @returns Usage card view model.
  */
-function createUsageCard(window: UsageWindow | null, fallbackTitle: string, now: Date): TuiUsageCard {
+function createUsageCard(
+  window: UsageWindow | null,
+  fallbackTitle: string,
+  now: Date
+): TuiUsageCard {
   const percent = window?.remainingPercent ?? null;
 
   return {
@@ -138,7 +157,9 @@ function formatCouponRow(item: CouponItem): TuiCouponRow {
     index: item.index,
     status: available ? "Available" : titleCase(item.status ?? "unknown"),
     available,
-    expires: item.expiresIn ? `expires in ${formatTuiDuration(item.expiresIn)}` : "expiration unknown",
+    expires: item.expiresIn
+      ? `expires in ${formatTuiDuration(item.expiresIn)}`
+      : "expiration unknown",
     expiresOn: formatCompactCouponDate(item.expiresAt, false),
   };
 }
@@ -150,7 +171,8 @@ function formatCouponRow(item: CouponItem): TuiCouponRow {
  * @returns Short date with year, or Unknown when unavailable.
  */
 function formatSummaryExpiration(coupons: CouponSummary | null): string {
-  const next = coupons?.items.find((item) => item.status === "available") ?? coupons?.items[0] ?? null;
+  const next =
+    coupons?.items.find((item) => item.status === "available") ?? coupons?.items[0] ?? null;
   return next ? formatCompactCouponDate(next.expiresAt, true) : "Unknown";
 }
 
@@ -167,7 +189,20 @@ function formatCompactCouponDate(value: string | null, includeYear: boolean): st
   }
 
   const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ] as const;
   const base = `${weekdays[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]}`;
   return includeYear ? `${base} ${date.getFullYear()}` : base;
 }
@@ -201,7 +236,9 @@ function formatResetLabel(window: UsageWindow | null, now: Date): string {
 
   const resetDate = parseDateValue(window.resetsAt);
   if (resetDate) {
-    return isSameLocalDate(resetDate, now) ? `Resets at ${formatTime(resetDate)}` : `Resets on ${formatShortDateTime(resetDate)}`;
+    return isSameLocalDate(resetDate, now)
+      ? `Resets at ${formatTime(resetDate)}`
+      : `Resets on ${formatShortDateTime(resetDate)}`;
   }
 
   return window.resetsIn ? `Resets in ${window.resetsIn}` : "Reset time unknown";

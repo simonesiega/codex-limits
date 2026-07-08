@@ -1,8 +1,8 @@
-import { readFile } from "node:fs/promises";
-import { join, normalize } from "node:path";
-import { detectCodexHome } from "../codex/paths";
-import type { CodexAuthOptions, CouponCredentialStatus } from "../types";
-import { readEnvValue, resolveEnvironment } from "../utils/env";
+import {readFile} from "node:fs/promises";
+import {join, normalize} from "node:path";
+import {detectCodexHome} from "../codex/paths";
+import type {CodexAuthOptions, CouponCredentialStatus} from "../types";
+import {readEnvValue, resolveEnvironment} from "../utils/env";
 
 /** Codex account credentials used for authenticated ChatGPT backend calls. */
 export interface CodexCredentials {
@@ -18,13 +18,15 @@ export interface CodexCredentials {
  * @param options - Environment, filesystem, and auth-file lookup options.
  * @returns Access token and account id, or null when unavailable.
  */
-export async function resolveCodexCredentials(options: CodexAuthOptions): Promise<CodexCredentials | null> {
+export async function resolveCodexCredentials(
+  options: CodexAuthOptions
+): Promise<CodexCredentials | null> {
   const env = resolveEnvironment(options.env);
   const accessToken = readEnvValue(env, "CODEX_LIMITS_ACCESS_TOKEN");
   const accountId = readEnvValue(env, "CODEX_LIMITS_ACCOUNT_ID");
 
   if (accessToken || accountId) {
-    return accessToken && accountId ? { accessToken, accountId } : null;
+    return accessToken && accountId ? {accessToken, accountId} : null;
   }
 
   const authFile = await resolveCodexAuthFile(options);
@@ -37,7 +39,9 @@ export async function resolveCodexCredentials(options: CodexAuthOptions): Promis
  * @param options - Environment and auth-file lookup options.
  * @returns Credential configuration status.
  */
-export async function getCodexCredentialStatus(options: CodexAuthOptions = {}): Promise<CouponCredentialStatus> {
+export async function getCodexCredentialStatus(
+  options: CodexAuthOptions = {}
+): Promise<CouponCredentialStatus> {
   const env = resolveEnvironment(options.env);
   const accessToken = readEnvValue(env, "CODEX_LIMITS_ACCESS_TOKEN");
   const accountId = readEnvValue(env, "CODEX_LIMITS_ACCOUNT_ID");
@@ -86,7 +90,7 @@ async function readAuthFile(authPath: string): Promise<CodexCredentials | null> 
     const accessToken = readString(tokens, "access_token");
     const accountId = readString(tokens, "account_id");
 
-    return accessToken && accountId ? { accessToken, accountId } : null;
+    return accessToken && accountId ? {accessToken, accountId} : null;
   } catch {
     return null;
   }

@@ -272,5 +272,5 @@ export type FetchLike = (
     method: "GET";
     headers: Record<string, string>;
     signal?: AbortSignal;
-  },
+  }
 ) => Promise<FetchResponseLike>;

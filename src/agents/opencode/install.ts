@@ -1,6 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import {mkdir, readFile, writeFile} from "node:fs/promises";
+import {homedir} from "node:os";
+import {dirname, join} from "node:path";
 
 export const OPENCODE_PLUGIN_SPEC = "@simonesiega/codex-limits";
 
@@ -24,7 +24,9 @@ export interface OpencodeInstallResult {
  * @param options - Optional config path override.
  * @returns Install result with changed state and target path.
  */
-export async function installOpencodePlugin(options: OpencodeInstallOptions = {}): Promise<OpencodeInstallResult> {
+export async function installOpencodePlugin(
+  options: OpencodeInstallOptions = {}
+): Promise<OpencodeInstallResult> {
   const configPath = options.configPath ?? getGlobalOpencodeConfigPath();
   const tuiConfigPath = options.tuiConfigPath ?? getGlobalOpencodeTuiConfigPath();
   const config = await readOpencodeConfig(configPath);
@@ -36,17 +38,17 @@ export async function installOpencodePlugin(options: OpencodeInstallOptions = {}
 
   if (configChanged) {
     config.plugin = [...plugin, OPENCODE_PLUGIN_SPEC];
-    await mkdir(dirname(configPath), { recursive: true });
+    await mkdir(dirname(configPath), {recursive: true});
     await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
   }
 
   if (tuiConfigChanged) {
     tuiConfig.plugin = [...tuiPlugin, OPENCODE_PLUGIN_SPEC];
-    await mkdir(dirname(tuiConfigPath), { recursive: true });
+    await mkdir(dirname(tuiConfigPath), {recursive: true});
     await writeFile(tuiConfigPath, `${JSON.stringify(tuiConfig, null, 2)}\n`, "utf8");
   }
 
-  return { changed: configChanged || tuiConfigChanged, configPaths: [configPath, tuiConfigPath] };
+  return {changed: configChanged || tuiConfigChanged, configPaths: [configPath, tuiConfigPath]};
 }
 
 /**
@@ -67,17 +69,20 @@ export function getGlobalOpencodeTuiConfigPath(): string {
   return join(homedir(), ".config", "opencode", "tui.json");
 }
 
-async function readOpencodeConfig(configPath: string, schema = "https://opencode.ai/config.json"): Promise<Record<string, unknown>> {
+async function readOpencodeConfig(
+  configPath: string,
+  schema = "https://opencode.ai/config.json"
+): Promise<Record<string, unknown>> {
   try {
     const parsed = JSON.parse(await readFile(configPath, "utf8")) as unknown;
     if (!isRecord(parsed)) {
       throw new Error("opencode config must be a JSON object.");
     }
 
-    return { $schema: schema, ...parsed };
+    return {$schema: schema, ...parsed};
   } catch (error) {
     if (isNodeError(error) && error.code === "ENOENT") {
-      return { $schema: schema };
+      return {$schema: schema};
     }
 
     throw error;

@@ -1,8 +1,11 @@
-import { expect, test } from "bun:test";
-import type { AgentIntegration } from "../../../src/agents";
-import { runInit } from "../../../src/package/commands/init";
+import {expect, test} from "bun:test";
+import type {AgentIntegration} from "../../../src/agents";
+import {runInit} from "../../../src/package/commands/init";
 
-function createIntegration(id = "opencode", configPaths = [`/${id}.json`]): AgentIntegration & { installs: number } {
+function createIntegration(
+  id = "opencode",
+  configPaths = [`/${id}.json`]
+): AgentIntegration & {installs: number} {
   return {
     id,
     name: id,
@@ -10,14 +13,17 @@ function createIntegration(id = "opencode", configPaths = [`/${id}.json`]): Agen
     installs: 0,
     async install() {
       this.installs += 1;
-      return { changed: true, configPaths };
+      return {changed: true, configPaths};
     },
   };
 }
 
 test("runInit prints help", async () => {
   const output: string[] = [];
-  const exitCode = await runInit(["--help"], { stdout: (text) => output.push(text), interactive: false });
+  const exitCode = await runInit(["--help"], {
+    stdout: (text) => output.push(text),
+    interactive: false,
+  });
 
   expect(exitCode).toBe(0);
   expect(output.join("")).toContain("codex-limits init --opencode");
@@ -26,7 +32,11 @@ test("runInit prints help", async () => {
 test("runInit installs all selected integrations", async () => {
   const output: string[] = [];
   const opencode = createIntegration("opencode", ["/opencode.json", "/tui.json"]);
-  const exitCode = await runInit(["--all"], { stdout: (text) => output.push(text), interactive: false, integrations: [opencode] });
+  const exitCode = await runInit(["--all"], {
+    stdout: (text) => output.push(text),
+    interactive: false,
+    integrations: [opencode],
+  });
 
   expect(exitCode).toBe(0);
   expect(opencode.installs).toBe(1);
@@ -36,7 +46,11 @@ test("runInit installs all selected integrations", async () => {
 test("runInit installs opencode directly", async () => {
   const output: string[] = [];
   const opencode = createIntegration("opencode");
-  const exitCode = await runInit(["--opencode"], { stdout: (text) => output.push(text), interactive: false, integrations: [opencode] });
+  const exitCode = await runInit(["--opencode"], {
+    stdout: (text) => output.push(text),
+    interactive: false,
+    integrations: [opencode],
+  });
 
   expect(exitCode).toBe(0);
   expect(opencode.installs).toBe(1);
@@ -45,7 +59,7 @@ test("runInit installs opencode directly", async () => {
 
 test("runInit handles non-interactive mode without prompting", async () => {
   const output: string[] = [];
-  const exitCode = await runInit([], { stdout: (text) => output.push(text), interactive: false });
+  const exitCode = await runInit([], {stdout: (text) => output.push(text), interactive: false});
 
   expect(exitCode).toBe(0);
   expect(output.join("")).toContain("requires an interactive terminal");
@@ -53,7 +67,10 @@ test("runInit handles non-interactive mode without prompting", async () => {
 
 test("runInit rejects unknown options", async () => {
   const errors: string[] = [];
-  const exitCode = await runInit(["--bad"], { stderr: (text) => errors.push(text), interactive: false });
+  const exitCode = await runInit(["--bad"], {
+    stderr: (text) => errors.push(text),
+    interactive: false,
+  });
 
   expect(exitCode).toBe(1);
   expect(errors.join("")).toContain("Unknown init option: --bad");
@@ -61,7 +78,10 @@ test("runInit rejects unknown options", async () => {
 
 test("runInit rejects the removed postinstall flag", async () => {
   const errors: string[] = [];
-  const exitCode = await runInit(["--postinstall"], { stderr: (text) => errors.push(text), interactive: false });
+  const exitCode = await runInit(["--postinstall"], {
+    stderr: (text) => errors.push(text),
+    interactive: false,
+  });
 
   expect(exitCode).toBe(1);
   expect(errors.join("")).toContain("Unknown init option: --postinstall");
@@ -71,8 +91,15 @@ test("runInit rejects unknown options before installing selected integrations", 
   const errors: string[] = [];
   const opencode = createIntegration("opencode");
 
-  for (const args of [["--all", "--bad"], ["--opencode", "--bad"]]) {
-    const exitCode = await runInit(args, { stderr: (text) => errors.push(text), interactive: false, integrations: [opencode] });
+  for (const args of [
+    ["--all", "--bad"],
+    ["--opencode", "--bad"],
+  ]) {
+    const exitCode = await runInit(args, {
+      stderr: (text) => errors.push(text),
+      interactive: false,
+      integrations: [opencode],
+    });
 
     expect(exitCode).toBe(1);
   }
@@ -84,7 +111,12 @@ test("runInit rejects unknown options before installing selected integrations", 
 test("runInit prompt installs integration for blank or yes answers", async () => {
   for (const answer of ["", "y"]) {
     const opencode = createIntegration("opencode");
-    const exitCode = await runInit([], { stdout: () => undefined, prompt: async () => answer, interactive: true, integrations: [opencode] });
+    const exitCode = await runInit([], {
+      stdout: () => undefined,
+      prompt: async () => answer,
+      interactive: true,
+      integrations: [opencode],
+    });
 
     expect(exitCode).toBe(0);
     expect(opencode.installs).toBe(1);
@@ -94,7 +126,12 @@ test("runInit prompt installs integration for blank or yes answers", async () =>
 test("runInit prompt skips integration for no answer", async () => {
   const output: string[] = [];
   const opencode = createIntegration("opencode");
-  const exitCode = await runInit([], { stdout: (text) => output.push(text), prompt: async () => "n", interactive: true, integrations: [opencode] });
+  const exitCode = await runInit([], {
+    stdout: (text) => output.push(text),
+    prompt: async () => "n",
+    interactive: true,
+    integrations: [opencode],
+  });
 
   expect(exitCode).toBe(0);
   expect(opencode.installs).toBe(0);

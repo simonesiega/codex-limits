@@ -1,12 +1,13 @@
-import type { Dirent } from "node:fs";
-import { readdir, readFile, stat } from "node:fs/promises";
-import { extname, join, relative } from "node:path";
-import type { CodexStateFile, CodexStateReadResult } from "../types";
+import type {Dirent} from "node:fs";
+import {readdir, readFile, stat} from "node:fs/promises";
+import {extname, join, relative} from "node:path";
+import type {CodexStateFile, CodexStateReadResult} from "../types";
 
 const MAX_DEPTH = 2;
 const MAX_FILES = 25;
 const MAX_FILE_BYTES = 1_000_000;
-const SENSITIVE_FILE_PATTERN = /(?:auth|token|cookie|session|secret|credential|api[-_]?key|keychain)/i;
+const SENSITIVE_FILE_PATTERN =
+  /(?:auth|token|cookie|session|secret|credential|api[-_]?key|keychain)/i;
 
 /**
  * Reads safe, small local Codex JSON files without exposing raw contents.
@@ -47,7 +48,7 @@ export async function readCodexState(homePath: string): Promise<CodexStateReadRe
     warnings.push(`Skipped ${paths.length - MAX_FILES} extra files to keep inspection small.`);
   }
 
-  return { homePath, files, warnings };
+  return {homePath, files, warnings};
 }
 
 /**
@@ -73,14 +74,20 @@ async function findReadableStateFiles(homePath: string, warnings: string[]): Pro
  * @param warnings - Mutable warning list for non-fatal inspection problems.
  * @returns Nothing; file and warning lists are updated in place.
  */
-async function walk(rootPath: string, currentPath: string, depth: number, files: string[], warnings: string[]): Promise<void> {
+async function walk(
+  rootPath: string,
+  currentPath: string,
+  depth: number,
+  files: string[],
+  warnings: string[]
+): Promise<void> {
   if (depth > MAX_DEPTH || files.length >= MAX_FILES) {
     return;
   }
 
   let entries: Array<Dirent<string>>;
   try {
-    entries = await readdir(currentPath, { withFileTypes: true });
+    entries = await readdir(currentPath, {withFileTypes: true});
   } catch {
     warnings.push(`Could not inspect ${relative(rootPath, currentPath) || "."}.`);
     return;
@@ -127,11 +134,15 @@ function isSensitiveFileName(fileName: string): boolean {
  * @param warnings - Mutable warning list for parse failures.
  * @returns Parsed value and a stable error code when parsing fails.
  */
-function parseJson(content: string, relativePath: string, warnings: string[]): { value: unknown | null; error: string | null } {
+function parseJson(
+  content: string,
+  relativePath: string,
+  warnings: string[]
+): {value: unknown | null; error: string | null} {
   try {
-    return { value: JSON.parse(content) as unknown, error: null };
+    return {value: JSON.parse(content) as unknown, error: null};
   } catch {
     warnings.push(`Could not parse JSON in ${relativePath}.`);
-    return { value: null, error: "invalid-json" };
+    return {value: null, error: "invalid-json"};
   }
 }

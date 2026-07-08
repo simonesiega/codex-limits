@@ -1,14 +1,14 @@
-import { request as httpRequest } from "node:http";
-import { request as httpsRequest } from "node:https";
-import { resolveCodexCredentials } from "../auth/codex-auth";
-import type { CodexLimitsOptions, FetchLike, FetchResponseLike, UsageResult } from "../types";
-import { readEnvValue, resolveEnvironment } from "../utils/env";
-import { buildUsageResult, parseUsageWindowsFromRateLimits } from "./normalizer";
+import {request as httpRequest} from "node:http";
+import {request as httpsRequest} from "node:https";
+import {resolveCodexCredentials} from "../auth/codex-auth";
+import type {CodexLimitsOptions, FetchLike, FetchResponseLike, UsageResult} from "../types";
+import {readEnvValue, resolveEnvironment} from "../utils/env";
+import {buildUsageResult, parseUsageWindowsFromRateLimits} from "./normalizer";
 
 export const LIVE_USAGE_ENDPOINT = "https://chatgpt.com/backend-api/codex/usage";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
-const UNAVAILABLE_SOURCE = { kind: "unavailable", label: "Unavailable" } as const;
+const UNAVAILABLE_SOURCE = {kind: "unavailable", label: "Unavailable"} as const;
 
 /**
  * Fetches current usage-limit windows from the ChatGPT/Codex backend.
@@ -41,9 +41,21 @@ export async function getLiveUsage(options: CodexLimitsOptions = {}): Promise<Us
       signal: controller.signal,
     });
 
-    return await parseLiveUsageResponse(response, endpoint, timeoutMs, headers, options.now ?? new Date());
+    return await parseLiveUsageResponse(
+      response,
+      endpoint,
+      timeoutMs,
+      headers,
+      options.now ?? new Date()
+    );
   } catch {
-    return await getLiveUsageWithNativeRequest(endpoint, timeoutMs, headers, options.now ?? new Date(), "Live usage lookup failed.");
+    return await getLiveUsageWithNativeRequest(
+      endpoint,
+      timeoutMs,
+      headers,
+      options.now ?? new Date(),
+      "Live usage lookup failed."
+    );
   } finally {
     clearTimeout(timeout);
   }
@@ -55,7 +67,10 @@ export async function getLiveUsage(options: CodexLimitsOptions = {}): Promise<Us
  * @param credentials - Resolved Codex credentials.
  * @returns Headers that do not get logged or exposed.
  */
-function buildUsageHeaders(credentials: { accessToken: string; accountId: string }): Record<string, string> {
+function buildUsageHeaders(credentials: {
+  accessToken: string;
+  accountId: string;
+}): Record<string, string> {
   return {
     Authorization: `Bearer ${credentials.accessToken}`,
     "ChatGPT-Account-ID": credentials.accountId,
@@ -78,12 +93,24 @@ function buildUsageHeaders(credentials: { accessToken: string; accountId: string
  * @param now - Current time used to compute reset durations.
  * @returns Normalized usage result.
  */
-async function parseLiveUsageResponse(response: FetchResponseLike, endpoint: string, timeoutMs: number, headers: Record<string, string>, now: Date): Promise<UsageResult> {
+async function parseLiveUsageResponse(
+  response: FetchResponseLike,
+  endpoint: string,
+  timeoutMs: number,
+  headers: Record<string, string>,
+  now: Date
+): Promise<UsageResult> {
   if (response.ok) {
     return parseLiveUsagePayload(await response.json(), endpoint, now);
   }
 
-  return getLiveUsageWithNativeRequest(endpoint, timeoutMs, headers, now, `Live usage endpoint returned HTTP ${response.status}.`);
+  return getLiveUsageWithNativeRequest(
+    endpoint,
+    timeoutMs,
+    headers,
+    now,
+    `Live usage endpoint returned HTTP ${response.status}.`
+  );
 }
 
 /**
@@ -96,7 +123,13 @@ async function parseLiveUsageResponse(response: FetchResponseLike, endpoint: str
  * @param fallbackWarning - Warning to use if the retry also fails.
  * @returns Normalized usage result.
  */
-async function getLiveUsageWithNativeRequest(endpoint: string, timeoutMs: number, headers: Record<string, string>, now: Date, fallbackWarning: string): Promise<UsageResult> {
+async function getLiveUsageWithNativeRequest(
+  endpoint: string,
+  timeoutMs: number,
+  headers: Record<string, string>,
+  now: Date,
+  fallbackWarning: string
+): Promise<UsageResult> {
   try {
     const response = await requestJson(endpoint, headers, timeoutMs);
     if (!response.ok) {
@@ -117,7 +150,9 @@ async function getLiveUsageWithNativeRequest(endpoint: string, timeoutMs: number
  */
 function resolveUsageEndpoint(options: CodexLimitsOptions): string {
   const env = resolveEnvironment(options.env);
-  return options.usageEndpoint ?? readEnvValue(env, "CODEX_LIMITS_USAGE_ENDPOINT") ?? LIVE_USAGE_ENDPOINT;
+  return (
+    options.usageEndpoint ?? readEnvValue(env, "CODEX_LIMITS_USAGE_ENDPOINT") ?? LIVE_USAGE_ENDPOINT
+  );
 }
 
 /**
@@ -134,7 +169,11 @@ function parseLiveUsagePayload(payload: unknown, endpoint: string, now: Date): U
     return unavailableLiveUsage(["Live usage endpoint returned an unexpected payload."]);
   }
 
-  return buildUsageResult(parseUsageWindowsFromRateLimits(rateLimits, now), { kind: "api", label: "API", endpoint });
+  return buildUsageResult(parseUsageWindowsFromRateLimits(rateLimits, now), {
+    kind: "api",
+    label: "API",
+    endpoint,
+  });
 }
 
 /**
@@ -144,7 +183,7 @@ function parseLiveUsagePayload(payload: unknown, endpoint: string, now: Date): U
  * @returns Unavailable usage result.
  */
 function unavailableLiveUsage(warnings: string[]): UsageResult {
-  return buildUsageResult({ fiveHour: null, weekly: null }, UNAVAILABLE_SOURCE, warnings);
+  return buildUsageResult({fiveHour: null, weekly: null}, UNAVAILABLE_SOURCE, warnings);
 }
 
 /**
@@ -164,7 +203,12 @@ function findRateLimits(value: unknown, depth = 0): Record<string, unknown> | nu
     return direct;
   }
 
-  if (isRecord(value.primary) || isRecord(value.secondary) || isRecord(value.primary_window) || isRecord(value.secondary_window)) {
+  if (
+    isRecord(value.primary) ||
+    isRecord(value.secondary) ||
+    isRecord(value.primary_window) ||
+    isRecord(value.secondary_window)
+  ) {
     return value;
   }
 
@@ -193,7 +237,7 @@ function buildRateLimitsFromWindowArray(value: unknown, depth = 0): Record<strin
   if (Array.isArray(value)) {
     const primary = value.find((item) => isUsageWindowRecord(item, "primary"));
     const secondary = value.find((item) => isUsageWindowRecord(item, "secondary"));
-    return primary || secondary ? { primary, secondary } : null;
+    return primary || secondary ? {primary, secondary} : null;
   }
 
   if (!isRecord(value)) {
@@ -217,21 +261,36 @@ function buildRateLimitsFromWindowArray(value: unknown, depth = 0): Record<strin
  * @param kind - Window kind to match.
  * @returns True when the item matches the requested window.
  */
-function isUsageWindowRecord(value: unknown, kind: "primary" | "secondary"): value is Record<string, unknown> {
+function isUsageWindowRecord(
+  value: unknown,
+  kind: "primary" | "secondary"
+): value is Record<string, unknown> {
   if (!isRecord(value)) {
     return false;
   }
 
-  const label = String(value.type ?? value.kind ?? value.name ?? value.label ?? value.window ?? "").toLowerCase();
-  if (kind === "primary" && (label.includes("primary") || label.includes("5-hour") || label.includes("five"))) {
+  const label = String(
+    value.type ?? value.kind ?? value.name ?? value.label ?? value.window ?? ""
+  ).toLowerCase();
+  if (
+    kind === "primary" &&
+    (label.includes("primary") || label.includes("5-hour") || label.includes("five"))
+  ) {
     return true;
   }
 
-  if (kind === "secondary" && (label.includes("secondary") || label.includes("weekly") || label.includes("week"))) {
+  if (
+    kind === "secondary" &&
+    (label.includes("secondary") || label.includes("weekly") || label.includes("week"))
+  ) {
     return true;
   }
 
-  const minutes = value.window_minutes ?? value.windowMinutes ?? value.window_length_minutes ?? value.windowLengthMinutes;
+  const minutes =
+    value.window_minutes ??
+    value.windowMinutes ??
+    value.window_length_minutes ??
+    value.windowLengthMinutes;
   return kind === "primary" ? minutes === 300 : minutes === 10_080;
 }
 
@@ -243,7 +302,11 @@ function isUsageWindowRecord(value: unknown, kind: "primary" | "secondary"): val
  * @param timeoutMs - Request timeout in milliseconds.
  * @returns Minimal fetch-like response.
  */
-function requestJson(endpoint: string, headers: Record<string, string>, timeoutMs: number): Promise<FetchResponseLike> {
+function requestJson(
+  endpoint: string,
+  headers: Record<string, string>,
+  timeoutMs: number
+): Promise<FetchResponseLike> {
   return new Promise((resolve, reject) => {
     const url = new URL(endpoint);
     const request = (url.protocol === "http:" ? httpRequest : httpsRequest)(
@@ -263,12 +326,15 @@ function requestJson(endpoint: string, headers: Record<string, string>, timeoutM
         response.on("end", () => {
           const body = Buffer.concat(chunks).toString("utf8");
           resolve({
-            ok: response.statusCode !== undefined && response.statusCode >= 200 && response.statusCode < 300,
+            ok:
+              response.statusCode !== undefined &&
+              response.statusCode >= 200 &&
+              response.statusCode < 300,
             status: response.statusCode ?? 0,
             json: async () => JSON.parse(body) as unknown,
           });
         });
-      },
+      }
     );
 
     request.on("timeout", () => {

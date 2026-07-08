@@ -26,6 +26,8 @@
   "scripts": {
     "dev": "bun run src/package/cli.ts",
     "build": "bun build src/package/cli.ts --target=node --outfile=dist/cli.js && bun build src/agents/opencode/plugin.tsx --target=node --external \"@opentui/*\" --outfile=dist/index.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "check": "bun run typecheck && bun test && bun run build",
@@ -64,6 +66,8 @@
     "@types/react": "^19.2.17",
     "bun-types": "^1.1.42",
     "ink-testing-library": "^4.0.0",
+    "prettier": "^3.9.4",
+    "prettier-plugin-tailwindcss": "^0.8.0",
     "typescript": "^5.7.2"
   },
   "dependencies": {

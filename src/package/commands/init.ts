@@ -1,6 +1,6 @@
-import { createInterface, type Interface } from "node:readline/promises";
-import { stdin as processStdin, stdout as processStdout } from "node:process";
-import { AGENT_INTEGRATIONS, type AgentIntegration } from "../../agents";
+import {createInterface, type Interface} from "node:readline/promises";
+import {stdin as processStdin, stdout as processStdout} from "node:process";
+import {AGENT_INTEGRATIONS, type AgentIntegration} from "../../agents";
 
 type WriteOutput = (text: string) => void;
 
@@ -18,7 +18,12 @@ export interface RunInitOptions {
 }
 
 function getInitHelp(integrations: AgentIntegration[]): string {
-  const integrationUsage = integrations.map((integration) => `  codex-limits init --${integration.id.padEnd(8)} Install the ${integration.name} integration`).join("\n");
+  const integrationUsage = integrations
+    .map(
+      (integration) =>
+        `  codex-limits init --${integration.id.padEnd(8)} Install the ${integration.name} integration`
+    )
+    .join("\n");
 
   return `codex-limits init
 
@@ -51,7 +56,10 @@ export async function runInit(args: string[], options: RunInitOptions = {}): Pro
     return 0;
   }
 
-  const validOptions = new Set(["--all", ...integrations.map((integration) => `--${integration.id}`)]);
+  const validOptions = new Set([
+    "--all",
+    ...integrations.map((integration) => `--${integration.id}`),
+  ]);
   const unknown = args.find((arg) => arg.startsWith("-") && !validOptions.has(arg));
   if (unknown) {
     stderr(`Unknown init option: ${unknown}\n\n${initHelp}`);
@@ -65,7 +73,9 @@ export async function runInit(args: string[], options: RunInitOptions = {}): Pro
 
   if (!interactive && !options.prompt) {
     const firstFlag = integrations[0] ? `--${integrations[0].id}` : "--all";
-    stdout(`codex-limits init requires an interactive terminal. Run \`codex-limits init --all\` or \`codex-limits init ${firstFlag}\` to install integrations.\n`);
+    stdout(
+      `codex-limits init requires an interactive terminal. Run \`codex-limits init --all\` or \`codex-limits init ${firstFlag}\` to install integrations.\n`
+    );
     return 0;
   }
 
@@ -103,18 +113,25 @@ function parseSelectedIntegrations(args: string[], integrations: AgentIntegratio
     return integrations.map((integration) => integration.id);
   }
 
-  return integrations.filter((integration) => args.includes(`--${integration.id}`)).map((integration) => integration.id);
+  return integrations
+    .filter((integration) => args.includes(`--${integration.id}`))
+    .map((integration) => integration.id);
 }
 
 /**
  * Installs the selected integrations.
- * @param ids - The list of integration IDs to install. 
+ * @param ids - The list of integration IDs to install.
  * @param integrations - Available integrations.
  * @param stdout - The output writer for stdout.
  * @param stderr - The output writer for stderr.
  * @returns A promise resolving to the exit code.
  */
-async function installSelected(ids: string[], integrations: AgentIntegration[], stdout: WriteOutput, stderr: WriteOutput): Promise<number> {
+async function installSelected(
+  ids: string[],
+  integrations: AgentIntegration[],
+  stdout: WriteOutput,
+  stderr: WriteOutput
+): Promise<number> {
   let failed = false;
 
   for (const id of ids) {
@@ -148,9 +165,11 @@ async function installSelected(ids: string[], integrations: AgentIntegration[], 
  * Creates a prompt for user interaction.
  * @returns The prompt function and a close method.
  */
-function createPrompt(): ((question: string) => Promise<string>) & { close: () => void } {
-  const reader = createInterface({ input: processStdin, output: processStdout });
-  const prompt = ((question: string) => reader.question(question)) as ((question: string) => Promise<string>) & { close: () => void };
+function createPrompt(): ((question: string) => Promise<string>) & {close: () => void} {
+  const reader = createInterface({input: processStdin, output: processStdout});
+  const prompt = ((question: string) => reader.question(question)) as ((
+    question: string
+  ) => Promise<string>) & {close: () => void};
   prompt.close = () => reader.close();
   return prompt;
 }

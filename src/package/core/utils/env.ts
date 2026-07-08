@@ -1,4 +1,4 @@
-import type { EnvironmentMap } from "../types";
+import type {EnvironmentMap} from "../types";
 
 /**
  * Reads a non-empty environment variable value.

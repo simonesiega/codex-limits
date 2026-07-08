@@ -1,5 +1,5 @@
-import type { CouponItem, CouponResult } from "../core/types";
-import { formatUnknown, formatWarnings } from "./format-shared";
+import type {CouponItem, CouponResult} from "../core/types";
+import {formatUnknown, formatWarnings} from "./format-shared";
 
 /**
  * Formats reset-credit coupon data for terminal output.
@@ -37,7 +37,9 @@ function formatNextExpiration(result: CouponResult): string {
     return "Unknown";
   }
 
-  return result.nextExpirationDate ? `${result.nextExpirationDate} (${result.nextExpirationIn})` : result.nextExpirationIn;
+  return result.nextExpirationDate
+    ? `${result.nextExpirationDate} (${result.nextExpirationIn})`
+    : result.nextExpirationIn;
 }
 
 /**

@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test";
-import { formatOpencodeLimits } from "../../../src/agents/opencode/format";
-import { createFakeLimitsResult } from "../../package/fixtures/fake-results";
+import {expect, test} from "bun:test";
+import {formatOpencodeLimits} from "../../../src/agents/opencode/format";
+import {createFakeLimitsResult} from "../../package/fixtures/fake-results";
 
 test("formatOpencodeLimits renders compact local-only UI", () => {
   const output = formatOpencodeLimits(createFakeLimitsResult());

@@ -1,8 +1,13 @@
-import { stat } from "node:fs/promises";
-import { homedir } from "node:os";
-import { join, normalize } from "node:path";
-import { readEnvValue, resolveEnvironment } from "../utils/env";
-import type { CodexHomeCandidate, CodexHomeCandidatePath, CodexHomeDetection, CodexHomeOptions } from "../types";
+import {stat} from "node:fs/promises";
+import {homedir} from "node:os";
+import {join, normalize} from "node:path";
+import {readEnvValue, resolveEnvironment} from "../utils/env";
+import type {
+  CodexHomeCandidate,
+  CodexHomeCandidatePath,
+  CodexHomeDetection,
+  CodexHomeOptions,
+} from "../types";
 
 const CODEX_LIMITS_HOME = "CODEX_LIMITS_HOME";
 
@@ -12,9 +17,15 @@ const CODEX_LIMITS_HOME = "CODEX_LIMITS_HOME";
  * @param options - Optional filesystem and environment overrides.
  * @returns Ordered candidate paths, with CODEX_LIMITS_HOME first when set.
  */
-export function getCodexHomeCandidatePaths(options: CodexHomeOptions = {}): CodexHomeCandidatePath[] {
+export function getCodexHomeCandidatePaths(
+  options: CodexHomeOptions = {}
+): CodexHomeCandidatePath[] {
   const env = resolveEnvironment(options.env);
-  const home = options.homeDirectory ?? readEnvValue(env, "HOME") ?? readEnvValue(env, "USERPROFILE") ?? homedir();
+  const home =
+    options.homeDirectory ??
+    readEnvValue(env, "HOME") ??
+    readEnvValue(env, "USERPROFILE") ??
+    homedir();
   const appData = options.appData ?? readEnvValue(env, "APPDATA");
   const localAppData = options.localAppData ?? readEnvValue(env, "LOCALAPPDATA");
   const paths: CodexHomeCandidatePath[] = [];
@@ -28,7 +39,11 @@ export function getCodexHomeCandidatePaths(options: CodexHomeOptions = {}): Code
     appendCandidate(paths, join(home, ".codex"), "default");
     appendCandidate(paths, join(home, ".config", "codex"), "default");
     appendCandidate(paths, join(home, "Library", "Application Support", "Codex"), "default");
-    appendCandidate(paths, join(home, "Library", "Application Support", "Parall", "Codex", ".codex"), "default");
+    appendCandidate(
+      paths,
+      join(home, "Library", "Application Support", "Parall", "Codex", ".codex"),
+      "default"
+    );
   }
 
   appendCandidate(paths, appData ? join(appData, "Codex") : null, "default");
@@ -50,7 +65,7 @@ export async function detectCodexHome(options: CodexHomeOptions = {}): Promise<C
     getCodexHomeCandidatePaths(options).map(async (candidate): Promise<CodexHomeCandidate> => ({
       ...candidate,
       exists: await canReadDirectory(candidate.path),
-    })),
+    }))
   );
 
   return {
@@ -68,12 +83,16 @@ export async function detectCodexHome(options: CodexHomeOptions = {}): Promise<C
  * @param source - Whether the path came from the environment or defaults.
  * @returns Nothing; the candidate list is updated in place.
  */
-function appendCandidate(paths: CodexHomeCandidatePath[], path: string | null, source: CodexHomeCandidatePath["source"]): void {
+function appendCandidate(
+  paths: CodexHomeCandidatePath[],
+  path: string | null,
+  source: CodexHomeCandidatePath["source"]
+): void {
   if (!path) {
     return;
   }
 
-  paths.push({ path: normalize(path), source });
+  paths.push({path: normalize(path), source});
 }
 
 /**
@@ -109,7 +128,7 @@ function dedupePaths(paths: CodexHomeCandidatePath[]): CodexHomeCandidatePath[] 
     }
 
     seen.add(key);
-    result.push({ path: normalizedPath, source: candidate.source });
+    result.push({path: normalizedPath, source: candidate.source});
   }
 
   return result;

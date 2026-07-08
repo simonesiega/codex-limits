@@ -1,10 +1,10 @@
-import { Box, render } from "ink";
-import type { ReactElement } from "react";
-import type { CodexLimitsResult } from "../core/types";
-import { CouponsPanel } from "./components/panels/coupons-panel";
-import { UsagePanel } from "./components/panels/usage-panel";
-import { Title } from "./components/primitives/title";
-import { createTuiViewModel } from "./view-model";
+import {Box, render} from "ink";
+import type {ReactElement} from "react";
+import type {CodexLimitsResult} from "../core/types";
+import {CouponsPanel} from "./components/panels/coupons-panel";
+import {UsagePanel} from "./components/panels/usage-panel";
+import {Title} from "./components/primitives/title";
+import {createTuiViewModel} from "./view-model";
 
 /** Props for the root Ink app. */
 export interface AppProps {
@@ -22,7 +22,7 @@ export interface AppProps {
  * @param props - Normalized core result and optional layout overrides.
  * @returns Ink app element.
  */
-export function App({ result, width, now }: AppProps): ReactElement {
+export function App({result, width, now}: AppProps): ReactElement {
   const columns = width ?? process.stdout.columns ?? 80;
   const contentWidth = Math.min(Math.max(columns - 2, 60), 104);
   const view = createTuiViewModel(result, contentWidth, now);
@@ -32,7 +32,13 @@ export function App({ result, width, now }: AppProps): ReactElement {
       <Box flexDirection="column" width={view.width}>
         <Title width={view.width} />
         <UsagePanel cards={view.usageCards} stacked={view.stacked} width={view.width} />
-        <CouponsPanel couponRows={view.couponRows} emptyLabel={view.couponEmptyLabel} stacked={view.couponsStacked} summary={view.couponSummary} width={view.width} />
+        <CouponsPanel
+          couponRows={view.couponRows}
+          emptyLabel={view.couponEmptyLabel}
+          stacked={view.couponsStacked}
+          summary={view.couponSummary}
+          width={view.width}
+        />
       </Box>
     </Box>
   );

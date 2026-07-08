@@ -16,11 +16,11 @@
 
 Security fixes are handled for the latest published version of `@simonesiega/codex-limits` and for the current `main` branch.
 
-| Version | Support |
-| --- | --- |
-| Latest npm release | Supported |
-| `main` branch | Supported for unreleased fixes |
-| Older releases | Best effort only |
+| Version            | Support                        |
+| ------------------ | ------------------------------ |
+| Latest npm release | Supported                      |
+| `main` branch      | Supported for unreleased fixes |
+| Older releases     | Best effort only               |
 
 ## Reporting a vulnerability
 
@@ -28,20 +28,20 @@ If you discover a vulnerability, a way to expose private Codex data, or a behavi
 
 Report it privately to the maintainer:
 
-| Contact | Value |
-| --- | --- |
-| Email | [simonesiega1@gmail.com](mailto:simonesiega1@gmail.com) |
-| GitHub | [@simonesiega](https://github.com/simonesiega) |
+| Contact | Value                                                   |
+| ------- | ------------------------------------------------------- |
+| Email   | [simonesiega1@gmail.com](mailto:simonesiega1@gmail.com) |
+| GitHub  | [@simonesiega](https://github.com/simonesiega)          |
 
 Please include:
 
-| Field | Why it matters |
-| --- | --- |
-| Short description | Explains what the issue is. |
-| Impact | Explains what data, command, output, or integration is affected. |
-| Reproduction steps | Makes the issue easier to verify and fix. |
-| Environment | Helps isolate OS, Bun, Node, Codex, terminal, or agent-specific behavior. |
-| Suggested mitigation | Optional, but useful if you already found a safe fix. |
+| Field                | Why it matters                                                            |
+| -------------------- | ------------------------------------------------------------------------- |
+| Short description    | Explains what the issue is.                                               |
+| Impact               | Explains what data, command, output, or integration is affected.          |
+| Reproduction steps   | Makes the issue easier to verify and fix.                                 |
+| Environment          | Helps isolate OS, Bun, Node, Codex, terminal, or agent-specific behavior. |
+| Suggested mitigation | Optional, but useful if you already found a safe fix.                     |
 
 ## Local data and network behavior
 

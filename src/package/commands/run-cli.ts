@@ -1,11 +1,11 @@
 import packageJson from "../../../package.json";
-import { getResetCoupons } from "../core/coupons/reset-coupons";
-import { getCodexLimits } from "../core/limits";
-import type { CodexLimitsResult, CouponResult, CouponSummary } from "../core/types";
-import { formatCoupons } from "./coupons";
-import { formatJson } from "./format-json";
-import { runInit } from "./init";
-import { formatStatus } from "./status";
+import {getResetCoupons} from "../core/coupons/reset-coupons";
+import {getCodexLimits} from "../core/limits";
+import type {CodexLimitsResult, CouponResult, CouponSummary} from "../core/types";
+import {formatCoupons} from "./coupons";
+import {formatJson} from "./format-json";
+import {runInit} from "./init";
+import {formatStatus} from "./status";
 
 type WriteOutput = (text: string) => void;
 type RenderTui = (result: CodexLimitsResult) => Promise<void> | void;
@@ -85,7 +85,7 @@ export async function runCli(args: string[], options: RunCliOptions = {}): Promi
   }
 
   if (args[0] === "init") {
-    return runInit(args.slice(1), { stdout, stderr });
+    return runInit(args.slice(1), {stdout, stderr});
   }
 
   if (args.length === 1 && args[0] === "status") {
@@ -133,7 +133,7 @@ export function getHelpText(): string {
  * @returns A promise that resolves after Ink exits.
  */
 async function renderDefaultTui(result: CodexLimitsResult): Promise<void> {
-  const { renderApp } = await import("../tui/app");
+  const {renderApp} = await import("../tui/app");
   await renderApp(result);
 }
 
@@ -163,7 +163,11 @@ function writeStderr(text: string): void {
  * @param result - Full internal limits result.
  * @returns Public usage and coupon data.
  */
-function formatLimitsData(result: CodexLimitsResult): { windows: CodexLimitsResult["windows"]; coupons: ReturnType<typeof formatCouponData> | null; warnings: string[] } {
+function formatLimitsData(result: CodexLimitsResult): {
+  windows: CodexLimitsResult["windows"];
+  coupons: ReturnType<typeof formatCouponData> | null;
+  warnings: string[];
+} {
   return {
     windows: result.windows,
     coupons: result.coupons ? formatCouponData(result.coupons) : null,
@@ -177,7 +181,17 @@ function formatLimitsData(result: CodexLimitsResult): { windows: CodexLimitsResu
  * @param result - Full internal coupon result.
  * @returns Public coupon summary and rows.
  */
-function formatCouponData(result: CouponSummary): Pick<CouponSummary, "available" | "earnedThisPeriod" | "nextExpirationDate" | "nextExpirationIn" | "items" | "warnings"> {
+function formatCouponData(
+  result: CouponSummary
+): Pick<
+  CouponSummary,
+  | "available"
+  | "earnedThisPeriod"
+  | "nextExpirationDate"
+  | "nextExpirationIn"
+  | "items"
+  | "warnings"
+> {
   return {
     available: result.available,
     earnedThisPeriod: result.earnedThisPeriod,

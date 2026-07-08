@@ -1,4 +1,4 @@
-import type { CodexLimitsResult, CouponResult } from "../../../src/package/core/types";
+import type {CodexLimitsResult, CouponResult} from "../../../src/package/core/types";
 
 export function createFakeLimitsResult(): CodexLimitsResult {
   return {
@@ -18,7 +18,11 @@ export function createFakeLimitsResult(): CodexLimitsResult {
         resetsIn: "2d 1h 40m",
       },
     },
-    usageSource: { kind: "api", label: "API", endpoint: "https://chatgpt.com/backend-api/codex/usage" },
+    usageSource: {
+      kind: "api",
+      label: "API",
+      endpoint: "https://chatgpt.com/backend-api/codex/usage",
+    },
     coupons: createFakeCouponResult(),
     warnings: [],
   };

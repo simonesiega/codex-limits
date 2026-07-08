@@ -1,13 +1,19 @@
-import { detectCodexHome } from "./codex/paths";
-import { readCodexSessions } from "./codex/session-reader";
-import { readCodexState } from "./codex/state-reader";
-import { getResetCoupons } from "./coupons/reset-coupons";
-import type { CodexLimitsOptions, CodexLimitsResult, LocalUsageResult, UsageResult } from "./types";
-import { getLiveUsage } from "./usage/live";
-import { mergeLocalUsage, parseUsageFromSessions, parseUsageFromState, unavailableLocalUsage, withUsageSource } from "./usage/normalizer";
-import { redactWarnings } from "./utils/redact";
+import {detectCodexHome} from "./codex/paths";
+import {readCodexSessions} from "./codex/session-reader";
+import {readCodexState} from "./codex/state-reader";
+import {getResetCoupons} from "./coupons/reset-coupons";
+import type {CodexLimitsOptions, CodexLimitsResult, LocalUsageResult, UsageResult} from "./types";
+import {getLiveUsage} from "./usage/live";
+import {
+  mergeLocalUsage,
+  parseUsageFromSessions,
+  parseUsageFromState,
+  unavailableLocalUsage,
+  withUsageSource,
+} from "./usage/normalizer";
+import {redactWarnings} from "./utils/redact";
 
-const LOCAL_USAGE_SOURCE = { kind: "local", label: "Local" } as const;
+const LOCAL_USAGE_SOURCE = {kind: "local", label: "Local"} as const;
 
 /**
  * Reads local Codex state, optionally fetches reset coupons, and returns normalized dashboard data.
@@ -41,7 +47,9 @@ export async function getUsageLimits(options: CodexLimitsOptions = {}): Promise<
   }
 
   const local = withUsageSource(await getLocalUsage(options), LOCAL_USAGE_SOURCE);
-  return local.status !== "unavailable" ? local : { ...local, warnings: [...live.warnings, ...local.warnings] };
+  return local.status !== "unavailable"
+    ? local
+    : {...local, warnings: [...live.warnings, ...local.warnings]};
 }
 
 /**

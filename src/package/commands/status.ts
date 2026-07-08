@@ -1,5 +1,5 @@
-import type { CodexLimitsResult, UsageWindow } from "../core/types";
-import { formatPercent, formatUnknown, formatWarnings } from "./format-shared";
+import type {CodexLimitsResult, UsageWindow} from "../core/types";
+import {formatPercent, formatUnknown, formatWarnings} from "./format-shared";
 
 /**
  * Formats the non-interactive status command output.
@@ -35,5 +35,7 @@ function formatUsageWindow(window: UsageWindow | null): string[] {
     return ["Usage limit: Unknown"];
   }
 
-  return [`${window.label}: ${formatPercent(window.remainingPercent)} remaining, resets in ${formatUnknown(window.resetsIn)}`];
+  return [
+    `${window.label}: ${formatPercent(window.remainingPercent)} remaining, resets in ${formatUnknown(window.resetsIn)}`,
+  ];
 }

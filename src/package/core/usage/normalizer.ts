@@ -1,14 +1,69 @@
-import { formatDuration, parseDateValue } from "../utils/date-time";
-import type { AvailabilityStatus, CodexSessionReadResult, CodexStateReadResult, LocalUsageResult, UsageResult, UsageSource, UsageWindow, UsageWindows } from "../types";
+import {formatDuration, parseDateValue} from "../utils/date-time";
+import type {
+  AvailabilityStatus,
+  CodexSessionReadResult,
+  CodexStateReadResult,
+  LocalUsageResult,
+  UsageResult,
+  UsageSource,
+  UsageWindow,
+  UsageWindows,
+} from "../types";
 
 const MAX_SEARCH_DEPTH = 5;
 const FIVE_HOUR_LABEL = "5-hour usage limit";
 const WEEKLY_LABEL = "Weekly usage limit";
-const FIVE_HOUR_KEYS = ["fiveHour", "five_hour", "fiveHourWindow", "five_hour_window", "primary", "primaryWindow", "primary_window", "main", "mainWindow"] as const;
-const WEEKLY_KEYS = ["weekly", "week", "weeklyWindow", "weekly_window", "secondary", "secondaryWindow", "secondary_window", "backup", "backupWindow"] as const;
-const USED_KEYS = ["used_percent", "usedPercent", "used", "usage", "percentUsed", "usagePercent", "usagePercentage", "percent"] as const;
-const REMAINING_KEYS = ["remaining_percent", "remainingPercent", "remaining", "percentRemaining", "availablePercent", "available_percentage"] as const;
-const RESETS_AT_KEYS = ["resets_at", "resetsAt", "resetAt", "resetTime", "reset_at", "reset", "ends_at", "endsAt", "windowEnd"] as const;
+const FIVE_HOUR_KEYS = [
+  "fiveHour",
+  "five_hour",
+  "fiveHourWindow",
+  "five_hour_window",
+  "primary",
+  "primaryWindow",
+  "primary_window",
+  "main",
+  "mainWindow",
+] as const;
+const WEEKLY_KEYS = [
+  "weekly",
+  "week",
+  "weeklyWindow",
+  "weekly_window",
+  "secondary",
+  "secondaryWindow",
+  "secondary_window",
+  "backup",
+  "backupWindow",
+] as const;
+const USED_KEYS = [
+  "used_percent",
+  "usedPercent",
+  "used",
+  "usage",
+  "percentUsed",
+  "usagePercent",
+  "usagePercentage",
+  "percent",
+] as const;
+const REMAINING_KEYS = [
+  "remaining_percent",
+  "remainingPercent",
+  "remaining",
+  "percentRemaining",
+  "availablePercent",
+  "available_percentage",
+] as const;
+const RESETS_AT_KEYS = [
+  "resets_at",
+  "resetsAt",
+  "resetAt",
+  "resetTime",
+  "reset_at",
+  "reset",
+  "ends_at",
+  "endsAt",
+  "windowEnd",
+] as const;
 const RESETS_IN_KEYS = ["resetsIn", "resetIn", "resets_in", "reset_in", "timeUntilReset"] as const;
 
 /**
@@ -18,13 +73,19 @@ const RESETS_IN_KEYS = ["resetsIn", "resetIn", "resets_in", "reset_in", "timeUnt
  * @param now - Current time used to compute reset durations.
  * @returns Normalized local usage result.
  */
-export function parseUsageFromSessions(sessions: CodexSessionReadResult, now: Date = new Date()): LocalUsageResult {
+export function parseUsageFromSessions(
+  sessions: CodexSessionReadResult,
+  now: Date = new Date()
+): LocalUsageResult {
   const snapshot = sessions.latestSnapshot;
   if (!snapshot) {
     return unavailableLocalUsage(sessions.warnings);
   }
 
-  return buildLocalUsageResult(parseUsageWindowsFromRateLimits(snapshot.rateLimits, now), sessions.warnings);
+  return buildLocalUsageResult(
+    parseUsageWindowsFromRateLimits(snapshot.rateLimits, now),
+    sessions.warnings
+  );
 }
 
 /**
@@ -34,7 +95,10 @@ export function parseUsageFromSessions(sessions: CodexSessionReadResult, now: Da
  * @param now - Current time used to compute reset durations.
  * @returns Normalized 5-hour and weekly windows.
  */
-export function parseUsageWindowsFromRateLimits(rateLimits: Record<string, unknown>, now: Date = new Date()): UsageWindows {
+export function parseUsageWindowsFromRateLimits(
+  rateLimits: Record<string, unknown>,
+  now: Date = new Date()
+): UsageWindows {
   return {
     fiveHour: parseUsageWindow(readRecord(rateLimits, FIVE_HOUR_KEYS), FIVE_HOUR_LABEL, now),
     weekly: parseUsageWindow(readRecord(rateLimits, WEEKLY_KEYS), WEEKLY_LABEL, now),
@@ -49,7 +113,7 @@ export function parseUsageWindowsFromRateLimits(rateLimits: Record<string, unkno
  * @returns Usage result with source metadata.
  */
 export function withUsageSource(result: LocalUsageResult, source: UsageSource): UsageResult {
-  return { ...result, source };
+  return {...result, source};
 }
 
 /**
@@ -60,8 +124,12 @@ export function withUsageSource(result: LocalUsageResult, source: UsageSource): 
  * @param warnings - Non-sensitive warnings to include.
  * @returns Usage result with derived availability.
  */
-export function buildUsageResult(windows: UsageWindows, source: UsageSource, warnings: string[] = []): UsageResult {
-  return { ...buildLocalUsageResult(windows, warnings), source };
+export function buildUsageResult(
+  windows: UsageWindows,
+  source: UsageSource,
+  warnings: string[] = []
+): UsageResult {
+  return {...buildLocalUsageResult(windows, warnings), source};
 }
 
 /**
@@ -71,8 +139,11 @@ export function buildUsageResult(windows: UsageWindows, source: UsageSource, war
  * @param now - Current time used to compute reset durations.
  * @returns Normalized local usage result.
  */
-export function parseUsageFromState(state: CodexStateReadResult, now: Date = new Date()): LocalUsageResult {
-  let windows: UsageWindows = { fiveHour: null, weekly: null };
+export function parseUsageFromState(
+  state: CodexStateReadResult,
+  now: Date = new Date()
+): LocalUsageResult {
+  let windows: UsageWindows = {fiveHour: null, weekly: null};
 
   for (const file of state.files) {
     if (!file.json) {
@@ -95,7 +166,7 @@ export function parseUsageFromState(state: CodexStateReadResult, now: Date = new
 export function unavailableLocalUsage(warnings: string[] = []): LocalUsageResult {
   return {
     status: "unavailable",
-    windows: { fiveHour: null, weekly: null },
+    windows: {fiveHour: null, weekly: null},
     warnings,
   };
 }
@@ -107,7 +178,10 @@ export function unavailableLocalUsage(warnings: string[] = []): LocalUsageResult
  * @param fallback - Fallback local usage result.
  * @returns Merged local usage result.
  */
-export function mergeLocalUsage(primary: LocalUsageResult, fallback: LocalUsageResult): LocalUsageResult {
+export function mergeLocalUsage(
+  primary: LocalUsageResult,
+  fallback: LocalUsageResult
+): LocalUsageResult {
   const windows = mergeUsageWindows(primary.windows, fallback.windows);
 
   return buildLocalUsageResult(windows, [...primary.warnings, ...fallback.warnings]);
@@ -122,16 +196,20 @@ export function mergeLocalUsage(primary: LocalUsageResult, fallback: LocalUsageR
  */
 function parseUsageFromUnknown(value: unknown, now: Date): Pick<LocalUsageResult, "windows"> {
   if (!isRecord(value)) {
-    return { windows: { fiveHour: null, weekly: null } };
+    return {windows: {fiveHour: null, weekly: null}};
   }
 
   const fiveHourSource = findRecord(value, FIVE_HOUR_KEYS);
   const weeklySource = findRecord(value, WEEKLY_KEYS);
-  const fiveHour = parseUsageWindow(fiveHourSource ?? (weeklySource ? null : value), FIVE_HOUR_LABEL, now);
+  const fiveHour = parseUsageWindow(
+    fiveHourSource ?? (weeklySource ? null : value),
+    FIVE_HOUR_LABEL,
+    now
+  );
   const weekly = parseUsageWindow(weeklySource, WEEKLY_LABEL, now);
 
   return {
-    windows: { fiveHour, weekly },
+    windows: {fiveHour, weekly},
   };
 }
 
@@ -143,7 +221,11 @@ function parseUsageFromUnknown(value: unknown, now: Date): Pick<LocalUsageResult
  * @param now - Current time used to compute reset durations.
  * @returns Normalized usage window, or null when no window values are present.
  */
-function parseUsageWindow(value: Record<string, unknown> | null, label: string, now: Date): UsageWindow | null {
+function parseUsageWindow(
+  value: Record<string, unknown> | null,
+  label: string,
+  now: Date
+): UsageWindow | null {
   if (!value) {
     return null;
   }
@@ -155,8 +237,10 @@ function parseUsageWindow(value: Record<string, unknown> | null, label: string, 
   const resetValue = findValue(value, RESETS_AT_KEYS, true);
   const resetDate = parseDateValue(resetValue);
   const resetsAt = resetDate ? resetDate.toISOString() : readStringValue(resetValue);
-  const resetsIn = resetDate ? formatDuration(resetDate.getTime() - now.getTime()) : readStringValue(findValue(value, RESETS_IN_KEYS, true));
-  const window = { label, remainingPercent, usedPercent, resetsAt, resetsIn };
+  const resetsIn = resetDate
+    ? formatDuration(resetDate.getTime() - now.getTime())
+    : readStringValue(findValue(value, RESETS_IN_KEYS, true));
+  const window = {label, remainingPercent, usedPercent, resetsAt, resetsIn};
 
   return hasWindowData(window) ? window : null;
 }
@@ -217,7 +301,11 @@ function mergeUsageWindows(primary: UsageWindows, fallback: UsageWindows): Usage
  * @param label - Stable window label.
  * @returns Merged usage window, or null when both are empty.
  */
-function mergeUsageWindow(primary: UsageWindow | null, fallback: UsageWindow | null, label: string): UsageWindow | null {
+function mergeUsageWindow(
+  primary: UsageWindow | null,
+  fallback: UsageWindow | null,
+  label: string
+): UsageWindow | null {
   if (!primary && !fallback) {
     return null;
   }
@@ -238,7 +326,13 @@ function mergeUsageWindow(primary: UsageWindow | null, fallback: UsageWindow | n
  * @returns True when any value is known.
  */
 function hasWindowData(window: UsageWindow | null): boolean {
-  return window !== null && (window.remainingPercent !== null || window.usedPercent !== null || window.resetsAt !== null || window.resetsIn !== null);
+  return (
+    window !== null &&
+    (window.remainingPercent !== null ||
+      window.usedPercent !== null ||
+      window.resetsAt !== null ||
+      window.resetsIn !== null)
+  );
 }
 
 /**
@@ -248,7 +342,12 @@ function hasWindowData(window: UsageWindow | null): boolean {
  * @returns True when percentage and reset data are known.
  */
 function isCompleteWindow(window: UsageWindow | null): boolean {
-  return window !== null && window.remainingPercent !== null && window.usedPercent !== null && (window.resetsAt !== null || window.resetsIn !== null);
+  return (
+    window !== null &&
+    window.remainingPercent !== null &&
+    window.usedPercent !== null &&
+    (window.resetsAt !== null || window.resetsIn !== null)
+  );
 }
 
 /**
@@ -259,7 +358,11 @@ function isCompleteWindow(window: UsageWindow | null): boolean {
  * @param depth - Current recursion depth.
  * @returns Matching object or null when none is found.
  */
-function findRecord(value: Record<string, unknown>, keys: readonly string[], depth = 0): Record<string, unknown> | null {
+function findRecord(
+  value: Record<string, unknown>,
+  keys: readonly string[],
+  depth = 0
+): Record<string, unknown> | null {
   if (depth > MAX_SEARCH_DEPTH) {
     return null;
   }
@@ -292,7 +395,10 @@ function findRecord(value: Record<string, unknown>, keys: readonly string[], dep
  * @param keys - Candidate property names.
  * @returns Matching object or null when none is found.
  */
-function readRecord(value: Record<string, unknown>, keys: readonly string[]): Record<string, unknown> | null {
+function readRecord(
+  value: Record<string, unknown>,
+  keys: readonly string[]
+): Record<string, unknown> | null {
   for (const key of keys) {
     const nested = value[key];
     if (isRecord(nested)) {
@@ -312,7 +418,12 @@ function readRecord(value: Record<string, unknown>, keys: readonly string[]): Re
  * @param depth - Current recursion depth.
  * @returns Matching value or undefined when none is found.
  */
-function findValue(value: Record<string, unknown>, keys: readonly string[], allowNested: boolean, depth = 0): unknown {
+function findValue(
+  value: Record<string, unknown>,
+  keys: readonly string[],
+  allowNested: boolean,
+  depth = 0
+): unknown {
   if (depth > MAX_SEARCH_DEPTH) {
     return undefined;
   }

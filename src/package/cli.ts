@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { runCli } from "./commands/run-cli";
+import {runCli} from "./commands/run-cli";
 
 /**
  * Starts the command-line program and applies its exit code.
