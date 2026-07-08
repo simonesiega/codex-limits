@@ -9,11 +9,14 @@ const module: TuiPluginModule = {
   id: "codex-limits",
   tui: async (api) => {
     const command = createCommand(api);
-    const registration = registerCommandLayer(api, command);
-    const dispose = registration.registered ? registration.dispose : api.command?.register(() => [command]);
+    const disposes = [api.command?.register(() => [command]), registerCommandLayer(api, command)].filter(isDispose);
 
-    if (dispose) {
-      api.lifecycle.onDispose(dispose);
+    if (disposes.length > 0) {
+      api.lifecycle.onDispose(() => {
+        for (const dispose of disposes) {
+          dispose();
+        }
+      });
     }
   },
 };
@@ -46,14 +49,13 @@ function createCommand(api: TuiPluginApi): TuiCommand {
   };
 }
 
-function registerCommandLayer(api: TuiPluginApi, command: TuiCommand): { registered: boolean; dispose?: () => void } {
-  const keymap = api.keymap as { registerLayer?: (layer: { commands: TuiCommand[]; bindings: never[] }) => void | (() => void) };
-  if (!keymap.registerLayer) {
-    return { registered: false };
-  }
+function registerCommandLayer(api: TuiPluginApi, command: TuiCommand): void | (() => void) {
+  const keymap = (api as { keymap?: { registerLayer?: (layer: { commands: TuiCommand[]; bindings: never[] }) => void | (() => void) } }).keymap;
+  return keymap?.registerLayer?.({ commands: [command], bindings: [] });
+}
 
-  const dispose = keymap.registerLayer?.({ commands: [command], bindings: [] });
-  return typeof dispose === "function" ? { registered: true, dispose } : { registered: true };
+function isDispose(value: void | (() => void)): value is () => void {
+  return typeof value === "function";
 }
 
 function alert(api: TuiPluginApi, message: string) {
