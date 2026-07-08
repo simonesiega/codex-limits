@@ -2,6 +2,13 @@
 
 All notable changes to codex-limits are documented in this file.
 
+## [0.1.3] - 2026-07-09
+
+### Fixed
+
+- Fixed `codex-limits init --opencode` to install the scoped OpenCode plugin package.
+- Fixed OpenCode command registration to keep `/codex-limits` available with both legacy and current TUI plugin APIs.
+
 ## [0.1.0] - 2026-07-05
 
 ### Added

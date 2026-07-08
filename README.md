@@ -30,6 +30,38 @@
 
 The screenshot shows the final **`codex-limits`** terminal dashboard: a clean, read-only TUI that summarizes Codex usage limits and reset-credit coupons in one place. The top section displays the current 5-hour and weekly usage windows with remaining percentages, visual progress bars, and reset times, while the lower section shows available reset coupons, their expiration dates, and the next coupon deadline.
 
+## Quick start
+
+The package is available on npm as [`@simonesiega/codex-limits`](https://www.npmjs.com/package/@simonesiega/codex-limits).
+
+Install **`codex-limits`** globally from npm:
+
+```bash
+npm install -g @simonesiega/codex-limits@latest
+```
+
+The `@latest` tag ensures you install the latest published version.
+
+Then run it from any terminal:
+
+```bash
+codex-limits
+```
+
+The list of available commands is shown when you run `codex-limits --help` or in the [Usage](#usage) section.
+
+Install optional agent integrations:
+
+```bash
+codex-limits init <agent-name>
+```
+
+For example, install the OpenCode integration:
+
+```bash
+codex-limits init --opencode
+```
+
 ## Overview
 
 When you are working with Codex or agent-based coding tools, usage limits can interrupt your flow if you do not know what is left or when the next reset happens.
@@ -42,11 +74,11 @@ It also includes plain-text commands for quick checks, JSON output for scripts a
 
 ### Supported agents
 
-| Agent | Status | Agent command | Init Command |  Description |
+| Agent | Status | Agent command | Init command | Description |
 | --- | --- | --- | --- | --- |
 | OpenCode | Supported | `/codex-limits` | `codex-limits init --opencode` | Opens a fast, read-only Codex limits dashboard directly inside OpenCode without sending the request to the LLM. |
 
-Agent integrations are not enabled during package installation. The package import export is reserved for the agent plugin entry that supported agents load after you run the matching `codex-limits init` command.
+Agent integrations are not enabled automatically during package installation. The package export is reserved for agent plugin entries that supported agents load after you run the matching `codex-limits init` command.
 
 ### Selected agent integration screenshots
 
@@ -61,7 +93,7 @@ The OpenCode integration adds a `/codex-limits` command that opens a compact mod
 
 New agents can be added by creating a dedicated adapter under `src/agents/<agent-name>` and registering it in `src/agents/index.ts`. Each integration should keep the same goal: show Codex limit information quickly, safely, and without exposing tokens, account IDs, cookies, auth headers, or raw local files.
 
-See the [Contributing](./CONTRIBUTING.md) section if you want to add support for another agent.
+See the [Contributing](./CONTRIBUTING.md) guide if you want to add support for another agent.
 
 ## How it works
 
@@ -90,20 +122,6 @@ Environment variables are only used as a fallback when automatic discovery is no
 | `CODEX_LIMITS_ACCESS_TOKEN` | Manually provides an access token for live reset-credit coupon data. |
 | `CODEX_LIMITS_ACCOUNT_ID` | Manually provides the account ID used for live reset-credit coupon data. |
 | `CODEX_LIMITS_USAGE_ENDPOINT` | Overrides the live usage endpoint, mainly for testing or advanced setups. |
-
-## Installation
-
-Install **`codex-limits`** globally from npm:
-
-```bash
-npm install -g @simonesiega/codex-limits
-```
-
-Then run it from any terminal:
-
-```bash
-codex-limits
-```
 
 ## Usage
 
@@ -136,6 +154,9 @@ Useful development commands:
 | `bun test` | Runs the test suite. |
 | `bun run build` | Builds the package. |
 
+## Security
+
+For vulnerability reports and local data safety details, see [`SECURITY.md`](./SECURITY.md).
 
 ## License
 

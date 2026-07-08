@@ -142,12 +142,7 @@ Before requesting review, verify:
 
 If you discover a vulnerability or a way to expose private Codex data, do not open a public issue.
 
-Report it privately to the maintainer with:
-
-- a short description;
-- impact;
-- reproduction steps;
-- suggested mitigation, if available.
+Please follow the private reporting process in [`SECURITY.md`](./SECURITY.md).
 
 ## Community guidelines
 
