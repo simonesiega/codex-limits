@@ -46,21 +46,19 @@ export async function runInit(args: string[], options: RunInitOptions = {}): Pro
   const integrations = options.integrations ?? AGENT_INTEGRATIONS;
   const initHelp = getInitHelp(integrations);
 
-  const setupArgs = args.filter((arg) => arg !== "--postinstall");
-
-  if (setupArgs.includes("--help") || setupArgs.includes("-h")) {
+  if (args.includes("--help") || args.includes("-h")) {
     stdout(initHelp);
     return 0;
   }
 
   const validOptions = new Set(["--all", ...integrations.map((integration) => `--${integration.id}`)]);
-  const unknown = setupArgs.find((arg) => arg.startsWith("-") && !validOptions.has(arg));
+  const unknown = args.find((arg) => arg.startsWith("-") && !validOptions.has(arg));
   if (unknown) {
     stderr(`Unknown init option: ${unknown}\n\n${initHelp}`);
     return 1;
   }
 
-  const selected = parseSelectedIntegrations(setupArgs, integrations);
+  const selected = parseSelectedIntegrations(args, integrations);
   if (selected.length > 0) {
     return installSelected(selected, integrations, stdout, stderr);
   }

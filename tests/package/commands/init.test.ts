@@ -59,6 +59,14 @@ test("runInit rejects unknown options", async () => {
   expect(errors.join("")).toContain("Unknown init option: --bad");
 });
 
+test("runInit rejects the removed postinstall flag", async () => {
+  const errors: string[] = [];
+  const exitCode = await runInit(["--postinstall"], { stderr: (text) => errors.push(text), interactive: false });
+
+  expect(exitCode).toBe(1);
+  expect(errors.join("")).toContain("Unknown init option: --postinstall");
+});
+
 test("runInit rejects unknown options before installing selected integrations", async () => {
   const errors: string[] = [];
   const opencode = createIntegration("opencode");

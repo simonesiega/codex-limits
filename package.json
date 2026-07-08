@@ -8,11 +8,15 @@
   },
   "exports": {
     ".": {
+      "types": "./types/index.d.ts",
       "import": "./dist/index.js"
     }
   },
+  "types": "./types/index.d.ts",
   "files": [
     "dist",
+    "types",
+    "docs/photos",
     "scripts/postinstall.cjs",
     "README.md",
     "CHANGELOG.md",

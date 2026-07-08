@@ -42,9 +42,11 @@ It also includes plain-text commands for quick checks, JSON output for scripts a
 
 ### Supported agents
 
-| Agent | Status | Agent command | Initi Command |  Description |
+| Agent | Status | Agent command | Init Command |  Description |
 | --- | --- | --- | --- | --- |
 | OpenCode | Supported | `/codex-limits` | `codex-limits init --opencode` | Opens a fast, read-only Codex limits dashboard directly inside OpenCode without sending the request to the LLM. |
+
+Agent integrations are not enabled during package installation. The package import export is reserved for the agent plugin entry that supported agents load after you run the matching `codex-limits init` command.
 
 ### Selected agent integration screenshots
 
@@ -67,11 +69,11 @@ See the [Contributing](./CONTRIBUTING.md) section if you want to add support for
 
 | Area | Path | Purpose |
 | --- | --- | --- |
-| Package entry | `src/package/index.ts` | Exports the CLI, TUI, and agent integration entry points. |
+| CLI entry | `src/package/cli.ts` | Starts the `codex-limits` command and routes to the dashboard, plain-text commands, JSON output, and `init`. |
 | Core logic | `src/package/core` | Detects Codex data, reads local usage, fetches optional live information, normalizes usage windows, and keeps sensitive values out of the output. |
 | CLI commands | `src/package/commands` | Handles the dashboard, `status`, `coupons`, `--json`, and `init` commands. |
 | Terminal UI | `src/package/tui` | Renders the clean Ink-based dashboard from normalized usage data. |
-| Agent integrations | `src/agents` | Contains the shared agent integration layer and registers supported coding-agent adapters. |
+| Agent integrations | `src/agents` | Contains optional coding-agent adapters that users install with `codex-limits init`. |
 | Tests | `tests` | Contains the test suite used to validate core behavior, CLI output, safety rules, and integration logic. |
 
 This structure keeps the project easy to extend: the core decides what the data means, while the CLI, TUI, and agents only decide how that information is shown.
