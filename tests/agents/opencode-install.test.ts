@@ -16,8 +16,8 @@ test("installOpencodePlugin creates global plugin config", async () => {
 
     expect(result.changed).toBe(true);
     expect(result.configPaths).toEqual([configPath, tuiConfigPath]);
-    expect(config.plugin).toContain("codex-limits");
-    expect(tuiConfig.plugin).toContain("codex-limits");
+    expect(config.plugin).toContain("@simonesiega/codex-limits");
+    expect(tuiConfig.plugin).toContain("@simonesiega/codex-limits");
   } finally {
     await rm(home, { recursive: true, force: true });
   }
@@ -29,7 +29,7 @@ test("installOpencodePlugin rejects invalid plugin config", async () => {
   const tuiConfigPath = join(home, "tui.json");
 
   try {
-    await writeFile(configPath, JSON.stringify({ plugin: "codex-limits" }), "utf8");
+    await writeFile(configPath, JSON.stringify({ plugin: "@simonesiega/codex-limits" }), "utf8");
 
     await expect(installOpencodePlugin({ configPath, tuiConfigPath })).rejects.toThrow("opencode config field `plugin` must be an array.");
   } finally {
@@ -41,7 +41,7 @@ test("installOpencodePlugin does not duplicate tuple plugin config", async () =>
   const home = await mkdtemp(join(tmpdir(), "codex-limits-opencode-tuple-"));
   const configPath = join(home, "opencode.json");
   const tuiConfigPath = join(home, "tui.json");
-  const plugin = [["codex-limits", {}]];
+  const plugin = [["@simonesiega/codex-limits", {}]];
 
   try {
     await writeFile(configPath, JSON.stringify({ plugin }), "utf8");
@@ -65,15 +65,15 @@ test("installOpencodePlugin changes when one config is missing", async () => {
   const tuiConfigPath = join(home, "tui.json");
 
   try {
-    await writeFile(configPath, JSON.stringify({ plugin: ["codex-limits"] }), "utf8");
+    await writeFile(configPath, JSON.stringify({ plugin: ["@simonesiega/codex-limits"] }), "utf8");
 
     const result = await installOpencodePlugin({ configPath, tuiConfigPath });
     const config = JSON.parse(await readFile(configPath, "utf8")) as { plugin: string[] };
     const tuiConfig = JSON.parse(await readFile(tuiConfigPath, "utf8")) as { plugin: string[] };
 
     expect(result.changed).toBe(true);
-    expect(config.plugin).toEqual(["codex-limits"]);
-    expect(tuiConfig.plugin).toEqual(["codex-limits"]);
+    expect(config.plugin).toEqual(["@simonesiega/codex-limits"]);
+    expect(tuiConfig.plugin).toEqual(["@simonesiega/codex-limits"]);
   } finally {
     await rm(home, { recursive: true, force: true });
   }
@@ -85,8 +85,8 @@ test("installOpencodePlugin preserves existing config and avoids duplicates", as
   const tuiConfigPath = join(home, "tui.json");
 
   try {
-    await writeFile(configPath, JSON.stringify({ model: "anthropic/test", plugin: ["codex-limits"] }), "utf8");
-    await writeFile(tuiConfigPath, JSON.stringify({ theme: "opencode", plugin: ["codex-limits"] }), "utf8");
+    await writeFile(configPath, JSON.stringify({ model: "anthropic/test", plugin: ["@simonesiega/codex-limits"] }), "utf8");
+    await writeFile(tuiConfigPath, JSON.stringify({ theme: "opencode", plugin: ["@simonesiega/codex-limits"] }), "utf8");
 
     const result = await installOpencodePlugin({ configPath, tuiConfigPath });
     const config = JSON.parse(await readFile(configPath, "utf8")) as { model: string; plugin: string[] };
@@ -94,9 +94,9 @@ test("installOpencodePlugin preserves existing config and avoids duplicates", as
 
     expect(result.changed).toBe(false);
     expect(config.model).toBe("anthropic/test");
-    expect(config.plugin).toEqual(["codex-limits"]);
+    expect(config.plugin).toEqual(["@simonesiega/codex-limits"]);
     expect(tuiConfig.theme).toBe("opencode");
-    expect(tuiConfig.plugin).toEqual(["codex-limits"]);
+    expect(tuiConfig.plugin).toEqual(["@simonesiega/codex-limits"]);
   } finally {
     await rm(home, { recursive: true, force: true });
   }

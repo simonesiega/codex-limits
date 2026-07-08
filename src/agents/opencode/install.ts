@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
-export const OPENCODE_PLUGIN_SPEC = "codex-limits";
+export const OPENCODE_PLUGIN_SPEC = "@simonesiega/codex-limits";
 
 export interface OpencodeInstallOptions {
   /** Global opencode config path override used by tests. */
