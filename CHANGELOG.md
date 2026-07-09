@@ -2,6 +2,23 @@
 
 All notable changes to codex-limits are documented in this file.
 
+## [Unreleased]
+
+### Breaking Changes
+
+### Added
+
+- Added GitHub Actions workflows for repository checks and npm package publishing with Trusted Publishing.
+- Prettier formatting to keep the codebase consistent.
+
+### Changed
+
+### Fixed
+
+### Removed
+
+### Security
+
 ## [0.1.3] - 2026-07-09
 
 ### Fixed
