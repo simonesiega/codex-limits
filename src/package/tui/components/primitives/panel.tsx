@@ -6,6 +6,10 @@ import {theme} from "../../theme";
 export interface PanelProps {
   /** Panel title. */
   title: string;
+  /** Panel width constrained to the initial terminal width. */
+  width: number;
+  /** Whether to reduce vertical spacing. */
+  dense?: boolean;
   /** Panel body content. */
   children: ReactNode;
 }
@@ -16,7 +20,7 @@ export interface PanelProps {
  * @param props - Panel title and children.
  * @returns Ink panel element.
  */
-export function Panel({title, children}: PanelProps): ReactElement {
+export function Panel({title, width, dense = false, children}: PanelProps): ReactElement {
   const displayTitle = title.toUpperCase();
 
   return (
@@ -24,12 +28,13 @@ export function Panel({title, children}: PanelProps): ReactElement {
       borderStyle="round"
       borderColor={theme.border}
       flexDirection="column"
-      marginBottom={1}
+      marginBottom={dense ? 0 : 1}
       paddingX={1}
       paddingY={0}
+      width={width}
     >
       <Text bold inverse color={theme.accent}>{`  ${displayTitle}  `}</Text>
-      <Box flexDirection="column" marginBottom={1} marginTop={1}>
+      <Box flexDirection="column" marginBottom={dense ? 0 : 1} marginTop={dense ? 0 : 1}>
         {children}
       </Box>
     </Box>

@@ -16,6 +16,10 @@ export interface CouponsPanelProps {
   stacked: boolean;
   /** Terminal width used to size inner cards. */
   width: number;
+  /** Whether to reduce vertical spacing. */
+  dense?: boolean;
+  /** Whether coupon rows should use compact labels. */
+  compactRows?: boolean;
 }
 
 /**
@@ -30,23 +34,36 @@ export function CouponsPanel({
   emptyLabel,
   stacked,
   width,
+  dense = false,
+  compactRows = false,
 }: CouponsPanelProps): ReactElement {
-  const innerWidth = Math.max(width - 4, 56);
-  const gutter = stacked ? 0 : Math.max(Math.round(innerWidth * 0.02), 1);
+  const bodyWidth = Math.max(width - 4, 1);
+  const gutter = stacked ? 0 : Math.max(Math.round(bodyWidth * 0.02), 1);
   const summaryWidth = stacked
-    ? Math.max(width - 6, 28)
-    : Math.max(Math.floor(innerWidth * 0.35) - gutter, 24);
+    ? Math.max(bodyWidth - 4, 1)
+    : Math.max(Math.floor((bodyWidth - gutter) * 0.35), 1);
   const listWidth = stacked
-    ? Math.max(width - 6, 28)
-    : Math.max(innerWidth - summaryWidth - gutter * 3, 46);
+    ? Math.max(bodyWidth - 4, 1)
+    : Math.max(bodyWidth - summaryWidth - gutter, 1);
 
   return (
-    <Panel title="Reset Coupons">
-      <Box flexDirection={stacked ? "column" : "row"} marginLeft={gutter} marginRight={gutter}>
-        <Box marginBottom={stacked ? 1 : 0} marginRight={stacked ? 0 : gutter}>
-          <CouponSummaryCard summary={summary} width={summaryWidth} />
+    <Panel dense={dense} title="Reset Coupons" width={width}>
+      <Box
+        alignItems={stacked ? "center" : undefined}
+        flexDirection={stacked ? "column" : "row"}
+        justifyContent={stacked ? undefined : "center"}
+        width={bodyWidth}
+      >
+        <Box marginBottom={stacked && !dense ? 1 : 0} marginRight={stacked ? 0 : gutter}>
+          <CouponSummaryCard dense={dense} summary={summary} width={summaryWidth} />
         </Box>
-        <CouponListCard emptyLabel={emptyLabel} rows={couponRows} width={listWidth} />
+        <CouponListCard
+          compactRows={compactRows}
+          dense={dense}
+          emptyLabel={emptyLabel}
+          rows={couponRows}
+          width={listWidth}
+        />
       </Box>
     </Panel>
   );
@@ -58,6 +75,8 @@ interface CouponSummaryCardProps {
   summary: TuiCouponSummaryCard;
   /** Card width. */
   width: number;
+  /** Whether to reduce vertical spacing. */
+  dense: boolean;
 }
 
 /**
@@ -66,7 +85,9 @@ interface CouponSummaryCardProps {
  * @param props - Summary values and card width.
  * @returns Ink summary card element.
  */
-function CouponSummaryCard({summary, width}: CouponSummaryCardProps): ReactElement {
+function CouponSummaryCard({summary, width, dense}: CouponSummaryCardProps): ReactElement {
+  const contentWidth = Math.max(width - 4, 1);
+
   return (
     <Box
       borderStyle="single"
@@ -79,19 +100,29 @@ function CouponSummaryCard({summary, width}: CouponSummaryCardProps): ReactEleme
         Summary
       </Text>
       <SummaryMetric
+        dense={dense}
         label="Available coupons"
         value={summary.availableCoupons}
         valueColor={theme.accent}
         strong
       />
       <SummaryMetric
+        dense={dense}
         label="Earned this period"
         value={summary.earnedThisPeriod}
         valueColor={theme.accent}
         strong
       />
-      <SummaryMetric label="Next expiration" value={summary.nextExpiration} />
-      <SummaryMetric label="Time left" value={summary.timeLeft} />
+      <SummaryMetric
+        dense={dense}
+        label="Next expiration"
+        value={truncateText(summary.nextExpiration, contentWidth)}
+      />
+      <SummaryMetric
+        dense={dense}
+        label="Time left"
+        value={truncateText(summary.timeLeft, contentWidth)}
+      />
     </Box>
   );
 }
@@ -106,6 +137,8 @@ interface SummaryMetricProps {
   valueColor?: string;
   /** Whether to render the value with extra emphasis. */
   strong?: boolean;
+  /** Whether to reduce vertical spacing. */
+  dense: boolean;
 }
 
 /**
@@ -119,9 +152,10 @@ function SummaryMetric({
   value,
   valueColor = theme.text,
   strong = false,
+  dense,
 }: SummaryMetricProps): ReactElement {
   return (
-    <Box flexDirection="column" marginTop={1}>
+    <Box flexDirection="column" marginTop={dense ? 0 : 1}>
       <Text color={theme.muted}>{label}</Text>
       <Text bold={strong} color={valueColor}>
         {value}
@@ -138,6 +172,10 @@ interface CouponListCardProps {
   emptyLabel: string;
   /** Card width. */
   width: number;
+  /** Whether to reduce vertical spacing. */
+  dense: boolean;
+  /** Whether coupon rows should use compact labels. */
+  compactRows: boolean;
 }
 
 /**
@@ -146,7 +184,15 @@ interface CouponListCardProps {
  * @param props - Coupon rows, empty state, and width.
  * @returns Ink coupon list card element.
  */
-function CouponListCard({rows, emptyLabel, width}: CouponListCardProps): ReactElement {
+function CouponListCard({
+  rows,
+  emptyLabel,
+  width,
+  dense,
+  compactRows,
+}: CouponListCardProps): ReactElement {
+  const contentWidth = Math.max(width - 4, 1);
+
   return (
     <Box
       borderStyle="single"
@@ -158,11 +204,13 @@ function CouponListCard({rows, emptyLabel, width}: CouponListCardProps): ReactEl
       <Text bold color={theme.text}>
         Coupons
       </Text>
-      <Box flexDirection="column" marginTop={1}>
+      <Box flexDirection="column" marginTop={dense ? 0 : 1}>
         {rows.length === 0 ? (
-          <Text color={theme.muted}>{emptyLabel}</Text>
+          <Text color={theme.muted}>{truncateText(emptyLabel, contentWidth)}</Text>
         ) : (
-          rows.map((row) => <CouponRow key={row.index} row={row} />)
+          rows.map((row) => (
+            <CouponRow compact={compactRows} key={row.index} row={row} width={contentWidth} />
+          ))
         )}
       </Box>
     </Box>
@@ -173,6 +221,10 @@ function CouponListCard({rows, emptyLabel, width}: CouponListCardProps): ReactEl
 interface CouponRowProps {
   /** Coupon row display model. */
   row: TuiCouponRow;
+  /** Content width available for the row. */
+  width: number;
+  /** Whether to render a compact row. */
+  compact: boolean;
 }
 
 /**
@@ -181,7 +233,22 @@ interface CouponRowProps {
  * @param props - Coupon row data.
  * @returns Ink coupon row element.
  */
-function CouponRow({row}: CouponRowProps): ReactElement {
+function CouponRow({row, width, compact}: CouponRowProps): ReactElement {
+  if (compact || width < 50) {
+    const prefix = `${row.index} • `;
+    const separator = " • ";
+    const dateWidth = Math.max(width - prefix.length - separator.length - row.status.length, 1);
+
+    return (
+      <Box>
+        <Text color={theme.text}>{prefix}</Text>
+        <Text color={row.available ? theme.green : theme.gray}>{row.status}</Text>
+        <Text color={theme.text}>{separator}</Text>
+        <Text color={theme.text}>{truncateText(row.expiresOn, dateWidth)}</Text>
+      </Box>
+    );
+  }
+
   return (
     <Box marginBottom={0}>
       <Box width={3}>
@@ -191,12 +258,24 @@ function CouponRow({row}: CouponRowProps): ReactElement {
         <Text color={row.available ? theme.green : theme.gray}>●</Text>
       </Box>
       <Box width={12}>
-        <Text color={row.available ? theme.green : theme.text}>{row.status}</Text>
+        <Text color={row.available ? theme.green : theme.text}>{truncateText(row.status, 12)}</Text>
       </Box>
       <Box width={26}>
-        <Text color={theme.muted}>{row.expires}</Text>
+        <Text color={theme.muted}>{truncateText(row.expires, 26)}</Text>
       </Box>
-      <Text color={theme.text}>{row.expiresOn}</Text>
+      <Text color={theme.text}>{truncateText(row.expiresOn, Math.max(width - 43, 1))}</Text>
     </Box>
   );
+}
+
+function truncateText(value: string, width: number): string {
+  if (value.length <= width) {
+    return value;
+  }
+
+  if (width <= 1) {
+    return value.slice(0, Math.max(width, 0));
+  }
+
+  return `${value.slice(0, width - 1)}…`;
 }

@@ -19,7 +19,8 @@ export interface UsageCardProps {
  * @returns Ink usage-card element.
  */
 export function UsageCard({card, width}: UsageCardProps): ReactElement {
-  const barWidth = Math.max(Math.min(width - 6, 32), 12);
+  const contentWidth = Math.max(width - 4, 1);
+  const barWidth = Math.max(Math.min(contentWidth, 32), 1);
 
   return (
     <Box
@@ -29,10 +30,22 @@ export function UsageCard({card, width}: UsageCardProps): ReactElement {
       paddingX={1}
       width={width}
     >
-      <Text bold>{card.title}</Text>
-      <Text color={theme[card.tone]}>{card.remainingLabel}</Text>
+      <Text bold>{truncateText(card.title, contentWidth)}</Text>
+      <Text color={theme[card.tone]}>{truncateText(card.remainingLabel, contentWidth)}</Text>
       <ProgressBar percent={card.percent} tone={card.tone} width={barWidth} />
-      <Text dimColor>{card.resetLabel}</Text>
+      <Text dimColor>{truncateText(card.resetLabel, contentWidth)}</Text>
     </Box>
   );
+}
+
+function truncateText(value: string, width: number): string {
+  if (value.length <= width) {
+    return value;
+  }
+
+  if (width <= 1) {
+    return value.slice(0, Math.max(width, 0));
+  }
+
+  return `${value.slice(0, width - 1)}…`;
 }

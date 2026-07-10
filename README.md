@@ -25,10 +25,12 @@
 ## Final result 🚀
 
 <p align="center">
-  <img src="docs/photos/terminal/final_result.png" alt="Final codex-limits terminal dashboard" width="740" />
+  <img src="docs/photos/terminal/final_result_large.png" alt="Final codex-limits larger terminal dashboard" width="440" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/photos/terminal/final_result_small.png" alt="Final codex-limits smaller terminal dashboard" width="440" />
 </p>
 
-The screenshot shows the final **`codex-limits`** terminal dashboard: a clean, read-only TUI that summarizes Codex usage limits and reset-credit coupons in one place. The top section displays the current 5-hour and weekly usage windows with remaining percentages, visual progress bars, and reset times, while the lower section shows available reset coupons, their expiration dates, and the next coupon deadline.
+The screenshots show the final **`codex-limits`** terminal dashboards: clean, read-only TUIs that summarize Codex usage limits and reset-credit coupons in one place. The top section displays the current 5-hour and weekly usage windows with remaining percentages, visual progress bars, and reset times, while the lower section shows available reset coupons, their expiration dates, and the next coupon deadline.
 
 ## Quick start
 

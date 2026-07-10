@@ -41,4 +41,4 @@ jobs:
         run: bun run check
 
       - name: Publish package
-        run: npm publish --access public
+        run: npm publish --access public --provenance
