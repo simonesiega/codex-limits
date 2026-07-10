@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test";
 import {mkdtemp, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join, normalize} from "node:path";
 import {detectCodexHome, getCodexHomeCandidatePaths} from "../../../src/package/core/codex/paths";
 
 test("detectCodexHome respects CODEX_LIMITS_HOME", async () => {
@@ -68,6 +68,6 @@ test("getCodexHomeCandidatePaths includes platform defaults", () => {
   expect(paths.length).toBeGreaterThan(1);
   expect(paths[0]?.path).toContain(".codex");
   expect(paths.map((candidate) => candidate.path)).toContain(
-    "C:\\Users\\Fake\\Library\\Application Support\\Parall\\Codex\\.codex"
+    normalize(join("C:/Users/Fake", "Library", "Application Support", "Parall", "Codex", ".codex"))
   );
 });
