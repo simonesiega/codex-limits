@@ -4,7 +4,9 @@ import type {CodexLimitsResult} from "../core/types";
 import {CouponsPanel} from "./components/panels/coupons-panel";
 import {UsagePanel} from "./components/panels/usage-panel";
 import {Title} from "./components/primitives/title";
+import {createTuiLayout} from "./layout";
 import {theme} from "./theme";
+import {truncateText} from "./text";
 import {createTuiViewModel, type TuiViewModel} from "./view-model";
 
 /** Props for the root Ink app. */
@@ -21,43 +23,42 @@ export interface AppProps {
   now?: Date;
 }
 
-type LayoutMode = "wide" | "standard" | "compact" | "ultra";
-
 /**
- * Renders the read-only codex-limits terminal dashboard.
- *
- * @param props - Normalized core result and optional layout overrides.
- * @returns Ink app element.
+ * Renders the root Ink app with the specified props.
+ * @param param0 - App props including result, terminal dimensions, and optional overrides.
+ * @returns - Ink app element.
  */
 export function App({result, terminalColumns, terminalRows, width, now}: AppProps): ReactElement {
   const columns = terminalColumns ?? width ?? process.stdout.columns ?? 80;
   const rows = terminalRows ?? process.stdout.rows ?? 24;
-  const terminalWidth = Math.max(columns, 1);
-  const mode = getLayoutMode(terminalWidth, rows);
-  const contentWidth = getContentWidth(terminalWidth, mode);
-  const view = createTuiViewModel(result, contentWidth, now);
-  const dense = mode === "compact" || mode === "ultra";
-  const stacked = dense || view.stacked;
+  const layout = createTuiLayout(columns, rows);
+  const view = createTuiViewModel(result, layout.contentWidth, now);
+  const stacked = layout.dense || view.stacked;
 
-  if (shouldUseTextSummary(rows)) {
-    return renderTextSummary(view, terminalWidth);
+  if (layout.textSummary) {
+    return renderTextSummary(view, layout.terminalWidth, rows);
   }
 
   return (
-    <Box justifyContent="center" width={terminalWidth}>
+    <Box justifyContent="center" width={layout.terminalWidth}>
       <Box flexDirection="column" width={view.width}>
         <Title
-          showLarge={shouldShowLargeLogo(terminalWidth, rows)}
-          showStyled={shouldShowStyledLogo(terminalWidth, rows)}
+          showLarge={layout.showLargeLogo}
+          showStyled={layout.showStyledLogo}
           width={view.width}
         />
-        <UsagePanel cards={view.usageCards} dense={dense} stacked={stacked} width={view.width} />
+        <UsagePanel
+          cards={view.usageCards}
+          dense={layout.dense}
+          stacked={stacked}
+          width={view.width}
+        />
         <CouponsPanel
-          compactRows={mode !== "wide"}
+          compactRows={layout.mode !== "wide"}
           couponRows={view.couponRows}
-          dense={dense}
+          dense={layout.dense}
           emptyLabel={view.couponEmptyLabel}
-          stacked={dense || view.couponsStacked}
+          stacked={layout.dense || view.couponsStacked}
           summary={view.couponSummary}
           width={view.width}
         />
@@ -66,41 +67,21 @@ export function App({result, terminalColumns, terminalRows, width, now}: AppProp
   );
 }
 
-function getLayoutMode(columns: number, rows: number): LayoutMode {
-  if (columns < 70 || rows < 18) {
-    return "ultra";
-  }
-
-  if (columns < 100 || rows < 28) {
-    return "compact";
-  }
-
-  if (columns < 130) {
-    return "standard";
-  }
-
-  return "wide";
-}
-
-function getContentWidth(columns: number, mode: LayoutMode): number {
-  const maxWidth = mode === "wide" ? 120 : mode === "standard" ? 104 : 96;
-  return Math.max(Math.min(columns - 2, maxWidth), 1);
-}
-
-function shouldShowLargeLogo(columns: number, rows: number): boolean {
-  return columns >= 130 && rows >= 28;
-}
-
-function shouldShowStyledLogo(columns: number, rows: number): boolean {
-  return columns >= 72 && rows >= 40;
-}
-
-function shouldUseTextSummary(rows: number): boolean {
-  return rows < 40;
-}
-
-function renderTextSummary(view: TuiViewModel, terminalWidth: number): ReactElement {
+/**
+ * Renders a text-only summary of the Codex limits result for narrow terminals.
+ * @param view - TUI view model containing usage and coupon data.
+ * @param terminalWidth - Terminal width used to truncate text.
+ * @param terminalRows - Terminal row count used to limit visible coupon rows.
+ * @returns - Ink text summary element.
+ */
+function renderTextSummary(
+  view: TuiViewModel,
+  terminalWidth: number,
+  terminalRows: number
+): ReactElement {
   const width = Math.max(Math.min(terminalWidth - 2, 96), 1);
+  const visibleRows = view.couponRows.slice(0, Math.max(terminalRows - 8, 0));
+  const hiddenRows = view.couponRows.length - visibleRows.length;
 
   return (
     <Box flexDirection="column" width={width}>
@@ -123,41 +104,30 @@ function renderTextSummary(view: TuiViewModel, terminalWidth: number): ReactElem
       {view.couponRows.length === 0 ? (
         <Text>{truncateText(view.couponEmptyLabel, width)}</Text>
       ) : (
-        view.couponRows.map((row) => (
+        visibleRows.map((row) => (
           <Text key={row.index}>
             {truncateText(`${row.index}. ${row.status} - ${row.expires} - ${row.expiresOn}`, width)}
           </Text>
         ))
       )}
+      {hiddenRows > 0 ? <Text>{truncateText(`… ${hiddenRows} more coupons`, width)}</Text> : null}
     </Box>
   );
 }
 
+/**
+ * Formats a usage card into a single line of text for the text summary.
+ * @param card - Usage card data or undefined if not available.
+ * @returns - Formatted usage line string.
+ */
 function formatUsageLine(card: TuiViewModel["usageCards"][number] | undefined): string {
-  if (!card) {
-    return "Unknown";
-  }
-
-  return `${card.remainingLabel}, ${card.resetLabel}`;
-}
-
-function truncateText(value: string, width: number): string {
-  if (value.length <= width) {
-    return value;
-  }
-
-  if (width <= 1) {
-    return value.slice(0, Math.max(width, 0));
-  }
-
-  return `${value.slice(0, width - 1)}…`;
+  return card ? `${card.remainingLabel}, ${card.resetLabel}` : "Unknown";
 }
 
 /**
- * Renders the Ink app and waits until it exits.
- *
+ * Renders the Ink app with the specified Codex limits result and waits for exit.
  * @param result - Normalized Codex limits result to render.
- * @returns A promise that resolves after Ink exits.
+ * @returns - Promise that resolves when the Ink app exits.
  */
 export async function renderApp(result: CodexLimitsResult): Promise<void> {
   const terminalColumns = process.stdout.columns ?? 80;

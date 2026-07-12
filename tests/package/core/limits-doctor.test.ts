@@ -19,10 +19,11 @@ test("getCodexLimits combines local usage and live coupons", async () => {
       fetch: async () => ({
         ok: true,
         status: 200,
-        json: async () => ({
-          available_count: 1,
-          credits: [{status: "available", expires_at: "2026-01-02T00:00:00.000Z"}],
-        }),
+        text: async () =>
+          JSON.stringify({
+            available_count: 1,
+            credits: [{status: "available", expires_at: "2026-01-02T00:00:00.000Z"}],
+          }),
       }),
     });
 

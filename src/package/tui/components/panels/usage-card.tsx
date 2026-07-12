@@ -1,6 +1,7 @@
 import {Box, Text} from "ink";
 import type {ReactElement} from "react";
 import {theme} from "../../theme";
+import {truncateText} from "../../text";
 import type {TuiUsageCard} from "../../view-model";
 import {ProgressBar} from "../primitives/progress-bar";
 
@@ -14,9 +15,8 @@ export interface UsageCardProps {
 
 /**
  * Renders one usage-limit card with remaining percent and reset text.
- *
  * @param props - Usage card data and width.
- * @returns Ink usage-card element.
+ * @returns -Ink usage-card element.
  */
 export function UsageCard({card, width}: UsageCardProps): ReactElement {
   const contentWidth = Math.max(width - 4, 1);
@@ -36,16 +36,4 @@ export function UsageCard({card, width}: UsageCardProps): ReactElement {
       <Text dimColor>{truncateText(card.resetLabel, contentWidth)}</Text>
     </Box>
   );
-}
-
-function truncateText(value: string, width: number): string {
-  if (value.length <= width) {
-    return value;
-  }
-
-  if (width <= 1) {
-    return value.slice(0, Math.max(width, 0));
-  }
-
-  return `${value.slice(0, width - 1)}…`;
 }

@@ -18,9 +18,8 @@ export interface UsagePanelProps {
 
 /**
  * Renders the 5-hour and weekly usage limit cards.
- *
  * @param props - Usage cards and responsive layout options.
- * @returns Ink usage panel element.
+ * @returns - Ink usage panel element.
  */
 export function UsagePanel({cards, width, stacked, dense = false}: UsagePanelProps): ReactElement {
   const bodyWidth = Math.max(width - 4, 1);

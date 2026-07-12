@@ -1,136 +1,138 @@
-import packageJson from "../../../package.json";
 import {getResetCoupons} from "../core/coupons/reset-coupons";
 import {getCodexLimits} from "../core/limits";
-import type {CodexLimitsResult, CouponResult, CouponSummary} from "../core/types";
+import type {CodexLimitsResult, CouponResult} from "../core/types";
+import {PACKAGE_VERSION} from "../version";
+import {parseCommand} from "./cli-parser";
+import {getHelpText} from "./cli-spec";
 import {formatCoupons} from "./coupons";
 import {formatJson} from "./format-json";
 import {runInit} from "./init";
+import {toCodexLimitsDto, toCouponSummaryDto} from "./public-dto";
+import {operationFailure} from "./safe-error";
 import {formatStatus} from "./status";
 
 type WriteOutput = (text: string) => void;
 type RenderTui = (result: CodexLimitsResult) => Promise<void> | void;
 
-/** Options used to run the CLI in production or tests. */
+/**
+ * Store the options for running the `codex-limits` CLI command.
+ */
 export interface RunCliOptions {
-  /** Version string to print for --version, defaults to package.json. */
+  // Codex-limits version.
   version?: string;
-  /** Output writer for stdout, defaults to process.stdout. */
+
+  // Output writer for stdout, defaults to process.stdout.
   stdout?: WriteOutput;
-  /** Output writer for stderr, defaults to process.stderr. */
+
+  // Output writer for stderr, defaults to process.stderr.
   stderr?: WriteOutput;
-  /** Limits loader override used by tests. */
+
+  // Codex limits loader override used by tests.
   getLimits?: () => Promise<CodexLimitsResult>;
-  /** Reset coupons loader override used by tests. */
+
+  // Reset coupons loader override used by tests.
   getCoupons?: () => Promise<CouponResult>;
-  /** TUI renderer override used by tests. */
+
+  // TUI renderer override used by tests.
   renderTui?: RenderTui;
 }
 
-const HELP_TEXT = `codex-limits
-
-A polished TUI dashboard for checking Codex usage limits, reset times, and reset-credit coupons.
-
-Usage:
-  codex-limits              Open the terminal UI
-  codex-limits status       Print a plain usage summary
-  codex-limits coupons      Print reset-credit coupon information
-  codex-limits init         Install optional agent integrations
-  codex-limits --json       Print JSON only
-  codex-limits --help       Print this help text
-  codex-limits --version    Print the package version
-
-Commands:
-  status      Print a non-interactive usage summary
-  coupons     Print reset-credit coupon information
-  init        Install optional agent integrations
-
-Options:
-  --json          Print JSON only
-  -h, --help      Print this help text
-  -v, --version   Print the package version
-
-Environment:
-  CODEX_LIMITS_HOME            Override the local Codex data directory
-  CODEX_LIMITS_ACCESS_TOKEN    Access token for live reset coupons
-  CODEX_LIMITS_ACCOUNT_ID      Account ID for live reset coupons
-  CODEX_LIMITS_USAGE_ENDPOINT Override the live usage endpoint
-
-Safety:
-  The TUI never prints tokens, account IDs, auth headers, cookies, or raw local files.
-`;
-
 /**
- * Runs the CLI command for the provided arguments.
- *
- * @param args - Command-line arguments without node or script path.
- * @param options - Optional dependency overrides for tests.
- * @returns Process exit code that should be used by the entry point.
+ * Main entry point for the `codex-limits` CLI command.
+ * @param args - Command-line arguments for the CLI command.
+ * @param options - Options for running the CLI command.
+ * @returns - Exit code for the CLI command.
  */
 export async function runCli(args: string[], options: RunCliOptions = {}): Promise<number> {
   const stdout = options.stdout ?? writeStdout;
   const stderr = options.stderr ?? writeStderr;
   const getLimits = options.getLimits ?? getCodexLimits;
   const getCoupons = options.getCoupons ?? getResetCoupons;
-  const renderTui = options.renderTui ?? renderDefaultTui;
-  const version = options.version ?? packageJson.version;
 
-  if (args.length === 0) {
-    await renderTui(await getLimits());
-    return 0;
+  // Parse the command-line arguments into a structured command object.
+  const command = parseCommand(args);
+
+  switch (command.kind) {
+    // Help case - display help text and exit with code 0.
+    case "help":
+      stdout(getHelpText());
+      return 0;
+
+    // Version case - display version and exit with code 0.
+    case "version":
+      stdout(`${options.version ?? PACKAGE_VERSION}\n`);
+      return 0;
+
+    // Invalid case - display error message and help text, exit with code 1.
+    case "invalid":
+      stderr(`Unknown command or option: ${command.input}\n\n${getHelpText()}`);
+      return 1;
+
+    // Init case - run the init command and return its exit code.
+    case "init":
+      try {
+        return await runInit(command.args, {stdout, stderr});
+      } catch {
+        stderr(operationFailure("init"));
+        return 1;
+      }
+
+    // Dashboard case - load limits and render TUI, exit with code 0 on success or 1 on failure.
+    case "dashboard":
+      try {
+        const result = await getLimits();
+        await (options.renderTui ?? renderDefaultTui)(result);
+        return 0;
+      } catch {
+        stderr(operationFailure("dashboard"));
+        return 1;
+      }
+
+    // Status case - load limits, format status, and output to stdout, exit with code 0 on success or 1 on failure.
+    case "status":
+      try {
+        const output = formatStatus(await getLimits());
+        stdout(output);
+        return 0;
+      } catch {
+        stderr(operationFailure("status"));
+        return 1;
+      }
+
+    // Limits JSON case - load limits, format as JSON, and output to stdout, exit with code 0 on success or 1 on failure.
+    case "limits-json":
+      try {
+        const output = formatJson(toCodexLimitsDto(await getLimits()));
+        stdout(output);
+        return 0;
+      } catch {
+        stderr(operationFailure("status"));
+        return 1;
+      }
+
+    // Coupons case - load reset coupons, format output, and output to stdout, exit with code 0 on success or 1 on failure.
+    case "coupons":
+      try {
+        const result = await getCoupons();
+        const output = command.json
+          ? formatJson(toCouponSummaryDto(result))
+          : formatCoupons(result);
+        stdout(output);
+        return 0;
+      } catch {
+        stderr(operationFailure("coupons"));
+        return 1;
+      }
   }
-
-  if (args.length === 1 && args[0] === "--json") {
-    stdout(formatJson(formatLimitsData(await getLimits())));
-    return 0;
-  }
-
-  if (args[0] === "init") {
-    return runInit(args.slice(1), {stdout, stderr});
-  }
-
-  if (args.length === 1 && args[0] === "status") {
-    stdout(formatStatus(await getLimits()));
-    return 0;
-  }
-
-  if (args.length === 1 && args[0] === "coupons") {
-    stdout(formatCoupons(await getCoupons()));
-    return 0;
-  }
-
-  if (args.length === 2 && args[0] === "coupons" && args[1] === "--json") {
-    stdout(formatJson(formatCouponData(await getCoupons())));
-    return 0;
-  }
-
-  if (args.length === 1 && (args[0] === "--help" || args[0] === "-h")) {
-    stdout(getHelpText());
-    return 0;
-  }
-
-  if (args.length === 1 && (args[0] === "--version" || args[0] === "-v")) {
-    stdout(`${version}\n`);
-    return 0;
-  }
-
-  stderr(`Unknown command or option: ${args.join(" ")}\n\n${getHelpText()}`);
-  return 1;
 }
 
-/**
- * Returns CLI help text.
- *
- * @returns Human-readable help text ending with a newline.
- */
-export function getHelpText(): string {
-  return HELP_TEXT;
-}
+export {getHelpText};
 
 /**
- * Dynamically loads and renders the Ink TUI.
- *
- * @param result - Normalized Codex limits result to render.
- * @returns A promise that resolves after Ink exits.
+ * Renders the default TUI (Text User Interface) for displaying Codex limits.
+ * @param result - The Codex limits result to render in the TUI.
+ * @returns - A promise that resolves when the TUI rendering is complete.
+ * @throws - Any error that occurs during TUI rendering.
  */
 async function renderDefaultTui(result: CodexLimitsResult): Promise<void> {
   const {renderApp} = await import("../tui/app");
@@ -138,66 +140,17 @@ async function renderDefaultTui(result: CodexLimitsResult): Promise<void> {
 }
 
 /**
- * Writes text to process stdout.
- *
- * @param text - Text to write.
- * @returns Nothing.
+ * Writes text to the standard output (stdout).
+ * @param text - The text to write to stdout.
  */
 function writeStdout(text: string): void {
   process.stdout.write(text);
 }
 
 /**
- * Writes text to process stderr.
- *
- * @param text - Text to write.
- * @returns Nothing.
+ * Writes text to the standard error (stderr).
+ * @param text - The text to write to stderr.
  */
 function writeStderr(text: string): void {
   process.stderr.write(text);
-}
-
-/**
- * Keeps JSON output aligned with the visible dashboard data.
- *
- * @param result - Full internal limits result.
- * @returns Public usage and coupon data.
- */
-function formatLimitsData(result: CodexLimitsResult): {
-  windows: CodexLimitsResult["windows"];
-  coupons: ReturnType<typeof formatCouponData> | null;
-  warnings: string[];
-} {
-  return {
-    windows: result.windows,
-    coupons: result.coupons ? formatCouponData(result.coupons) : null,
-    warnings: result.warnings,
-  };
-}
-
-/**
- * Keeps coupon JSON output aligned with the visible reset-coupon data.
- *
- * @param result - Full internal coupon result.
- * @returns Public coupon summary and rows.
- */
-function formatCouponData(
-  result: CouponSummary
-): Pick<
-  CouponSummary,
-  | "available"
-  | "earnedThisPeriod"
-  | "nextExpirationDate"
-  | "nextExpirationIn"
-  | "items"
-  | "warnings"
-> {
-  return {
-    available: result.available,
-    earnedThisPeriod: result.earnedThisPeriod,
-    nextExpirationDate: result.nextExpirationDate,
-    nextExpirationIn: result.nextExpirationIn,
-    items: result.items,
-    warnings: result.warnings,
-  };
 }

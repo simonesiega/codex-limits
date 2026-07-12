@@ -2,6 +2,7 @@ import {expect, test} from "bun:test";
 import {render} from "ink-testing-library";
 import {App} from "../../../src/package/tui/app";
 import {buildProgressBar} from "../../../src/package/tui/components/primitives/progress-bar";
+import {createTuiLayout} from "../../../src/package/tui/layout";
 import {createFakeLimitsResult} from "../fixtures/fake-results";
 
 test("App renders available data without footer actions", () => {
@@ -153,6 +154,39 @@ test("App keeps boxed panels at the short-height cutoff", () => {
   expect(frame).not.toContain("5-hour: 93% remaining");
 
   instance.unmount();
+});
+
+test("App remains readable in very small terminals and truncates extra coupons", () => {
+  const result = createFakeLimitsResult();
+  result.coupons!.items = Array.from({length: 6}, (_, index) => ({
+    ...result.coupons!.items[0]!,
+    index: index + 1,
+  }));
+  const instance = render(
+    <App
+      result={result}
+      terminalColumns={20}
+      terminalRows={9}
+      now={new Date("2026-07-05T10:00:30.000Z")}
+    />
+  );
+  const plainFrame = stripAnsi(instance.lastFrame() ?? "");
+
+  expect(plainFrame).toContain("CODEX LIMITS");
+  expect(plainFrame).toContain("more coupons");
+  for (const line of plainFrame.split("\n")) {
+    expect(line.length).toBeLessThanOrEqual(18);
+  }
+
+  instance.unmount();
+});
+
+test("layout boundaries are deterministic from startup dimensions", () => {
+  expect(createTuiLayout(132, 40)).toMatchObject({mode: "wide", textSummary: false});
+  expect(createTuiLayout(100, 40)).toMatchObject({mode: "standard", textSummary: false});
+  expect(createTuiLayout(80, 40)).toMatchObject({mode: "compact", textSummary: false});
+  expect(createTuiLayout(50, 14)).toMatchObject({mode: "ultra", textSummary: true});
+  expect(createTuiLayout(20, 40)).toMatchObject({mode: "ultra", textSummary: true});
 });
 
 test("buildProgressBar renders percentages predictably", () => {

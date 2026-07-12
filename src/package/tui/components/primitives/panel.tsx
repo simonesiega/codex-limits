@@ -16,9 +16,8 @@ export interface PanelProps {
 
 /**
  * Renders a bordered panel with a bold title.
- *
  * @param props - Panel title and children.
- * @returns Ink panel element.
+ * @returns - Ink panel element.
  */
 export function Panel({title, width, dense = false, children}: PanelProps): ReactElement {
   const displayTitle = title.toUpperCase();

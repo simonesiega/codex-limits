@@ -1,6 +1,7 @@
 import {Box, Text} from "ink";
 import type {ReactElement} from "react";
 import {theme} from "../../theme";
+import {truncateText} from "../../text";
 import type {TuiCouponRow, TuiCouponSummaryCard} from "../../view-model";
 import {Panel} from "../primitives/panel";
 
@@ -24,9 +25,8 @@ export interface CouponsPanelProps {
 
 /**
  * Renders reset coupon summary and rows.
- *
  * @param props - Coupon summary, rows, empty state, and layout flag.
- * @returns Ink reset-coupons panel element.
+ * @returns - Ink reset-coupons panel element.
  */
 export function CouponsPanel({
   summary,
@@ -81,9 +81,8 @@ interface CouponSummaryCardProps {
 
 /**
  * Renders the reset-coupon summary card with a strong available count.
- *
  * @param props - Summary values and card width.
- * @returns Ink summary card element.
+ * @returns - Ink summary card element.
  */
 function CouponSummaryCard({summary, width, dense}: CouponSummaryCardProps): ReactElement {
   const contentWidth = Math.max(width - 4, 1);
@@ -143,9 +142,8 @@ interface SummaryMetricProps {
 
 /**
  * Renders one label/value pair in the coupon summary card.
- *
  * @param props - Metric label, value, and emphasis options.
- * @returns Ink metric element.
+ * @returns - Ink metric element.
  */
 function SummaryMetric({
   label,
@@ -180,9 +178,8 @@ interface CouponListCardProps {
 
 /**
  * Renders the coupon rows in a bordered list card.
- *
  * @param props - Coupon rows, empty state, and width.
- * @returns Ink coupon list card element.
+ * @returns - Ink coupon list card element.
  */
 function CouponListCard({
   rows,
@@ -229,9 +226,8 @@ interface CouponRowProps {
 
 /**
  * Renders one reset-credit coupon row.
- *
  * @param props - Coupon row data.
- * @returns Ink coupon row element.
+ * @returns - Ink coupon row element.
  */
 function CouponRow({row, width, compact}: CouponRowProps): ReactElement {
   if (compact || width < 50) {
@@ -266,16 +262,4 @@ function CouponRow({row, width, compact}: CouponRowProps): ReactElement {
       <Text color={theme.text}>{truncateText(row.expiresOn, Math.max(width - 43, 1))}</Text>
     </Box>
   );
-}
-
-function truncateText(value: string, width: number): string {
-  if (value.length <= width) {
-    return value;
-  }
-
-  if (width <= 1) {
-    return value.slice(0, Math.max(width, 0));
-  }
-
-  return `${value.slice(0, width - 1)}…`;
 }

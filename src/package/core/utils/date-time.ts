@@ -36,18 +36,18 @@ const SHORT_MONTH_NAMES = [
   "Dec",
 ] as const;
 
-/** Options used when formatting compact durations. */
+/**
+ * Store for optional formatting controls when formatting a duration.
+ */
 export interface DurationFormatOptions {
-  /** Whether to include seconds in the formatted output. */
   includeSeconds?: boolean;
 }
 
 /**
  * Formats a future duration as compact human text.
- *
  * @param durationMs - Milliseconds until the target time.
  * @param options - Optional formatting controls.
- * @returns Compact duration such as 7d 4h 38m.
+ * @returns - Compact duration such as 7d 4h 38m.
  */
 export function formatDuration(durationMs: number, options: DurationFormatOptions = {}): string {
   const includeSeconds = options.includeSeconds ?? false;
@@ -81,9 +81,8 @@ export function formatDuration(durationMs: number, options: DurationFormatOption
 
 /**
  * Parses a reset timestamp from a number, numeric string, or date string.
- *
  * @param value - Unknown timestamp value.
- * @returns Date when conversion is safe, otherwise null.
+ * @returns - Date when conversion is safe, otherwise null.
  */
 export function parseDateValue(value: unknown): Date | null {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -108,9 +107,8 @@ export function parseDateValue(value: unknown): Date | null {
 
 /**
  * Formats a date as a stable long local date.
- *
  * @param date - Date to format.
- * @returns Long date such as Monday 4 July 2026.
+ * @returns - Long date such as Monday 4 July 2026.
  */
 export function formatLongDate(date: Date): string {
   return `${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
@@ -118,9 +116,8 @@ export function formatLongDate(date: Date): string {
 
 /**
  * Formats a date as a compact local date and time.
- *
  * @param date - Date to format.
- * @returns Compact date such as 7 Jul 2026 11:40.
+ * @returns - Compact date such as 7 Jul 2026 11:40.
  */
 export function formatShortDateTime(date: Date): string {
   return `${date.getDate()} ${SHORT_MONTH_NAMES[date.getMonth()]} ${date.getFullYear()} ${formatTime(date)}`;
@@ -128,9 +125,8 @@ export function formatShortDateTime(date: Date): string {
 
 /**
  * Formats a date as local HH:mm time.
- *
  * @param date - Date to format.
- * @returns Time such as 19:55.
+ * @returns - Time such as 19:55.
  */
 export function formatTime(date: Date): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -138,10 +134,9 @@ export function formatTime(date: Date): string {
 
 /**
  * Checks whether two dates fall on the same local calendar day.
- *
  * @param left - First date to compare.
  * @param right - Second date to compare.
- * @returns True when both dates have the same local year, month, and day.
+ * @returns -True when both dates have the same local year, month, and day.
  */
 export function isSameLocalDate(left: Date, right: Date): boolean {
   return (
@@ -153,9 +148,8 @@ export function isSameLocalDate(left: Date, right: Date): boolean {
 
 /**
  * Formats a date in local time with an explicit offset.
- *
  * @param date - Date to format.
- * @returns Local ISO-like timestamp with timezone offset and no milliseconds.
+ * @returns - Local ISO-like timestamp with timezone offset and no milliseconds.
  */
 export function formatLocalDateTime(date: Date): string {
   const offsetMinutes = -date.getTimezoneOffset();
@@ -169,10 +163,9 @@ export function formatLocalDateTime(date: Date): string {
 
 /**
  * Formats elapsed time from an ISO timestamp to now.
- *
  * @param isoTimestamp - ISO timestamp to compare with now.
  * @param now - Current time used for comparison.
- * @returns Just now, an ago duration, or unknown.
+ * @returns - Just now, an ago duration, or unknown.
  */
 export function formatRelativeTime(isoTimestamp: string | null, now: Date = new Date()): string {
   const date = parseDateValue(isoTimestamp);
@@ -190,9 +183,8 @@ export function formatRelativeTime(isoTimestamp: string | null, now: Date = new 
 
 /**
  * Formats a number as two digits.
- *
  * @param value - Number to pad.
- * @returns Two-character string.
+ * @returns - Two-character string.
  */
 function pad(value: number): string {
   return String(value).padStart(2, "0");

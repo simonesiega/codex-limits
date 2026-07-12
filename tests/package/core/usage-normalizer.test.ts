@@ -45,6 +45,10 @@ test("date and redaction helpers avoid seconds and secrets", () => {
   expect(redactSensitiveText("Authorization: Bearer fake-secret-token")).not.toContain(
     "fake-secret-token"
   );
+  expect(redactSensitiveText('{"access_token":"fake-secret-token"}')).toBe("{[redacted]}");
+  expect(
+    redactSensitiveText("https://example.test/?account_id=fake-private-account")
+  ).not.toContain("fake-private-account");
 });
 
 function stateFromJson(json: unknown): CodexStateReadResult {

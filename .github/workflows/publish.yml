@@ -34,9 +34,6 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Check formatting
-        run: bun run format:check
-
       - name: Run project checks
         run: bun run check
 

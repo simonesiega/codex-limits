@@ -54,6 +54,10 @@ For architecture-level changes, open an issue first so the design can be discuss
 
 ## Local development
 
+### Requirements
+
+Before starting development, read the project [Requirements](README.md#requirements) and make sure your environment meets them. Development also requires [Bun](https://bun.sh/) using the version declared in `package.json`, because this repository uses Bun for dependency management, scripts, builds, and tests.
+
 Install dependencies:
 
 ```bash
@@ -66,7 +70,7 @@ Run the CLI locally:
 bun run dev
 ```
 
-Run the full validation pipeline:
+Run the full validation pipeline (format verification, types, tests, production builds, and packed-artifact smoke checks):
 
 ```bash
 bun run check
@@ -98,7 +102,7 @@ Keep changes small, readable, and easy to review.
 
 ## Safety rules
 
-`codex-limits` is read-only and should stay safe by default.
+`codex-limits` treats local Codex data as read-only and should remain safe by default.
 
 Do not print, log, snapshot, or commit:
 
@@ -113,16 +117,16 @@ If a change touches local data discovery, live coupon data, warnings, output for
 
 ## Adding a new agent
 
-New agents should be added with a small adapter and registered explicitly.
+New agents should be added with a small adapter and registered explicitly. Use the existing [`src/agents/opencode`](src/agents/opencode) adapter as the reference for structuring, installing, testing, and safely handling new agent integrations.
 
-| Step | Action                                                     |
-| ---- | ---------------------------------------------------------- |
-| 1    | Create a folder under `src/agents/<agent-name>`.           |
-| 2    | Keep the adapter focused on the target agent API.          |
-| 3    | Reuse the shared package core for Codex limit data.        |
-| 4    | Register the adapter in `src/agents/index.ts`.             |
-| 5    | Add tests or manual validation notes when possible.        |
-| 6    | Update the README agent integration table and screenshots. |
+| Step | Action                                                                                                                              |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Create a folder under `src/agents/<agent-name>`.                                                                                    |
+| 2    | Keep the adapter focused on the target agent API.                                                                                   |
+| 3    | Reuse the shared package core for Codex limit data.                                                                                 |
+| 4    | Register the adapter in `src/agents/index.ts`.                                                                                      |
+| 5    | Add automated tests for behavior changes when feasible. When automation is not practical, document the manual validation performed. |
+| 6    | Update the README agent integration table and screenshots.                                                                          |
 
 The goal of every integration is the same: show Codex limit information quickly, safely, and without sending unnecessary work to the LLM.
 
@@ -132,7 +136,7 @@ Before requesting review, verify:
 
 - [ ] The PR title and description explain what changed and why.
 - [ ] The change is focused and does not include unrelated cleanup.
-- [ ] `bun run check` passes locally when applicable.
+- [ ] `bun run format` was run and `bun run check` passes locally.
 - [ ] Tests were added or updated for behavior changes.
 - [ ] Documentation was updated if commands, setup, output, or agent support changed.
 - [ ] No secrets, account data, tokens, cookies, or raw local files were committed.

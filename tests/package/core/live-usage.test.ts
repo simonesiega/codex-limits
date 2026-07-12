@@ -19,12 +19,13 @@ test("getLiveUsage fetches current usage with Codex credentials", async () => {
     return {
       ok: true,
       status: 200,
-      json: async () => ({
-        rate_limit: {
-          primary_window: {used_percent: 20, reset_at: 1_767_229_200},
-          secondary_window: {used_percent: 69, reset_at: 1_767_232_800},
-        },
-      }),
+      text: async () =>
+        JSON.stringify({
+          rate_limit: {
+            primary_window: {used_percent: 20, reset_at: 1_767_229_200},
+            secondary_window: {used_percent: 69, reset_at: 1_767_232_800},
+          },
+        }),
     };
   };
 
@@ -96,6 +97,49 @@ test("getLiveUsage retries with native request when fetch is rejected", async ()
       server.close((error) => (error ? reject(error) : resolve()))
     );
   }
+});
+
+test("getUsageLimits preserves partial live windows when local data is unavailable", async () => {
+  const missingHome = join(tmpdir(), `codex-limits-no-local-${crypto.randomUUID()}`);
+  const result = await getUsageLimits({
+    env: {
+      CODEX_LIMITS_HOME: missingHome,
+      CODEX_LIMITS_ACCESS_TOKEN: "fake-access-token",
+      CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
+    },
+    homeDirectory: missingHome,
+    transport: async () => ({
+      ok: true,
+      status: 200,
+      transport: "fetch",
+      payload: {rate_limit: {primary_window: {used_percent: 20, reset_at: 1_767_229_200}}},
+    }),
+    now: new Date("2026-01-01T00:00:00.000Z"),
+  });
+
+  expect(result.status).toBe("partial");
+  expect(result.source.kind).toBe("api");
+  expect(result.windows.fiveHour?.remainingPercent).toBe(80);
+  expect(result.windows.weekly).toBeNull();
+  expect(result.warnings).toContain("Live usage endpoint returned incomplete usage data.");
+  expect(result.warnings).toContain("No readable local Codex home directory was found.");
+});
+
+test("getUsageLimits reports unsafe endpoint overrides without crashing", async () => {
+  const missingHome = join(tmpdir(), `codex-limits-bad-endpoint-${crypto.randomUUID()}`);
+  const result = await getUsageLimits({
+    env: {
+      CODEX_LIMITS_HOME: missingHome,
+      CODEX_LIMITS_ACCESS_TOKEN: "fake-access-token",
+      CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
+    },
+    homeDirectory: missingHome,
+    usageEndpoint: "file:///private/usage.json",
+  });
+
+  expect(result.status).toBe("unavailable");
+  expect(result.warnings).toContain("Live usage endpoint must use HTTPS or loopback HTTP.");
+  expect(JSON.stringify(result)).not.toContain("/private/usage.json");
 });
 
 test("getUsageLimits falls back to local sessions when live usage is unavailable", async () => {

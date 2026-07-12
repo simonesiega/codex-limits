@@ -76,6 +76,32 @@ test("runInit rejects unknown options", async () => {
   expect(errors.join("")).toContain("Unknown init option: --bad");
 });
 
+test("runInit rejects duplicate, conflicting, and positional arguments", async () => {
+  const cases = [
+    {args: ["--opencode", "--opencode"], message: "Duplicate init option: --opencode"},
+    {
+      args: ["--all", "--opencode"],
+      message: "Init option --all cannot be combined with integration options.",
+    },
+    {args: ["opencode"], message: "Unexpected init argument: opencode"},
+    {args: ["--help", "--opencode"], message: "Unknown init option: --help"},
+  ];
+
+  for (const item of cases) {
+    const errors: string[] = [];
+    const integration = createIntegration("opencode");
+    const exitCode = await runInit(item.args, {
+      stderr: (text) => errors.push(text),
+      interactive: false,
+      integrations: [integration],
+    });
+
+    expect(exitCode).toBe(1);
+    expect(integration.installs).toBe(0);
+    expect(errors.join("")).toContain(item.message);
+  }
+});
+
 test("runInit rejects the removed postinstall flag", async () => {
   const errors: string[] = [];
   const exitCode = await runInit(["--postinstall"], {
@@ -121,6 +147,22 @@ test("runInit prompt installs integration for blank or yes answers", async () =>
     expect(exitCode).toBe(0);
     expect(opencode.installs).toBe(1);
   }
+});
+
+test("runInit hides raw adapter errors", async () => {
+  const errors: string[] = [];
+  const integration = createIntegration("opencode");
+  integration.install = async () => {
+    throw new Error("Bearer fake-secret-token at C:/private/config.json");
+  };
+
+  const exitCode = await runInit(["--opencode"], {
+    stderr: (text) => errors.push(text),
+    integrations: [integration],
+  });
+
+  expect(exitCode).toBe(1);
+  expect(errors.join("")).toBe("opencode: Integration installation failed.\n");
 });
 
 test("runInit prompt skips integration for no answer", async () => {

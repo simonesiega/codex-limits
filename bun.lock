@@ -3,19 +3,17 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "codex-limits",
-      "dependencies": {
-        "ink": "^7.1.0",
-        "react": "^19.2.7",
-      },
+      "name": "@simonesiega/codex-limits",
       "devDependencies": {
         "@opencode-ai/plugin": "^1.15.4",
         "@types/node": "^22.10.2",
         "@types/react": "^19.2.17",
         "bun-types": "^1.1.42",
+        "ink": "^7.1.0",
         "ink-testing-library": "^4.0.0",
         "prettier": "^3.9.4",
         "prettier-plugin-tailwindcss": "^0.8.0",
+        "react": "^19.2.7",
         "typescript": "^5.7.2",
       },
     },

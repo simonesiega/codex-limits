@@ -14,9 +14,8 @@ export interface ProgressBarProps {
 
 /**
  * Renders a compact smooth progress bar.
- *
  * @param props - Progress percentage, width, and tone.
- * @returns Ink text element containing the progress bar.
+ * @returns - Ink text element containing the progress bar.
  */
 export function ProgressBar({percent, width, tone}: ProgressBarProps): ReactElement {
   const bar = buildProgressBar(percent, width);
@@ -25,10 +24,9 @@ export function ProgressBar({percent, width, tone}: ProgressBarProps): ReactElem
 
 /**
  * Builds the smooth progress bar string.
- *
  * @param percent - Remaining percent to render.
  * @param width - Width of the bar body.
- * @returns Progress bar string.
+ * @returns - Progress bar string.
  */
 export function buildProgressBar(percent: number | null, width: number): string {
   const safePercent = percent === null ? 0 : Math.min(Math.max(percent, 0), 100);

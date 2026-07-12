@@ -9,8 +9,12 @@ permissions:
 
 jobs:
   check:
-    name: Check
+    name: Check (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 24]
 
     steps:
       - name: Checkout
@@ -19,7 +23,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: ${{ matrix.node-version }}
           package-manager-cache: false
 
       - name: Setup Bun

@@ -67,11 +67,10 @@ export interface TuiViewModel {
 
 /**
  * Maps normalized core data into a TUI-specific display model.
- *
  * @param result - Normalized Codex limits result from the core.
  * @param width - Terminal width used for responsive layout.
  * @param now - Current time used for relative labels.
- * @returns TUI view model with no domain parsing logic.
+ * @returns - TUI view model with no domain parsing logic.
  */
 export function createTuiViewModel(
   result: CodexLimitsResult,
@@ -97,11 +96,10 @@ export function createTuiViewModel(
 
 /**
  * Builds a usage card for one usage window.
- *
  * @param window - Normalized usage window.
  * @param fallbackTitle - Title to show when the window is missing.
  * @param now - Current time used for reset labels.
- * @returns Usage card view model.
+ * @returns -Usage card view model.
  */
 function createUsageCard(
   window: UsageWindow | null,
@@ -121,9 +119,8 @@ function createUsageCard(
 
 /**
  * Builds summary rows for the reset-coupons panel.
- *
  * @param coupons - Coupon summary from the core.
- * @returns Coupon summary rows.
+ * @returns - Coupon summary rows.
  */
 function createCouponSummary(coupons: CouponSummary | null): TuiCouponSummaryCard {
   return {
@@ -136,9 +133,8 @@ function createCouponSummary(coupons: CouponSummary | null): TuiCouponSummaryCar
 
 /**
  * Builds coupon list rows for the reset-coupons panel.
- *
  * @param coupons - Coupon summary from the core.
- * @returns Coupon list rows.
+ * @returns - Coupon list rows.
  */
 function createCouponRows(coupons: CouponSummary | null): TuiCouponRow[] {
   return (coupons?.items ?? []).map(formatCouponRow);
@@ -146,9 +142,8 @@ function createCouponRows(coupons: CouponSummary | null): TuiCouponRow[] {
 
 /**
  * Formats one coupon row for the TUI.
- *
  * @param item - Normalized coupon item.
- * @returns TUI coupon row.
+ * @returns - TUI coupon row.
  */
 function formatCouponRow(item: CouponItem): TuiCouponRow {
   const available = (item.status ?? "").toLowerCase() === "available";
@@ -166,21 +161,21 @@ function formatCouponRow(item: CouponItem): TuiCouponRow {
 
 /**
  * Formats the next coupon expiration for the summary card.
- *
  * @param coupons - Coupon summary from the core.
- * @returns Short date with year, or Unknown when unavailable.
+ * @returns - Short date with year, or Unknown when unavailable.
  */
 function formatSummaryExpiration(coupons: CouponSummary | null): string {
   const next =
-    coupons?.items.find((item) => item.status === "available") ?? coupons?.items[0] ?? null;
+    coupons?.items.find((item) => item.status?.toLowerCase() === "available") ??
+    coupons?.items[0] ??
+    null;
   return next ? formatCompactCouponDate(next.expiresAt, true) : "Unknown";
 }
 
 /**
  * Formats a coupon expiration timestamp as a compact TUI date.
- *
  * @param value - Expiration timestamp from the normalized coupon item.
- * @returns Compact date such as Sun 12 Jul, or Unknown when unavailable.
+ * @returns - Compact date such as Sun 12 Jul, or Unknown when unavailable.
  */
 function formatCompactCouponDate(value: string | null, includeYear: boolean): string {
   const date = parseDateValue(value);
@@ -209,9 +204,8 @@ function formatCompactCouponDate(value: string | null, includeYear: boolean): st
 
 /**
  * Removes seconds from coupon durations shown in the TUI.
- *
  * @param value - Compact duration from the core.
- * @returns Duration without second units, or Unknown when missing.
+ * @returns - Duration without second units, or Unknown when missing.
  */
 function formatTuiDuration(value: string | null): string {
   if (!value) {
@@ -224,10 +218,9 @@ function formatTuiDuration(value: string | null): string {
 
 /**
  * Formats reset text for a usage card.
- *
  * @param window - Normalized usage window.
  * @param now - Current time used for same-day formatting.
- * @returns Human-readable reset label.
+ * @returns - Human-readable reset label.
  */
 function formatResetLabel(window: UsageWindow | null, now: Date): string {
   if (!window) {
@@ -246,9 +239,8 @@ function formatResetLabel(window: UsageWindow | null, now: Date): string {
 
 /**
  * Selects a display tone from remaining percentage.
- *
  * @param percent - Remaining percentage.
- * @returns Color tone for the usage card.
+ * @returns - Color tone for the usage card.
  */
 function toneForPercent(percent: number | null): TuiTone {
   if (percent === null) {
@@ -268,9 +260,8 @@ function toneForPercent(percent: number | null): TuiTone {
 
 /**
  * Formats nullable values using the TUI unknown label.
- *
  * @param value - Value to format.
- * @returns String value or Unknown.
+ * @returns - String value or Unknown.
  */
 function formatUnknown(value: number | string | null): string {
   return value === null ? "Unknown" : String(value);
@@ -278,9 +269,8 @@ function formatUnknown(value: number | string | null): string {
 
 /**
  * Title-cases a status-like string.
- *
  * @param value - String to title-case.
- * @returns Title-cased string.
+ * @returns - Title-cased string.
  */
 function titleCase(value: string): string {
   return `${value.slice(0, 1).toUpperCase()}${value.slice(1)}`;

@@ -38,10 +38,14 @@ export interface CodexAuthOptions extends CodexHomeOptions {
 export interface CouponOptions extends CodexAuthOptions {
   /** Fetch implementation override used by tests. */
   fetch?: FetchLike;
+  /** Authenticated JSON transport override used by deterministic tests. */
+  transport?: AuthenticatedJsonTransport;
   /** Endpoint override used by tests. */
   endpoint?: string;
-  /** Timeout in milliseconds for the live endpoint request. */
+  /** Timeout in milliseconds for each live endpoint request. */
   timeoutMs?: number;
+  /** Optional caller cancellation signal. */
+  signal?: AbortSignal;
   /** Current time override used by tests. */
   now?: Date;
 }
@@ -255,22 +259,86 @@ export interface CodexLimitsResult {
   warnings: string[];
 }
 
-/** Minimal response shape needed from fetch for live coupon lookups. */
+/** Header reader exposed by platform fetch responses. */
+export interface FetchHeadersLike {
+  /** Reads one response header by name. */
+  get: (name: string) => string | null;
+}
+
+/** Streaming body reader exposed by platform fetch responses. */
+export interface FetchBodyReaderLike {
+  /** Reads the next response body chunk. */
+  read: () => Promise<{done: boolean; value?: Uint8Array}>;
+  /** Cancels body consumption. */
+  cancel?: () => Promise<void>;
+}
+
+/** Minimal response shape needed by the authenticated JSON transport. */
 export interface FetchResponseLike {
   /** Whether the HTTP status is in the successful range. */
   ok: boolean;
   /** HTTP status code. */
   status: number;
-  /** Parses the response body as JSON. */
-  json: () => Promise<unknown>;
+  /** Response headers when available. */
+  headers?: FetchHeadersLike;
+  /** Streaming response body when available. */
+  body?: {getReader: () => FetchBodyReaderLike} | null;
+  /** Reads the response body as text when streaming is unavailable. */
+  text?: () => Promise<string>;
 }
 
-/** Minimal fetch function shape used by the live coupon client. */
+/** Minimal fetch function shape used by the authenticated JSON transport. */
 export type FetchLike = (
   url: string,
   init: {
     method: "GET";
     headers: Record<string, string>;
-    signal?: AbortSignal;
+    redirect: "error";
+    signal: AbortSignal;
   }
 ) => Promise<FetchResponseLike>;
+
+/** Stable failure categories returned by authenticated JSON requests. */
+export type JsonGetFailureCode =
+  | "aborted"
+  | "http-error"
+  | "invalid-json"
+  | "invalid-url"
+  | "network-error"
+  | "response-too-large"
+  | "timeout"
+  | "unsupported-protocol";
+
+/** Successful authenticated JSON response. */
+export interface JsonGetSuccess {
+  ok: true;
+  status: number;
+  payload: unknown;
+  transport: "fetch" | "node";
+}
+
+/** Safe authenticated JSON request failure without raw exception details. */
+export interface JsonGetFailure {
+  ok: false;
+  code: JsonGetFailureCode;
+  status: number | null;
+}
+
+/** Result from the shared authenticated JSON transport. */
+export type JsonGetResult = JsonGetSuccess | JsonGetFailure;
+
+/** Request accepted by the shared authenticated JSON transport. */
+export interface AuthenticatedJsonRequest {
+  endpoint: string;
+  headers: Record<string, string>;
+  timeoutMs: number;
+  maxResponseBytes: number;
+  fetch?: FetchLike;
+  signal?: AbortSignal;
+  fallbackOnHttpError?: boolean;
+}
+
+/** Injectable authenticated JSON transport boundary. */
+export type AuthenticatedJsonTransport = (
+  request: AuthenticatedJsonRequest
+) => Promise<JsonGetResult>;

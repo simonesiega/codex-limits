@@ -20,18 +20,20 @@
     "scripts/postinstall.cjs",
     "README.md",
     "CHANGELOG.md",
+    "SECURITY.md",
     ".env.example",
     "LICENSE"
   ],
   "scripts": {
     "dev": "bun run src/package/cli.ts",
-    "build": "bun build src/package/cli.ts --target=node --outfile=dist/cli.js && bun build src/agents/opencode/plugin.tsx --target=node --external \"@opentui/*\" --outfile=dist/index.js",
+    "build": "bun run scripts/build.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "check": "bun run typecheck && bun test && bun run build",
-    "prepack": "bun run check",
+    "package:validate": "bun run scripts/validate-package.ts",
+    "check": "bun run format:check && bun run typecheck && bun test && bun run build && bun run package:validate",
+    "prepack": "bun run build",
     "postinstall": "node ./scripts/postinstall.cjs"
   },
   "keywords": [
@@ -65,13 +67,11 @@
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.17",
     "bun-types": "^1.1.42",
+    "ink": "^7.1.0",
     "ink-testing-library": "^4.0.0",
     "prettier": "^3.9.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
+    "react": "^19.2.7",
     "typescript": "^5.7.2"
-  },
-  "dependencies": {
-    "ink": "^7.1.0",
-    "react": "^19.2.7"
   }
 }

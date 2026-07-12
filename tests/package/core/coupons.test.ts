@@ -19,22 +19,23 @@ test("getResetCoupons fetches live coupons with explicit env credentials", async
     return {
       ok: true,
       status: 200,
-      json: async () => ({
-        available_count: 2,
-        total_earned_count: 3,
-        credits: [
-          {
-            status: "available",
-            granted_at: "2026-06-11T20:38:07Z",
-            expires_at: "2026-07-11T20:38:07Z",
-          },
-          {
-            status: "available",
-            granted_at: "2026-06-17T18:42:45Z",
-            expires_at: "2026-07-17T18:42:45Z",
-          },
-        ],
-      }),
+      text: async () =>
+        JSON.stringify({
+          available_count: 2,
+          total_earned_count: 3,
+          credits: [
+            {
+              status: "available",
+              granted_at: "2026-06-11T20:38:07Z",
+              expires_at: "2026-07-11T20:38:07Z",
+            },
+            {
+              status: "available",
+              granted_at: "2026-06-17T18:42:45Z",
+              expires_at: "2026-07-17T18:42:45Z",
+            },
+          ],
+        }),
     };
   };
 
@@ -56,6 +57,36 @@ test("getResetCoupons fetches live coupons with explicit env credentials", async
   expect(JSON.stringify(result)).not.toContain("fake-account-id");
 });
 
+test("getResetCoupons validates untrusted coupon fields before public output", async () => {
+  const result = await getResetCoupons({
+    env: {
+      CODEX_LIMITS_ACCESS_TOKEN: "fake-access-token",
+      CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
+    },
+    transport: async () => ({
+      ok: true,
+      status: 200,
+      transport: "fetch",
+      payload: {
+        credits: [
+          {
+            status: "Bearer fake-response-secret",
+            granted_at: "fake-private-account-id",
+            expires_at: "fake-secret-token",
+          },
+        ],
+      },
+    }),
+  });
+
+  expect(result.status).toBe("partial");
+  expect(result.items).toEqual([]);
+  expect(result.warnings).toEqual(["Live reset coupon endpoint ignored malformed coupon entries."]);
+  expect(JSON.stringify(result)).not.toContain("fake-response-secret");
+  expect(JSON.stringify(result)).not.toContain("fake-private-account-id");
+  expect(JSON.stringify(result)).not.toContain("fake-secret-token");
+});
+
 test("getResetCoupons reads detected Codex auth file without exposing secrets", async () => {
   const home = await mkdtemp(join(tmpdir(), "codex-limits-coupons-auth-"));
 
@@ -73,7 +104,8 @@ test("getResetCoupons reads detected Codex auth file without exposing secrets", 
       fetch: async () => ({
         ok: true,
         status: 200,
-        json: async () => ({credits: [{status: "available", expires_at: "2026-07-11T20:38:07Z"}]}),
+        text: async () =>
+          JSON.stringify({credits: [{status: "available", expires_at: "2026-07-11T20:38:07Z"}]}),
       }),
       now: new Date("2026-07-10T20:38:07Z"),
     });

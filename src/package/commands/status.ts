@@ -3,7 +3,6 @@ import {formatPercent, formatUnknown, formatWarnings} from "./format-shared";
 
 /**
  * Formats the non-interactive status command output.
- *
  * @param result - Normalized Codex limits result.
  * @returns Human-readable status output ending with a newline.
  */
@@ -26,7 +25,6 @@ export function formatStatus(result: CodexLimitsResult): string {
 
 /**
  * Formats one usage window summary for status output.
- *
  * @param window - Usage window to format.
  * @returns Human-readable usage lines.
  */

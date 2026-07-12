@@ -1,6 +1,7 @@
 import {Box, Text} from "ink";
 import type {ReactElement} from "react";
 import {theme} from "../../theme";
+import {truncateText} from "../../text";
 
 const BLOCK_TITLE = [
   " ██████╗ ██████╗ ██████╗ ███████╗██╗  ██╗    ██╗     ██╗███╗   ███╗██╗████████╗███████╗ ",
@@ -38,9 +39,8 @@ export interface TitleProps {
 
 /**
  * Renders the centered static CODEX LIMITS title.
- *
  * @param props - Title layout props.
- * @returns Ink title element.
+ * @returns -Ink title element.
  */
 export function Title({width, showLarge, showStyled}: TitleProps): ReactElement {
   if (showLarge && width >= BLOCK_TITLE[0].length) {
@@ -91,16 +91,4 @@ export function Title({width, showLarge, showStyled}: TitleProps): ReactElement 
       </Box>
     </Box>
   );
-}
-
-function truncateText(value: string, width: number): string {
-  if (value.length <= width) {
-    return value;
-  }
-
-  if (width <= 1) {
-    return value.slice(0, Math.max(width, 0));
-  }
-
-  return `${value.slice(0, width - 1)}…`;
 }

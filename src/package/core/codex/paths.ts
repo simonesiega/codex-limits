@@ -1,4 +1,5 @@
-import {stat} from "node:fs/promises";
+import {constants} from "node:fs";
+import {access, stat} from "node:fs/promises";
 import {homedir} from "node:os";
 import {join, normalize} from "node:path";
 import {readEnvValue, resolveEnvironment} from "../utils/env";
@@ -13,9 +14,8 @@ const CODEX_LIMITS_HOME = "CODEX_LIMITS_HOME";
 
 /**
  * Returns candidate Codex home paths without touching the filesystem.
- *
  * @param options - Optional filesystem and environment overrides.
- * @returns Ordered candidate paths, with CODEX_LIMITS_HOME first when set.
+ * @returns - Ordered candidate paths, with CODEX_LIMITS_HOME first when set.
  */
 export function getCodexHomeCandidatePaths(
   options: CodexHomeOptions = {}
@@ -54,9 +54,8 @@ export function getCodexHomeCandidatePaths(
 
 /**
  * Finds the first readable local Codex home directory, if one exists.
- *
  * @param options - Optional filesystem and environment overrides.
- * @returns Detection details including candidates checked and the first readable directory.
+ * @returns - Detection details including candidates checked and the first readable directory.
  */
 export async function detectCodexHome(options: CodexHomeOptions = {}): Promise<CodexHomeDetection> {
   const env = resolveEnvironment(options.env);
@@ -77,11 +76,10 @@ export async function detectCodexHome(options: CodexHomeOptions = {}): Promise<C
 
 /**
  * Adds a normalized candidate path when a value is present.
- *
  * @param paths - Mutable candidate list being built.
  * @param path - Candidate path to append.
  * @param source - Whether the path came from the environment or defaults.
- * @returns Nothing; the candidate list is updated in place.
+ * @returns - Nothing; the candidate list is updated in place.
  */
 function appendCandidate(
   paths: CodexHomeCandidatePath[],
@@ -97,14 +95,19 @@ function appendCandidate(
 
 /**
  * Checks whether a path is a readable directory.
- *
  * @param path - Candidate directory path.
- * @returns True when the path exists and is a directory, otherwise false.
+ * @returns - True when the path exists and is a directory, otherwise false.
  */
 async function canReadDirectory(path: string): Promise<boolean> {
   try {
     const details = await stat(path);
-    return details.isDirectory();
+    if (!details.isDirectory()) {
+      return false;
+    }
+
+    // Top-level Codex home symlinks are allowed; nested readers never follow symlink entries.
+    await access(path, constants.R_OK);
+    return true;
   } catch {
     return false;
   }
@@ -112,9 +115,8 @@ async function canReadDirectory(path: string): Promise<boolean> {
 
 /**
  * Removes duplicate candidate paths while preserving the first occurrence.
- *
  * @param paths - Candidate paths that may contain duplicates.
- * @returns Deduplicated candidate paths.
+ * @returns - Deduplicated candidate paths.
  */
 function dedupePaths(paths: CodexHomeCandidatePath[]): CodexHomeCandidatePath[] {
   const seen = new Set<string>();
@@ -122,7 +124,7 @@ function dedupePaths(paths: CodexHomeCandidatePath[]): CodexHomeCandidatePath[] 
 
   for (const candidate of paths) {
     const normalizedPath = normalize(candidate.path);
-    const key = normalizedPath.toLowerCase();
+    const key = process.platform === "win32" ? normalizedPath.toLowerCase() : normalizedPath;
     if (seen.has(key)) {
       continue;
     }

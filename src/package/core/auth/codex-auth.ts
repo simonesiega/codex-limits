@@ -1,68 +1,105 @@
-import {readFile} from "node:fs/promises";
 import {join, normalize} from "node:path";
 import {detectCodexHome} from "../codex/paths";
+import {warningDiagnostic, type Diagnostic} from "../diagnostics";
 import type {CodexAuthOptions, CouponCredentialStatus} from "../types";
+import {BoundedFileError, readBoundedUtf8File} from "../utils/bounded-file";
 import {readEnvValue, resolveEnvironment} from "../utils/env";
+import {isRecord, readString} from "../utils/unknown";
 
-/** Codex account credentials used for authenticated ChatGPT backend calls. */
+const MAX_AUTH_FILE_BYTES = 1_000_000;
+
+/**
+ * Store the resolved Codex credentials for authentication with the Codex API.
+ */
 export interface CodexCredentials {
-  /** ChatGPT access token. */
+  // Codex access token.
   accessToken: string;
-  /** ChatGPT account id. */
+
+  // Codex account id.
   accountId: string;
 }
 
 /**
- * Resolves Codex credentials from environment variables or a local auth.json file.
- *
- * @param options - Environment, filesystem, and auth-file lookup options.
- * @returns Access token and account id, or null when unavailable.
+ * Store the result of resolving Codex credentials.
  */
-export async function resolveCodexCredentials(
-  options: CodexAuthOptions
-): Promise<CodexCredentials | null> {
-  const env = resolveEnvironment(options.env);
-  const accessToken = readEnvValue(env, "CODEX_LIMITS_ACCESS_TOKEN");
-  const accountId = readEnvValue(env, "CODEX_LIMITS_ACCOUNT_ID");
+export interface CodexCredentialResolution {
+  credentials: CodexCredentials | null;
 
-  if (accessToken || accountId) {
-    return accessToken && accountId ? {accessToken, accountId} : null;
-  }
+  // The status of the credentials resolution.
+  status: "configured" | "malformed" | "missing" | "partial" | "unreadable";
 
-  const authFile = await resolveCodexAuthFile(options);
-  return authFile ? readAuthFile(authFile) : null;
+  diagnostics: Diagnostic[];
 }
 
 /**
- * Checks whether Codex credentials are configured without exposing values.
- *
- * @param options - Environment and auth-file lookup options.
- * @returns Credential configuration status.
+ * Resolves the Codex credentials and returns a structured result with diagnostics.
+ * @param options - Options for resolving Codex credentials, including environment variables and auth file path.
+ * @returns - A promise that resolves to a `CodexCredentialResolution` object.
  */
-export async function getCodexCredentialStatus(
+export async function resolveCodexCredentialResult(
   options: CodexAuthOptions = {}
-): Promise<CouponCredentialStatus> {
+): Promise<CodexCredentialResolution> {
   const env = resolveEnvironment(options.env);
   const accessToken = readEnvValue(env, "CODEX_LIMITS_ACCESS_TOKEN");
   const accountId = readEnvValue(env, "CODEX_LIMITS_ACCOUNT_ID");
 
   if (accessToken && accountId) {
-    return "configured";
+    return {credentials: {accessToken, accountId}, status: "configured", diagnostics: []};
   }
 
+  // If either the access token or account ID is present but not both.
   if (accessToken || accountId) {
-    return "partial";
+    return {
+      credentials: null,
+      status: "partial",
+      diagnostics: [
+        warningDiagnostic(
+          "auth.environment.partial",
+          "authentication",
+          "Codex authentication environment variables are incomplete."
+        ),
+      ],
+    };
   }
 
   const authFile = await resolveCodexAuthFile(options);
-  return authFile && (await readAuthFile(authFile)) ? "configured" : "missing";
+  if (!authFile) {
+    return {credentials: null, status: "missing", diagnostics: []};
+  }
+
+  return readAuthFile(authFile);
 }
 
 /**
- * Resolves the Codex auth.json path for live lookups.
- *
- * @param options - Environment and filesystem lookup options.
- * @returns Normalized auth file path or null.
+ * Resolves the Codex credentials.
+ * @param options - Options for resolving Codex credentials, including environment variables and auth file path.
+ * @returns - A promise that resolves to the Codex credentials or null if they are not available.
+ */
+export async function resolveCodexCredentials(
+  options: CodexAuthOptions = {}
+): Promise<CodexCredentials | null> {
+  return (await resolveCodexCredentialResult(options)).credentials;
+}
+
+/**
+ * Gets the status of the Codex credentials.
+ * @param options - Options for resolving Codex credentials, including environment variables and auth file path.
+ * @returns - A promise that resolves to the status of the credentials.
+ */
+export async function getCodexCredentialStatus(
+  options: CodexAuthOptions = {}
+): Promise<CouponCredentialStatus> {
+  const result = await resolveCodexCredentialResult(options);
+  if (result.status === "configured") {
+    return "configured";
+  }
+  return result.status === "partial" ? "partial" : "missing";
+}
+
+/**
+ * Resolves the path to the Codex authentication file.
+ * @param options - Options for resolving the authentication file path.
+ * @returns - A promise that resolves to the path of the authentication file or null if not found.
  */
 async function resolveCodexAuthFile(options: CodexAuthOptions): Promise<string | null> {
   if (options.authFile) {
@@ -74,46 +111,71 @@ async function resolveCodexAuthFile(options: CodexAuthOptions): Promise<string |
 }
 
 /**
- * Reads account credentials from a Codex auth.json file without exposing them.
- *
- * @param authPath - Auth JSON file path.
- * @returns Access token and account id, or null when missing or invalid.
+ * Reads and parses the Codex authentication file, returning the credentials and status.
+ * @param authPath - The path to the Codex authentication file.
+ * @returns - A promise that resolves to a `CodexCredentialResolution` object.
  */
-async function readAuthFile(authPath: string): Promise<CodexCredentials | null> {
+async function readAuthFile(authPath: string): Promise<CodexCredentialResolution> {
+  let content: string;
+
+  // Attempt to read the authentication file with a bounded size limit.
   try {
-    const parsed = JSON.parse(await readFile(authPath, "utf8")) as unknown;
+    content = await readBoundedUtf8File(authPath, MAX_AUTH_FILE_BYTES);
+  } catch (error) {
+    if (error instanceof BoundedFileError && error.code === "not-found") {
+      return {credentials: null, status: "missing", diagnostics: []};
+    }
+
+    const tooLarge = error instanceof BoundedFileError && error.code === "too-large";
+    return {
+      credentials: null,
+      status: "unreadable",
+      diagnostics: [
+        warningDiagnostic(
+          tooLarge ? "auth.file.too-large" : "auth.file.unreadable",
+          "authentication",
+          tooLarge
+            ? "Codex auth.json is too large to inspect safely."
+            : "Codex auth.json could not be read safely."
+        ),
+      ],
+    };
+  }
+
+  // Attempt to parse the authentication file content as JSON and extract credentials.
+  try {
+    const parsed = JSON.parse(content) as unknown;
     if (!isRecord(parsed)) {
-      return null;
+      return malformedAuthResult();
     }
 
     const tokens = isRecord(parsed.tokens) ? parsed.tokens : parsed;
     const accessToken = readString(tokens, "access_token");
     const accountId = readString(tokens, "account_id");
+    if (!accessToken || !accountId) {
+      return malformedAuthResult();
+    }
 
-    return accessToken && accountId ? {accessToken, accountId} : null;
+    return {credentials: {accessToken, accountId}, status: "configured", diagnostics: []};
   } catch {
-    return null;
+    return malformedAuthResult();
   }
 }
 
 /**
- * Reads a string property from a record.
- *
- * @param value - Record to inspect.
- * @param key - Property name.
- * @returns Non-empty string or null.
+ * Returns a `CodexCredentialResolution` object indicating that the authentication file is malformed.
+ * @returns - A `CodexCredentialResolution` object with status "malformed" and a diagnostic warning.
  */
-function readString(value: Record<string, unknown>, key: string): string | null {
-  const field = value[key];
-  return typeof field === "string" && field.length > 0 ? field : null;
-}
-
-/**
- * Checks whether a value is a non-array object.
- *
- * @param value - Unknown value.
- * @returns True when value is a record.
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function malformedAuthResult(): CodexCredentialResolution {
+  return {
+    credentials: null,
+    status: "malformed",
+    diagnostics: [
+      warningDiagnostic(
+        "auth.file.malformed",
+        "authentication",
+        "Codex auth.json is malformed or does not contain required credentials."
+      ),
+    ],
+  };
 }

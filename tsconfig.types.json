@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "outDir": ".types-build",
+    "rootDir": "src",
+    "stripInternal": true
+  },
+  "include": ["src/package/index.ts"],
+  "exclude": ["tests"]
+}
