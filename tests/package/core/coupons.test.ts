@@ -85,6 +85,30 @@ test("getResetCoupons validates untrusted coupon fields before public output", a
   expect(JSON.stringify(result)).not.toContain("fake-secret-token");
 });
 
+test("getResetCoupons rejects fractional coupon counts", async () => {
+  const result = await getResetCoupons({
+    env: {
+      CODEX_LIMITS_ACCESS_TOKEN: "fake-access-token",
+      CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
+    },
+    transport: async () => ({
+      ok: true,
+      status: 200,
+      transport: "fetch",
+      payload: {
+        available_count: 1.5,
+        total_earned_count: 2.5,
+        credits: [],
+      },
+    }),
+  });
+
+  expect(result.status).toBe("partial");
+  expect(result.available).toBeNull();
+  expect(result.earnedThisPeriod).toBeNull();
+  expect(result.warnings).toEqual(["Live reset coupon endpoint ignored malformed summary fields."]);
+});
+
 test("getResetCoupons reads detected Codex auth file without exposing secrets", async () => {
   await withAuthHome(async (home) => {
     const result = await getResetCoupons({

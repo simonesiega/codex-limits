@@ -59,7 +59,7 @@ Please do not publicly disclose the vulnerability until a fix is available or di
 
 ## Local data and network behavior
 
-`codex-limits` is designed to keep Codex data on your machine.
+`codex-limits` is designed to keep raw local Codex files and sensitive values on your machine. It makes authenticated requests to the documented ChatGPT Codex endpoints only when retrieving live usage or reset-credit information.
 
 The CLI performs bounded, read-only inspection of recognized Codex home candidates. It reads small non-sensitive JSON state files, bounded `sessions/**/rollout-*.jsonl` logs, and `auth.json` only for credential resolution. Traversal depth, directory entries, file counts, file sizes, JSONL line sizes, and response sizes are limited; nested symbolic links are skipped. Raw local files and credentials are never returned by the public CLI or JSON contracts.
 

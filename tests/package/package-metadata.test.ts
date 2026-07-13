@@ -56,7 +56,11 @@ test("package metadata includes runtime documentation and excludes bundled runti
 test("validation and prepack scripts do not recurse", async () => {
   const packageJson = await readPackageMetadata();
 
+  expect(packageJson.scripts["docs:link"]).toBe("bun run scripts/check-doc-links.ts");
+  expect(packageJson.scripts["docs:schema"]).toBe("bun run scripts/check-doc-schema.ts");
+  expect(packageJson.scripts["docs:check"]).toBe("bun run docs:link && bun run docs:schema");
   expect(packageJson.scripts.check).toContain("format:check");
+  expect(packageJson.scripts.check).toContain("docs:check");
   expect(packageJson.scripts.check).toContain("package:validate");
   expect(packageJson.scripts.prepack).toBe("bun run build");
   expect(packageJson.scripts.prepack).not.toContain("check");

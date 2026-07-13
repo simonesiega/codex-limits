@@ -38,8 +38,8 @@ export function mapResetCouponsPayload(
     .map((credit, index) => ({...credit, index: index + 1}));
   const nextExpiring =
     items.find((item) => item.status?.toLowerCase() === "available") ?? items[0] ?? null;
-  const available = readNumber(payload, AVAILABLE_KEYS);
-  const earnedThisPeriod = readNumber(payload, EARNED_KEYS);
+  const available = readNonNegativeInteger(payload, AVAILABLE_KEYS);
+  const earnedThisPeriod = readNonNegativeInteger(payload, EARNED_KEYS);
   const warnings: string[] = [];
 
   if (rawCredits.length !== items.length) {
@@ -141,7 +141,7 @@ function readArray(
   return {value: [], malformed: found};
 }
 
-function readNumber(
+function readNonNegativeInteger(
   value: Record<string, unknown>,
   keys: readonly string[]
 ): {value: number | null; malformed: boolean} {
@@ -152,7 +152,7 @@ function readNumber(
     }
     found = true;
     const field = value[key];
-    if (typeof field === "number" && Number.isFinite(field) && field >= 0) {
+    if (typeof field === "number" && Number.isInteger(field) && field >= 0) {
       return {value: field, malformed: false};
     }
   }

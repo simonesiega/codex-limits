@@ -41,10 +41,17 @@ The screenshots show the **`codex-limits`** terminal dashboards: clean, read-onl
 - [Environment](#environment)
 - [Usage](#usage)
 - [Troubleshooting](#troubleshooting)
+- [Documentation](#documentation)
+  - [JSON output](docs/readme/json-output.md)
+  - [Agent integrations](docs/readme/agent-integrations.md)
+  - [Compatibility](docs/readme/compatibility.md)
 - [Local development](#local-development)
 - [Security](#security)
 - [License](#license)
 - [Contributors](#contributors)
+
+> Last verified against: `@simonesiega/codex-limits` v0.1.4
+> Verification date: 2026-07-14
 
 ## Quick start
 
@@ -97,11 +104,15 @@ It also includes plain-text commands for quick checks, JSON output for scripts a
 
 ## Agent integrations
 
+Optional integrations make Codex limit information available directly inside supported coding agents while reusing the same read-only core and safety model as the CLI.
+
+For installation details, adapter behavior, architecture, and contribution guidance, see the detailed [Agent integrations guide](docs/readme/agent-integrations.md).
+
 ### Supported agents
 
-| Agent    | Status    | Agent command   | Init command                   | Description                                                                                                     |
-| -------- | --------- | --------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| OpenCode | Supported | `/codex-limits` | `codex-limits init --opencode` | Opens a fast, read-only Codex limits dashboard directly inside OpenCode without sending the request to the LLM. |
+| Agent    | Status    | Agent command   | Guide                                                    | Description                                                                                                     |
+| -------- | --------- | --------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| OpenCode | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/opencode.md) | Opens a fast, read-only Codex limits dashboard directly inside OpenCode without sending the request to the LLM. |
 
 Agent integrations are not enabled automatically during package installation. They must be installed with `codex-limits init` and are only available in the agent terminal after a restart. See [Adding new agents](#adding-new-agents) if you want to add support for another agent.
 
@@ -198,6 +209,14 @@ Confirm that your user can read the selected Codex directory and its session fil
 
 Run the named initializer again, for example `codex-limits init --opencode`, and confirm that it reports the integration as installed or already installed. Restart the target agent terminal so it reloads its configuration. If the command is still missing, verify that the displayed configuration paths belong to the agent installation you are using.
 
+## Documentation
+
+The README provides an overview of the main features, commands, and configuration options. For more detailed technical information, see the following guides:
+
+- [JSON output](docs/readme/json-output.md) — Learn about the machine-readable output format, available fields, warnings, examples, and scripting behavior.
+- [Agent integrations](docs/readme/agent-integrations.md) — Learn how agent integrations work, how they are installed, and how to develop and contribute new agent adapters.
+- [Compatibility](docs/readme/compatibility.md) — View the supported operating systems, Node.js versions, terminals, Codex environments, and agent versions.
+
 ## Local development
 
 Clone the repository, install dependencies, and run the CLI locally:
@@ -211,16 +230,25 @@ bun run dev
 
 Useful development commands:
 
-| Command                | Description                                                      |
-| ---------------------- | ---------------------------------------------------------------- |
-| `bun run dev`          | Runs the CLI in development mode.                                |
-| `bun run check`        | Runs formatting, types, tests, builds, and package smoke checks. |
-| `bun test`             | Runs the test suite.                                             |
-| `bun run build`        | Builds the package.                                              |
-| `bun run format`       | Formats the repository with Prettier.                            |
-| `bun run format:check` | Checks formatting without changing files.                        |
+| Command                | Description                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| `bun run dev`          | Runs the CLI in development mode.                                               |
+| `bun run check`        | Runs formatting, documentation, types, tests, builds, and package smoke checks. |
+| `bun run docs:link`    | Checks local documentation links and heading anchors.                           |
+| `bun run docs:schema`  | Validates the JSON Schema and its example output.                               |
+| `bun run docs:check`   | Runs both documentation checks.                                                 |
+| `bun test`             | Runs the test suite.                                                            |
+| `bun run build`        | Builds the package.                                                             |
+| `bun run format`       | Formats the repository with Prettier.                                           |
+| `bun run format:check` | Checks formatting without changing files.                                       |
 
 ## Security
+
+| Operation             | Reads                                           | Writes                            | Network                         |
+| --------------------- | ----------------------------------------------- | --------------------------------- | ------------------------------- |
+| `codex-limits`        | Recognized Codex state and bounded session data | Nothing                           | Live usage and coupon endpoints |
+| `status` / `coupons`  | Shared read-only core                           | Nothing                           | When live data is requested     |
+| `init --<agent-name>` | Selected agent configuration                    | Adds the integration registration | Does not send an LLM prompt     |
 
 For vulnerability reports and local data safety details, see [`SECURITY.md`](./SECURITY.md).
 

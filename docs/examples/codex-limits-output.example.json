@@ -1,0 +1,63 @@
+{
+  "windows": {
+    "fiveHour": {
+      "label": "5-hour usage limit",
+      "remainingPercent": 80,
+      "usedPercent": 20,
+      "resetsAt": "2026-07-14T01:30:15.000Z",
+      "resetsIn": "3h 55m"
+    },
+    "weekly": {
+      "label": "Weekly usage limit",
+      "remainingPercent": 31,
+      "usedPercent": 69,
+      "resetsAt": "2026-07-18T11:15:15.000Z",
+      "resetsIn": "4d 13h 40m"
+    }
+  },
+  "coupons": {
+    "available": 4,
+    "earnedThisPeriod": 0,
+    "nextExpirationDate": "Saturday 18 July 2026",
+    "nextExpirationIn": "4d 2h 42m",
+    "items": [
+      {
+        "index": 1,
+        "status": "available",
+        "grantedAt": "2026-06-18T00:17:20.252556Z",
+        "expiresAt": "2026-07-18T00:17:20.252556Z",
+        "expirationDate": "Saturday 18 July 2026",
+        "expiresIn": "4d 2h 42m"
+      },
+      {
+        "index": 2,
+        "status": "available",
+        "grantedAt": "2026-06-26T23:48:13.132409Z",
+        "expiresAt": "2026-07-26T23:48:13.132409Z",
+        "expirationDate": "Monday 27 July 2026",
+        "expiresIn": "13d 2h 12m"
+      },
+      {
+        "index": 3,
+        "status": "available",
+        "grantedAt": "2026-07-01T19:59:47.228684Z",
+        "expiresAt": "2026-07-31T19:59:47.228684Z",
+        "expirationDate": "Friday 31 July 2026",
+        "expiresIn": "17d 22h 24m"
+      },
+      {
+        "index": 4,
+        "status": "available",
+        "grantedAt": "2026-07-13T17:48:41.527506Z",
+        "expiresAt": "2026-08-12T17:48:41.527506Z",
+        "expirationDate": "Wednesday 12 August 2026",
+        "expiresIn": "29d 20h 13m"
+      }
+    ],
+    "warnings": []
+  },
+  "warnings": [
+    "Skipped a sensitive-looking local file.",
+    "Skipped a local cache file because it is too large to inspect safely."
+  ]
+}

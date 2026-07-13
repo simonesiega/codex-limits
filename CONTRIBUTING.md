@@ -38,7 +38,7 @@ If you are new to the project, read [`README.md`](README.md) first, then choose 
 
 ## Issues
 
-Before opening a new issue, check existing [Issues](../../issues) to avoid duplicates.
+Before opening a new issue, check existing [Issues](https://github.com/simonesiega/codex-limits/issues) to avoid duplicates.
 
 Please include:
 
@@ -70,10 +70,23 @@ Run the CLI locally:
 bun run dev
 ```
 
-Run the full validation pipeline (format verification, types, tests, production builds, and packed-artifact smoke checks):
+Run the full validation pipeline (format verification, documentation checks, types, tests, production builds, and packed-artifact smoke checks):
 
 ```bash
 bun run check
+```
+
+Run all documentation checks:
+
+```bash
+bun run docs:check
+```
+
+Run the documentation checks individually:
+
+```bash
+bun run docs:link
+bun run docs:schema
 ```
 
 Run tests only:
@@ -126,7 +139,11 @@ New agents should be added with a small adapter and registered explicitly. Use t
 | 3    | Reuse the shared package core for Codex limit data.                                                                                 |
 | 4    | Register the adapter in `src/agents/index.ts`.                                                                                      |
 | 5    | Add automated tests for behavior changes when feasible. When automation is not practical, document the manual validation performed. |
-| 6    | Update the README agent integration table and screenshots.                                                                          |
+| 6    | Add `docs/readme/agents/<agent-name>.md`.                                                                                           |
+| 7    | Add the integration to [Agent Integrations](docs/readme/agent-integrations.md).                                                     |
+| 8    | Update the README supported-agent summary.                                                                                          |
+| 9    | Add or update screenshots when the visual output changes.                                                                           |
+| 10   | Run the documentation link and schema checks.                                                                                       |
 
 The goal of every integration is the same: show Codex limit information quickly, safely, and without sending unnecessary work to the LLM.
 

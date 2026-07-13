@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simonesiega/codex-limits/main/docs/schema/codex-limits.schema.json",
+  "title": "Codex Limits JSON Output",
+  "description": "Schema for the output of `codex-limits --json`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["windows", "coupons", "warnings"],
+  "properties": {
+    "windows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fiveHour", "weekly"],
+      "properties": {
+        "fiveHour": {
+          "$ref": "#/$defs/nullableUsageWindow"
+        },
+        "weekly": {
+          "$ref": "#/$defs/nullableUsageWindow"
+        }
+      }
+    },
+    "coupons": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/couponSummary"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "warnings": {
+      "$ref": "#/$defs/warnings"
+    }
+  },
+  "$defs": {
+    "nullableUsageWindow": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/usageWindow"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "usageWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "remainingPercent", "usedPercent", "resetsAt", "resetsIn"],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "remainingPercent": {
+          "$ref": "#/$defs/nullablePercent"
+        },
+        "usedPercent": {
+          "$ref": "#/$defs/nullablePercent"
+        },
+        "resetsAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resetsIn": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "nullablePercent": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "couponSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "earnedThisPeriod",
+        "nextExpirationDate",
+        "nextExpirationIn",
+        "items",
+        "warnings"
+      ],
+      "properties": {
+        "available": {
+          "$ref": "#/$defs/nullableNonNegativeInteger"
+        },
+        "earnedThisPeriod": {
+          "$ref": "#/$defs/nullableNonNegativeInteger"
+        },
+        "nextExpirationDate": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "nextExpirationIn": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/couponItem"
+          }
+        },
+        "warnings": {
+          "$ref": "#/$defs/warnings"
+        }
+      }
+    },
+    "couponItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "status", "grantedAt", "expiresAt", "expirationDate", "expiresIn"],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grantedAt": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "expirationDate": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "expiresIn": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "nullableNonNegativeInteger": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nullableString": {
+      "type": ["string", "null"]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
