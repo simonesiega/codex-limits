@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test";
-import {createServer} from "node:http";
 import {authenticatedJsonGet} from "@/package/core/network/authenticated-json-get";
 import type {AuthenticatedJsonRequest, FetchLike, JsonGetFailureCode} from "@/package/core/types";
+import {withLoopbackServer} from "@tests/helpers/http-server";
 
 const HEADERS = {
   Authorization: "Bearer fake-secret-token",
@@ -158,37 +158,28 @@ test("authenticatedJsonGet honors caller aborts while fetch is in flight", async
 });
 
 test("authenticatedJsonGet falls back from fetch to the bounded native transport", async () => {
-  const server = createServer((_request, response) => {
-    response.setHeader("content-type", "application/json");
-    response.end(JSON.stringify({native: true}));
-  });
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  await withLoopbackServer(
+    (_request, response) => {
+      response.setHeader("content-type", "application/json");
+      response.end(JSON.stringify({native: true}));
+    },
+    async (origin) => {
+      const result = await authenticatedJsonGet(
+        request(
+          async () => {
+            throw new Error("fetch failed with fake-secret-token");
+          },
+          {endpoint: `${origin}/usage`}
+        )
+      );
 
-  try {
-    const address = server.address();
-    if (!address || typeof address === "string") {
-      throw new Error("Expected a TCP address.");
+      expect(result).toEqual({
+        ok: true,
+        status: 200,
+        payload: {native: true},
+        transport: "node",
+      });
+      expect(JSON.stringify(result)).not.toContain("fake-secret-token");
     }
-
-    const result = await authenticatedJsonGet(
-      request(
-        async () => {
-          throw new Error("fetch failed with fake-secret-token");
-        },
-        {endpoint: `http://127.0.0.1:${address.port}/usage`}
-      )
-    );
-
-    expect(result).toEqual({
-      ok: true,
-      status: 200,
-      payload: {native: true},
-      transport: "node",
-    });
-    expect(JSON.stringify(result)).not.toContain("fake-secret-token");
-  } finally {
-    await new Promise<void>((resolve, reject) =>
-      server.close((error) => (error ? reject(error) : resolve()))
-    );
-  }
+  );
 });

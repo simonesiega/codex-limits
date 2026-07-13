@@ -1,34 +1,42 @@
 import {expect, test} from "bun:test";
 import plugin, {createOpencodePlugin} from "@/agents/opencode/plugin";
-import {createFakeLimitsResult} from "../../package/fixtures/fake-results";
+import {createFakeLimitsResult} from "@tests/package/fixtures/fake-results";
+
+function initialize(
+  tuiPlugin: ReturnType<typeof createOpencodePlugin>,
+  api: object
+): Promise<void> {
+  // Each test supplies only the OpenCode host surface exercised by that scenario.
+  return Promise.resolve(tuiPlugin.tui(api as never, undefined, {} as never));
+}
+
+function disposeImmediately(callback: () => void): () => void {
+  callback();
+  return () => undefined;
+}
+
+function keepPluginActive(_callback: () => void): () => void {
+  return () => undefined;
+}
 
 test("opencode plugin registers the slash command through legacy command api", async () => {
   const commands: Array<{slash?: {name: string}; value: string}> = [];
   let disposed = false;
 
-  await plugin.tui(
-    {
-      command: {
-        register: (callback: () => Array<{slash?: {name: string}; value: string}>) => {
-          commands.push(...callback());
-          return () => {
-            disposed = true;
-          };
-        },
+  await initialize(plugin, {
+    command: {
+      register: (callback: () => Array<{slash?: {name: string}; value: string}>) => {
+        commands.push(...callback());
+        return () => {
+          disposed = true;
+        };
       },
-      lifecycle: {
-        onDispose: (fn: () => void) => {
-          fn();
-          return () => undefined;
-        },
-      },
-      ui: {
-        dialog: {},
-      },
-    } as never,
-    undefined,
-    {} as never
-  );
+    },
+    lifecycle: {onDispose: disposeImmediately},
+    ui: {
+      dialog: {},
+    },
+  });
 
   expect(commands).toHaveLength(1);
   expect(commands[0]?.value).toBe("codex-limits.show");
@@ -50,35 +58,26 @@ test("opencode plugin prefers the current keymap command api", async () => {
   let legacyRegistrations = 0;
   let disposeCount = 0;
 
-  await plugin.tui(
-    {
-      command: {
-        register: () => {
-          legacyRegistrations += 1;
-          return () => undefined;
-        },
+  await initialize(plugin, {
+    command: {
+      register: () => {
+        legacyRegistrations += 1;
+        return () => undefined;
       },
-      keymap: {
-        registerLayer: (layer: (typeof layers)[number]) => {
-          layers.push(layer);
-          return () => {
-            disposeCount += 1;
-          };
-        },
+    },
+    keymap: {
+      registerLayer: (layer: (typeof layers)[number]) => {
+        layers.push(layer);
+        return () => {
+          disposeCount += 1;
+        };
       },
-      lifecycle: {
-        onDispose: (fn: () => void) => {
-          fn();
-          return () => undefined;
-        },
-      },
-      ui: {
-        dialog: {},
-      },
-    } as never,
-    undefined,
-    {} as never
-  );
+    },
+    lifecycle: {onDispose: disposeImmediately},
+    ui: {
+      dialog: {},
+    },
+  });
 
   expect(legacyRegistrations).toBe(0);
   expect(layers).toHaveLength(1);
@@ -96,11 +95,11 @@ test("opencode plugin reports a safe registration failure", async () => {
         throw new Error("private registration detail");
       },
     },
-    lifecycle: {onDispose: () => () => undefined},
+    lifecycle: {onDispose: keepPluginActive},
     ui: {dialog: {}},
-  } as never;
+  };
 
-  await expect(localPlugin.tui(api, undefined, {} as never)).rejects.toThrow(
+  await expect(initialize(localPlugin, api)).rejects.toThrow(
     "Could not register the codex-limits OpenCode command."
   );
 });
@@ -125,9 +124,9 @@ test("opencode plugin cleans up when lifecycle registration fails", async () => 
       },
     },
     ui: {dialog: {}},
-  } as never;
+  };
 
-  await expect(localPlugin.tui(api, undefined, {} as never)).rejects.toThrow(
+  await expect(initialize(localPlugin, api)).rejects.toThrow(
     "Could not register the codex-limits OpenCode lifecycle."
   );
   expect(disposeCount).toBe(1);
@@ -164,10 +163,10 @@ test("opencode registration and disposal are idempotent for the same API", async
       },
     },
     ui: {dialog: {}},
-  } as never;
+  };
 
-  await localPlugin.tui(api, undefined, {} as never);
-  await localPlugin.tui(api, undefined, {} as never);
+  await initialize(localPlugin, api);
+  await initialize(localPlugin, api);
   disposeLifecycle?.();
   disposeLifecycle?.();
 
@@ -192,7 +191,7 @@ test("/codex-limits loads shared core data directly without an LLM prompt", asyn
         return () => undefined;
       },
     },
-    lifecycle: {onDispose: () => () => undefined},
+    lifecycle: {onDispose: keepPluginActive},
     ui: {
       DialogAlert: ({message}: {message: string}) => ({message}),
       dialog: {
@@ -204,9 +203,9 @@ test("/codex-limits loads shared core data directly without an LLM prompt", asyn
       },
       toast: () => undefined,
     },
-  } as never;
+  };
 
-  await localPlugin.tui(api, undefined, {} as never);
+  await initialize(localPlugin, api);
   await command?.run?.();
 
   expect(globalDialogClears).toBe(1);
@@ -232,7 +231,7 @@ test("/codex-limits presents a safe static error", async () => {
         return () => undefined;
       },
     },
-    lifecycle: {onDispose: () => () => undefined},
+    lifecycle: {onDispose: keepPluginActive},
     ui: {
       DialogAlert: ({message}: {message: string}) => ({message}),
       dialog: {
@@ -242,9 +241,9 @@ test("/codex-limits presents a safe static error", async () => {
       },
       toast: (toast: {variant: string; title: string; message: string}) => toasts.push(toast),
     },
-  } as never;
+  };
 
-  await localPlugin.tui(api, undefined, {} as never);
+  await initialize(localPlugin, api);
   await command?.onSelect?.();
 
   expect(messages.at(-1)).toBe("Could not load Codex limits.");

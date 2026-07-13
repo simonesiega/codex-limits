@@ -1,21 +1,26 @@
 import {expect, test} from "bun:test";
 import {render} from "ink-testing-library";
+import type {CodexLimitsResult} from "@/package/core/types";
 import {App} from "@/package/tui/app";
 import {buildProgressBar} from "@/package/tui/components/primitives/progress-bar";
 import {createTuiLayout} from "@/package/tui/layout";
-import {createFakeLimitsResult} from "../fixtures/fake-results";
+import {createFakeLimitsResult} from "@tests/package/fixtures/fake-results";
+
+const NOW = new Date("2026-07-05T10:00:30.000Z");
+
+function renderFrame(result: CodexLimitsResult, columns: number, rows: number): string {
+  const instance = render(
+    <App result={result} terminalColumns={columns} terminalRows={rows} now={NOW} />
+  );
+  try {
+    return instance.lastFrame() ?? "";
+  } finally {
+    instance.unmount();
+  }
+}
 
 test("App renders available data without footer actions", () => {
-  const result = createFakeLimitsResult();
-  const instance = render(
-    <App
-      result={result}
-      terminalColumns={132}
-      terminalRows={40}
-      now={new Date("2026-07-05T10:00:30.000Z")}
-    />
-  );
-  const frame = instance.lastFrame() ?? "";
+  const frame = renderFrame(createFakeLimitsResult(), 132, 40);
 
   expect(frame).toContain("█████");
   expect(frame).toContain("Codex usage windows and reset credits");
@@ -39,67 +44,39 @@ test("App renders available data without footer actions", () => {
   expect(frame).not.toContain("Press");
   expect(frame).not.toContain("Quit");
   expect(frame).not.toContain("40s");
-
-  instance.unmount();
 });
 
 test("App renders missing data fallbacks without secrets", () => {
-  const result = {
-    ...createFakeLimitsResult(),
-    windows: {fiveHour: null, weekly: null},
-    coupons: null,
-    warnings: ["Bearer fake-secret-token"],
-  };
-  const instance = render(
-    <App
-      result={result}
-      terminalColumns={72}
-      terminalRows={40}
-      now={new Date("2026-07-05T10:00:30.000Z")}
-    />
+  const frame = renderFrame(
+    {
+      ...createFakeLimitsResult(),
+      windows: {fiveHour: null, weekly: null},
+      coupons: null,
+      warnings: ["Bearer fake-secret-token"],
+    },
+    72,
+    40
   );
-  const frame = instance.lastFrame() ?? "";
 
   expect(frame).toContain("Unknown remaining");
   expect(frame).toContain("Summary");
   expect(frame).toContain("Coupons");
   expect(frame).toContain("Coupon data unavailable.");
   expect(frame).not.toContain("fake-secret-token");
-
-  instance.unmount();
 });
 
 test("Reset Coupons panel strips seconds from TUI durations", () => {
   const result = createFakeLimitsResult();
   result.coupons!.nextExpirationIn = "7d 4h 38m 40s";
   result.coupons!.items[0]!.expiresIn = "7d 4h 38m 40s";
-  const instance = render(
-    <App
-      result={result}
-      terminalColumns={132}
-      terminalRows={40}
-      now={new Date("2026-07-05T10:00:30.000Z")}
-    />
-  );
-  const frame = instance.lastFrame() ?? "";
+  const frame = renderFrame(result, 132, 40);
 
   expect(frame).toContain("7d 4h 38m");
   expect(frame).not.toContain("40s");
-
-  instance.unmount();
 });
 
 test("App uses a compact stacked layout for narrow terminals", () => {
-  const result = createFakeLimitsResult();
-  const instance = render(
-    <App
-      result={result}
-      terminalColumns={80}
-      terminalRows={40}
-      now={new Date("2026-07-05T10:00:30.000Z")}
-    />
-  );
-  const frame = instance.lastFrame() ?? "";
+  const frame = renderFrame(createFakeLimitsResult(), 80, 40);
   const plainFrame = stripAnsi(frame);
 
   expect(frame).toContain("██████╗");
@@ -107,21 +84,10 @@ test("App uses a compact stacked layout for narrow terminals", () => {
   expect(frame).toContain("5-hour usage limit");
   expect(frame).toContain("Weekly usage limit");
   expect(plainFrame).toContain("1 • Available • Sat 11 Jul");
-
-  instance.unmount();
 });
 
 test("App uses a text summary when the terminal is too short for boxes", () => {
-  const result = createFakeLimitsResult();
-  const instance = render(
-    <App
-      result={result}
-      terminalColumns={50}
-      terminalRows={14}
-      now={new Date("2026-07-05T10:00:30.000Z")}
-    />
-  );
-  const frame = instance.lastFrame() ?? "";
+  const frame = renderFrame(createFakeLimitsResult(), 50, 14);
 
   expect(frame).toContain("CODEX LIMITS");
   expect(frame).toContain("Codex usage windows and reset credits");
@@ -132,28 +98,15 @@ test("App uses a text summary when the terminal is too short for boxes", () => {
   expect(frame).toContain("1. Available");
   expect(frame).not.toContain("USAGE LIMITS");
   expect(frame).not.toContain("RESET COUPONS");
-
-  instance.unmount();
 });
 
 test("App keeps boxed panels at the short-height cutoff", () => {
-  const result = createFakeLimitsResult();
-  const instance = render(
-    <App
-      result={result}
-      terminalColumns={50}
-      terminalRows={40}
-      now={new Date("2026-07-05T10:00:30.000Z")}
-    />
-  );
-  const frame = instance.lastFrame() ?? "";
+  const frame = renderFrame(createFakeLimitsResult(), 50, 40);
 
   expect(frame).toContain("CODEX LIMITS");
   expect(frame).toContain("USAGE LIMITS");
   expect(frame).toContain("RESET COUPONS");
   expect(frame).not.toContain("5-hour: 93% remaining");
-
-  instance.unmount();
 });
 
 test("App remains readable in very small terminals and truncates extra coupons", () => {
@@ -162,23 +115,13 @@ test("App remains readable in very small terminals and truncates extra coupons",
     ...result.coupons!.items[0]!,
     index: index + 1,
   }));
-  const instance = render(
-    <App
-      result={result}
-      terminalColumns={20}
-      terminalRows={9}
-      now={new Date("2026-07-05T10:00:30.000Z")}
-    />
-  );
-  const plainFrame = stripAnsi(instance.lastFrame() ?? "");
+  const plainFrame = stripAnsi(renderFrame(result, 20, 9));
 
   expect(plainFrame).toContain("CODEX LIMITS");
   expect(plainFrame).toContain("more coupons");
   for (const line of plainFrame.split("\n")) {
     expect(line.length).toBeLessThanOrEqual(18);
   }
-
-  instance.unmount();
 });
 
 test("layout boundaries are deterministic from startup dimensions", () => {

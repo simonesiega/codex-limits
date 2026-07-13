@@ -1,12 +1,13 @@
 import {expect, test} from "bun:test";
-import {mkdir, mkdtemp, rm, writeFile} from "node:fs/promises";
-import {createServer} from "node:http";
+import {mkdir, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {getUsageLimits} from "@/package/core/limits";
 import type {FetchLike} from "@/package/core/types";
 import {mapLiveUsagePayload} from "@/package/core/usage/live-payload";
 import {getLiveUsage} from "@/package/core/usage/live";
+import {withLoopbackServer} from "@tests/helpers/http-server";
+import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 test("getLiveUsage fetches current usage with Codex credentials", async () => {
   const calls: Array<{url: string; authorization: string; accountId: string}> = [];
@@ -56,48 +57,37 @@ test("getLiveUsage fetches current usage with Codex credentials", async () => {
 });
 
 test("getLiveUsage retries with native request when fetch is rejected", async () => {
-  const server = createServer((request, response) => {
-    expect(request.headers.authorization).toBe("Bearer fake-access-token");
-    expect(request.headers["chatgpt-account-id"]).toBe("fake-account-id");
-
-    response.setHeader("content-type", "application/json");
-    response.end(
-      JSON.stringify({
-        rate_limit: {
-          primary_window: {used_percent: 15, reset_at: 1_767_229_200},
-          secondary_window: {used_percent: 25, reset_at: 1_767_232_800},
+  await withLoopbackServer(
+    (request, response) => {
+      expect(request.headers.authorization).toBe("Bearer fake-access-token");
+      expect(request.headers["chatgpt-account-id"]).toBe("fake-account-id");
+      response.setHeader("content-type", "application/json");
+      response.end(
+        JSON.stringify({
+          rate_limit: {
+            primary_window: {used_percent: 15, reset_at: 1_767_229_200},
+            secondary_window: {used_percent: 25, reset_at: 1_767_232_800},
+          },
+        })
+      );
+    },
+    async (origin) => {
+      const result = await getLiveUsage({
+        env: {
+          CODEX_LIMITS_ACCESS_TOKEN: "fake-access-token",
+          CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
         },
-      })
-    );
-  });
+        fetch: async () => ({ok: false, status: 403, json: async () => ({})}),
+        now: new Date("2026-01-01T00:00:00.000Z"),
+        usageEndpoint: `${origin}/usage`,
+      });
 
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-
-  try {
-    const address = server.address();
-    if (!address || typeof address === "string") {
-      throw new Error("Expected server address info.");
+      expect(result.status).toBe("available");
+      expect(result.source.kind).toBe("api");
+      expect(result.windows.fiveHour?.remainingPercent).toBe(85);
+      expect(result.windows.weekly?.remainingPercent).toBe(75);
     }
-
-    const result = await getLiveUsage({
-      env: {
-        CODEX_LIMITS_ACCESS_TOKEN: "fake-access-token",
-        CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
-      },
-      fetch: async () => ({ok: false, status: 403, json: async () => ({})}),
-      now: new Date("2026-01-01T00:00:00.000Z"),
-      usageEndpoint: `http://127.0.0.1:${address.port}/usage`,
-    });
-
-    expect(result.status).toBe("available");
-    expect(result.source.kind).toBe("api");
-    expect(result.windows.fiveHour?.remainingPercent).toBe(85);
-    expect(result.windows.weekly?.remainingPercent).toBe(75);
-  } finally {
-    await new Promise<void>((resolve, reject) =>
-      server.close((error) => (error ? reject(error) : resolve()))
-    );
-  }
+  );
 });
 
 test("getUsageLimits preserves partial live windows when local data is unavailable", async () => {
@@ -164,9 +154,7 @@ test("mapLiveUsagePayload bounds traversal of unusually wide payloads", () => {
 });
 
 test("getUsageLimits falls back to local sessions when live usage is unavailable", async () => {
-  const home = await mkdtemp(join(tmpdir(), "codex-limits-live-fallback-"));
-
-  try {
+  await withTempDirectory("codex-limits-live-fallback-", async (home) => {
     const sessionDir = join(home, "sessions", "2026", "01", "01");
     await mkdir(sessionDir, {recursive: true});
     await writeFile(
@@ -199,7 +187,5 @@ test("getUsageLimits falls back to local sessions when live usage is unavailable
     expect(result.source.kind).toBe("local");
     expect(result.windows.fiveHour?.remainingPercent).toBe(88);
     expect(result.windows.weekly?.remainingPercent).toBe(87);
-  } finally {
-    await rm(home, {recursive: true, force: true});
-  }
+  });
 });

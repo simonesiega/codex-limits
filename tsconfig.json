@@ -5,7 +5,9 @@
     "moduleResolution": "Bundler",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@root/*": ["*"],
+      "@tests/*": ["tests/*"]
     },
     "strict": true,
     "noUncheckedIndexedAccess": true,

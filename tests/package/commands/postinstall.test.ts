@@ -1,22 +1,20 @@
 import {expect, test} from "bun:test";
-import {mkdir, mkdtemp, rm} from "node:fs/promises";
-import {tmpdir} from "node:os";
-import {join, resolve} from "node:path";
+import {mkdir} from "node:fs/promises";
+import {join} from "node:path";
+import {fileURLToPath} from "node:url";
+import {withTempDirectory} from "@tests/helpers/temp-directory";
 
-const postinstallScript = resolve(import.meta.dir, "../../../scripts/postinstall.cjs");
+const postinstallScript = fileURLToPath(import.meta.resolve("@root/scripts/postinstall.cjs"));
 
 test("postinstall only prints explicit init guidance for global installs", async () => {
-  const installRoot = await mkdtemp(join(tmpdir(), "codex-limits-postinstall-"));
-  const {CI: _ci, CODEX_LIMITS_SKIP_INIT: _skipInit, ...env} = process.env;
-
-  try {
+  await withTempDirectory("codex-limits-postinstall-", async (installRoot) => {
+    const {CI: _ci, CODEX_LIMITS_SKIP_INIT: _skipInit, ...env} = process.env;
     const proc = Bun.spawn([process.execPath, postinstallScript], {
       cwd: installRoot,
       env: {...env, npm_config_global: "true"},
       stderr: "pipe",
       stdout: "pipe",
     });
-
     const [stdout, stderr, exitCode] = await Promise.all([
       new Response(proc.stdout).text(),
       new Response(proc.stderr).text(),
@@ -28,37 +26,34 @@ test("postinstall only prints explicit init guidance for global installs", async
     expect(stdout).toBe(
       "codex-limits: installed. Run `codex-limits init` to install optional agent integrations.\n"
     );
-  } finally {
-    await rm(installRoot, {recursive: true, force: true});
-  }
+  });
 });
 
 test("postinstall stays silent in non-global, CI, source, skipped, and OpenCode installs", async () => {
-  const root = await mkdtemp(join(tmpdir(), "codex-limits-postinstall-silent-"));
-  const cases = [
-    {name: "non-global", cwd: join(root, "regular"), env: {}},
-    {name: "CI", cwd: join(root, "ci"), env: {npm_config_global: "true", CI: "true"}},
-    {
-      name: "explicit skip",
-      cwd: join(root, "skip"),
-      env: {npm_config_global: "true", CODEX_LIMITS_SKIP_INIT: "true"},
-    },
-    {name: "source", cwd: join(root, "source"), env: {npm_config_global: "true"}, src: true},
-    {
-      name: "OpenCode",
-      cwd: join(root, ".opencode", "node_modules", "package"),
-      env: {npm_config_global: "true"},
-    },
-  ];
-  const {
-    CI: _ci,
-    CODEX_LIMITS_SKIP_INIT: _skip,
-    npm_config_global: _global,
-    npm_config_location: _location,
-    ...baseEnv
-  } = process.env;
+  await withTempDirectory("codex-limits-postinstall-silent-", async (root) => {
+    const cases = [
+      {name: "non-global", cwd: join(root, "regular"), env: {}},
+      {name: "CI", cwd: join(root, "ci"), env: {npm_config_global: "true", CI: "true"}},
+      {
+        name: "explicit skip",
+        cwd: join(root, "skip"),
+        env: {npm_config_global: "true", CODEX_LIMITS_SKIP_INIT: "true"},
+      },
+      {name: "source", cwd: join(root, "source"), env: {npm_config_global: "true"}, src: true},
+      {
+        name: "OpenCode",
+        cwd: join(root, ".opencode", "node_modules", "package"),
+        env: {npm_config_global: "true"},
+      },
+    ];
+    const {
+      CI: _ci,
+      CODEX_LIMITS_SKIP_INIT: _skip,
+      npm_config_global: _global,
+      npm_config_location: _location,
+      ...baseEnv
+    } = process.env;
 
-  try {
     for (const item of cases) {
       await mkdir(item.cwd, {recursive: true});
       if (item.src) {
@@ -80,7 +75,5 @@ test("postinstall stays silent in non-global, CI, source, skipped, and OpenCode 
       expect(stdout, item.name).toBe("");
       expect(stderr, item.name).toBe("");
     }
-  } finally {
-    await rm(root, {recursive: true, force: true});
-  }
+  });
 });

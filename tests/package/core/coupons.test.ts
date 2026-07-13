@@ -1,9 +1,10 @@
 import {expect, test} from "bun:test";
-import {mkdtemp, rm, writeFile} from "node:fs/promises";
+import {writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {getCouponCredentialStatus, getResetCoupons} from "@/package/core/coupons/reset-coupons";
 import type {FetchLike} from "@/package/core/types";
+import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 test("getResetCoupons fetches live coupons with explicit env credentials", async () => {
   const calls: Array<{authorization: string; accountId: string}> = [];
@@ -85,16 +86,7 @@ test("getResetCoupons validates untrusted coupon fields before public output", a
 });
 
 test("getResetCoupons reads detected Codex auth file without exposing secrets", async () => {
-  const home = await mkdtemp(join(tmpdir(), "codex-limits-coupons-auth-"));
-
-  try {
-    const authPath = join(home, "auth.json");
-    await writeFile(
-      authPath,
-      JSON.stringify({tokens: {access_token: "fake-secret-token", account_id: "fake-account-id"}}),
-      "utf8"
-    );
-
+  await withAuthHome(async (home) => {
     const result = await getResetCoupons({
       env: {CODEX_LIMITS_HOME: home},
       homeDirectory: join(home, "unused"),
@@ -110,9 +102,7 @@ test("getResetCoupons reads detected Codex auth file without exposing secrets", 
     expect(result.status).toBe("available");
     expect(JSON.stringify(result)).not.toContain("fake-secret-token");
     expect(JSON.stringify(result)).not.toContain("fake-account-id");
-  } finally {
-    await rm(home, {recursive: true, force: true});
-  }
+  });
 });
 
 test("getResetCoupons returns unavailable without credentials", async () => {
@@ -133,22 +123,23 @@ test("getResetCoupons returns unavailable without credentials", async () => {
 });
 
 test("getCouponCredentialStatus detects local auth.json", async () => {
-  const home = await mkdtemp(join(tmpdir(), "codex-limits-credential-status-"));
-
-  try {
-    await writeFile(
-      join(home, "auth.json"),
-      JSON.stringify({tokens: {access_token: "fake-secret-token", account_id: "fake-account-id"}}),
-      "utf8"
-    );
-
+  await withAuthHome(async (home) => {
     const status = await getCouponCredentialStatus({
       env: {CODEX_LIMITS_HOME: home},
       homeDirectory: join(home, "unused"),
     });
 
     expect(status).toBe("configured");
-  } finally {
-    await rm(home, {recursive: true, force: true});
-  }
+  });
 });
+
+function withAuthHome(run: (home: string) => Promise<void>): Promise<void> {
+  return withTempDirectory("codex-limits-coupons-auth-", async (home) => {
+    await writeFile(
+      join(home, "auth.json"),
+      JSON.stringify({tokens: {access_token: "fake-secret-token", account_id: "fake-account-id"}}),
+      "utf8"
+    );
+    await run(home);
+  });
+}

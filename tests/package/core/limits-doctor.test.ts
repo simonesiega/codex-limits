@@ -1,13 +1,12 @@
 import {expect, test} from "bun:test";
-import {mkdir, mkdtemp, rm, writeFile} from "node:fs/promises";
-import {tmpdir} from "node:os";
+import {mkdir, writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {getCodexLimits} from "@/package/core/limits";
+import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 test("getCodexLimits combines local usage and live coupons", async () => {
-  const home = await createUsageHome();
-
-  try {
+  await withTempDirectory("codex-limits-combined-", async (home) => {
+    await createUsageHome(home);
     const result = await getCodexLimits({
       env: {
         CODEX_LIMITS_HOME: home,
@@ -30,13 +29,10 @@ test("getCodexLimits combines local usage and live coupons", async () => {
     expect(result.windows.fiveHour?.remainingPercent).toBe(88);
     expect(result.coupons?.available).toBe(1);
     expect(JSON.stringify(result)).not.toContain("fake-token");
-  } finally {
-    await rm(home, {recursive: true, force: true});
-  }
+  });
 });
 
-async function createUsageHome(): Promise<string> {
-  const home = await mkdtemp(join(tmpdir(), "codex-limits-combined-"));
+async function createUsageHome(home: string): Promise<void> {
   const sessionDir = join(home, "sessions", "2026", "01", "01");
   await mkdir(sessionDir, {recursive: true});
   await writeFile(
@@ -54,5 +50,4 @@ async function createUsageHome(): Promise<string> {
     }),
     "utf8"
   );
-  return home;
 }

@@ -3,7 +3,7 @@ import {runCli} from "@/package/commands/run-cli";
 import {formatCoupons} from "@/package/commands/coupons";
 import {formatStatus} from "@/package/commands/status";
 import {unavailableCoupons} from "@/package/core/coupons/reset-coupons";
-import {createFakeCouponResult, createFakeLimitsResult} from "../fixtures/fake-results";
+import {createFakeCouponResult, createFakeLimitsResult} from "@tests/package/fixtures/fake-results";
 
 test("runCli renders TUI for the default command", async () => {
   let rendered = false;

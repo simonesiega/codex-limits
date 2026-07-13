@@ -1,13 +1,11 @@
 import {expect, test} from "bun:test";
-import {mkdtemp, rm, writeFile} from "node:fs/promises";
-import {tmpdir} from "node:os";
+import {writeFile} from "node:fs/promises";
 import {join, normalize} from "node:path";
 import {detectCodexHome, getCodexHomeCandidatePaths} from "@/package/core/codex/paths";
+import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 test("detectCodexHome respects CODEX_LIMITS_HOME", async () => {
-  const home = await mkdtemp(join(tmpdir(), "codex-limits-home-"));
-
-  try {
+  await withTempDirectory("codex-limits-home-", async (home) => {
     const detection = await detectCodexHome({
       env: {CODEX_LIMITS_HOME: home},
       homeDirectory: join(home, "unused-home"),
@@ -15,35 +13,25 @@ test("detectCodexHome respects CODEX_LIMITS_HOME", async () => {
 
     expect(detection.overrideHome).toBe(home);
     expect(detection.foundHome).toBe(home);
-    expect(detection.candidates[0]?.source).toBe("env");
-    expect(detection.candidates[0]?.exists).toBe(true);
-  } finally {
-    await rm(home, {recursive: true, force: true});
-  }
+    expect(detection.candidates[0]).toMatchObject({source: "env", exists: true});
+  });
 });
 
 test("detectCodexHome respects CODEX_HOME", async () => {
-  const home = await mkdtemp(join(tmpdir(), "codex-home-"));
-
-  try {
+  await withTempDirectory("codex-home-", async (home) => {
     const detection = await detectCodexHome({
       env: {CODEX_HOME: home},
       homeDirectory: join(home, "unused-home"),
     });
 
     expect(detection.foundHome).toBe(home);
-    expect(detection.candidates[0]?.path).toBe(home);
-    expect(detection.candidates[0]?.source).toBe("env");
-  } finally {
-    await rm(home, {recursive: true, force: true});
-  }
+    expect(detection.candidates[0]).toMatchObject({path: home, source: "env"});
+  });
 });
 
 test("detectCodexHome ignores files as home directories", async () => {
-  const home = await mkdtemp(join(tmpdir(), "codex-limits-home-file-"));
-  const filePath = join(home, "not-a-directory");
-
-  try {
+  await withTempDirectory("codex-limits-home-file-", async (home) => {
+    const filePath = join(home, "not-a-directory");
     await writeFile(filePath, "{}", "utf8");
 
     const detection = await detectCodexHome({
@@ -53,9 +41,7 @@ test("detectCodexHome ignores files as home directories", async () => {
 
     expect(detection.foundHome).toBeNull();
     expect(detection.candidates[0]?.exists).toBe(false);
-  } finally {
-    await rm(home, {recursive: true, force: true});
-  }
+  });
 });
 
 test("getCodexHomeCandidatePaths includes platform defaults", () => {
