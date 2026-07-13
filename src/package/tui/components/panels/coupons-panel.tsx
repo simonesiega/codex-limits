@@ -1,33 +1,21 @@
 import {Box, Text} from "ink";
 import type {ReactElement} from "react";
-import {theme} from "../../theme";
-import {truncateText} from "../../text";
-import type {TuiCouponRow, TuiCouponSummaryCard} from "../../view-model";
-import {Panel} from "../primitives/panel";
+import {theme} from "@/package/tui/theme";
+import {truncateText} from "@/package/tui/text";
+import type {TuiCouponRow, TuiCouponSummaryCard} from "@/package/tui/view-model";
+import {Panel} from "@/package/tui/components/primitives/panel";
 
-/** Props for the reset-coupons panel. */
 export interface CouponsPanelProps {
-  /** Summary values shown on the left or top. */
   summary: TuiCouponSummaryCard;
-  /** Coupon rows shown on the right or bottom. */
   couponRows: TuiCouponRow[];
-  /** Empty state when no coupon rows are present. */
   emptyLabel: string;
-  /** Whether summary and rows should stack vertically. */
   stacked: boolean;
-  /** Terminal width used to size inner cards. */
   width: number;
-  /** Whether to reduce vertical spacing. */
   dense?: boolean;
-  /** Whether coupon rows should use compact labels. */
   compactRows?: boolean;
 }
 
-/**
- * Renders reset coupon summary and rows.
- * @param props - Coupon summary, rows, empty state, and layout flag.
- * @returns - Ink reset-coupons panel element.
- */
+/** Renders responsive reset-credit summary and list cards. */
 export function CouponsPanel({
   summary,
   couponRows,
@@ -69,21 +57,12 @@ export function CouponsPanel({
   );
 }
 
-/** Props for the coupon summary card component. */
 interface CouponSummaryCardProps {
-  /** Summary values to render. */
   summary: TuiCouponSummaryCard;
-  /** Card width. */
   width: number;
-  /** Whether to reduce vertical spacing. */
   dense: boolean;
 }
 
-/**
- * Renders the reset-coupon summary card with a strong available count.
- * @param props - Summary values and card width.
- * @returns - Ink summary card element.
- */
 function CouponSummaryCard({summary, width, dense}: CouponSummaryCardProps): ReactElement {
   const contentWidth = Math.max(width - 4, 1);
 
@@ -126,25 +105,14 @@ function CouponSummaryCard({summary, width, dense}: CouponSummaryCardProps): Rea
   );
 }
 
-/** Props for one summary metric. */
 interface SummaryMetricProps {
-  /** Metric label. */
   label: string;
-  /** Metric value. */
   value: string;
-  /** Optional value color. */
   valueColor?: string;
-  /** Whether to render the value with extra emphasis. */
   strong?: boolean;
-  /** Whether to reduce vertical spacing. */
   dense: boolean;
 }
 
-/**
- * Renders one label/value pair in the coupon summary card.
- * @param props - Metric label, value, and emphasis options.
- * @returns - Ink metric element.
- */
 function SummaryMetric({
   label,
   value,
@@ -162,25 +130,14 @@ function SummaryMetric({
   );
 }
 
-/** Props for the coupon list card component. */
 interface CouponListCardProps {
-  /** Coupon rows to render. */
   rows: TuiCouponRow[];
-  /** Empty state when no rows are present. */
   emptyLabel: string;
-  /** Card width. */
   width: number;
-  /** Whether to reduce vertical spacing. */
   dense: boolean;
-  /** Whether coupon rows should use compact labels. */
   compactRows: boolean;
 }
 
-/**
- * Renders the coupon rows in a bordered list card.
- * @param props - Coupon rows, empty state, and width.
- * @returns - Ink coupon list card element.
- */
 function CouponListCard({
   rows,
   emptyLabel,
@@ -214,21 +171,12 @@ function CouponListCard({
   );
 }
 
-/** Props for one coupon row component. */
 interface CouponRowProps {
-  /** Coupon row display model. */
   row: TuiCouponRow;
-  /** Content width available for the row. */
   width: number;
-  /** Whether to render a compact row. */
   compact: boolean;
 }
 
-/**
- * Renders one reset-credit coupon row.
- * @param props - Coupon row data.
- * @returns - Ink coupon row element.
- */
 function CouponRow({row, width, compact}: CouponRowProps): ReactElement {
   if (compact || width < 50) {
     const prefix = `${row.index} • `;

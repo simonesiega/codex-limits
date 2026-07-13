@@ -1,8 +1,8 @@
 import {expect, test} from "bun:test";
-import {runCli} from "../../../src/package/commands/run-cli";
-import {formatCoupons} from "../../../src/package/commands/coupons";
-import {formatStatus} from "../../../src/package/commands/status";
-import {unavailableCoupons} from "../../../src/package/core/coupons/reset-coupons";
+import {runCli} from "@/package/commands/run-cli";
+import {formatCoupons} from "@/package/commands/coupons";
+import {formatStatus} from "@/package/commands/status";
+import {unavailableCoupons} from "@/package/core/coupons/reset-coupons";
 import {createFakeCouponResult, createFakeLimitsResult} from "../fixtures/fake-results";
 
 test("runCli renders TUI for the default command", async () => {

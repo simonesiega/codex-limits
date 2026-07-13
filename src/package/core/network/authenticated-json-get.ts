@@ -8,15 +8,11 @@ import type {
   JsonGetFailure,
   JsonGetFailureCode,
   JsonGetResult,
-} from "../types";
+} from "@/package/core/types";
 
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "::1", "[::1]", "localhost"]);
 
-/**
- * Sanitizes an endpoint URL by removing sensitive information such as username, password, query parameters, and fragments.
- * @param endpoint - The endpoint URL to sanitize.
- * @returns - The sanitized endpoint URL, or "[invalid endpoint]" if the input is not a valid URL.
- */
+/** Removes credentials, query parameters, and fragments from a public endpoint label. */
 export function sanitizeEndpoint(endpoint: string): string {
   try {
     const url = new URL(endpoint);
@@ -30,11 +26,7 @@ export function sanitizeEndpoint(endpoint: string): string {
   }
 }
 
-/**
- * Performs one bounded authenticated JSON GET with a native Node fallback.
- * @param request - The request object containing endpoint and headers.
- * @returns - A promise resolving to the result of the request.
- */
+/** Performs one bounded authenticated JSON GET with a native Node fallback. */
 export async function authenticatedJsonGet(
   request: AuthenticatedJsonRequest
 ): Promise<JsonGetResult> {
@@ -56,13 +48,13 @@ export async function authenticatedJsonGet(
   if (
     fetched.ok ||
     fetched.code === "aborted" ||
-    (!shouldUseNativeFallback(fetched, request.fallbackOnHttpError ?? false) &&
-      fetched.code !== "network-error")
+    !shouldUseNativeFallback(fetched, request.fallbackOnHttpError ?? false)
   ) {
     return fetched;
   }
 
   const native = await requestWithNode(endpoint.url, request);
+  // Prefer a definitive native response, but preserve the original fetch diagnostic otherwise.
   if (
     native.ok ||
     native.code === "http-error" ||
@@ -74,11 +66,6 @@ export async function authenticatedJsonGet(
   return fetched;
 }
 
-/**
- * Validates the provided endpoint URL, ensuring it is a valid URL with an acceptable protocol (HTTPS or HTTP for loopback hosts).
- * @param endpoint - The endpoint URL to validate.
- * @returns - An object indicating whether the validation was successful and, if so, the parsed URL; otherwise, a failure object with an appropriate error code.
- */
 function validateEndpoint(endpoint: string): {ok: true; url: URL} | JsonGetFailure {
   let url: URL;
   try {
@@ -102,13 +89,6 @@ function validateEndpoint(endpoint: string): {ok: true; url: URL} | JsonGetFailu
   return failure("unsupported-protocol");
 }
 
-/**
- * Performs an authenticated JSON GET request using the Fetch API.
- * @param url - The URL to fetch.
- * @param request - The request object containing headers and other options.
- * @param fetchImplementation - The Fetch API implementation to use.
- * @returns - A promise resolving to the result of the request.
- */
 async function requestWithFetch(
   url: URL,
   request: AuthenticatedJsonRequest,
@@ -150,12 +130,6 @@ async function requestWithFetch(
   }
 }
 
-/**
- * Reads the JSON payload from a Fetch response, ensuring it does not exceed the maximum allowed size.
- * @param response - The Fetch response to read.
- * @param maxBytes - The maximum number of bytes allowed for the response.
- * @returns - A promise resolving to the parsed JSON object.
- */
 async function readFetchJson(response: FetchResponseLike, maxBytes: number): Promise<unknown> {
   const declaredLength = Number(response.headers?.get("content-length"));
   if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
@@ -204,11 +178,6 @@ async function readFetchJson(response: FetchResponseLike, maxBytes: number): Pro
   throw new InvalidJsonError();
 }
 
-/**
- * Cancels the body of a Fetch response, if it exists.
- * @param response - The Fetch response whose body should be canceled.
- * @returns - A promise resolving when the cancellation is complete.
- */
 async function cancelFetchBody(response: FetchResponseLike): Promise<void> {
   if (!response.body) {
     return;
@@ -221,12 +190,6 @@ async function cancelFetchBody(response: FetchResponseLike): Promise<void> {
   }
 }
 
-/**
- * Returns a promise that resolves to the result of an authenticated JSON GET request using Node's HTTP/HTTPS modules.
- * @param url - The URL to request.
- * @param request - The request object containing headers and other options.
- * @returns - A promise resolving to the result of the request.
- */
 function requestWithNode(url: URL, request: AuthenticatedJsonRequest): Promise<JsonGetResult> {
   return new Promise((resolve) => {
     const timeout = createRequestSignal(request.timeoutMs, request.signal);
@@ -271,13 +234,6 @@ function requestWithNode(url: URL, request: AuthenticatedJsonRequest): Promise<J
   });
 }
 
-/**
- * Reads the JSON payload from a Node.js HTTP response, ensuring it does not exceed the maximum allowed size.
- * @param response - The Node.js HTTP response to read.
- * @param maxBytes - The maximum number of bytes allowed for the response.
- * @param finish - The function to call with the result of the operation.
- * @returns - A promise resolving when the operation is complete.
- */
 function consumeNodeResponse(
   response: IncomingMessage,
   maxBytes: number,
@@ -321,12 +277,6 @@ function consumeNodeResponse(
   response.on("error", () => finish(failure("network-error")));
 }
 
-/**
- * Creates an abort signal for the request, with a timeout and optional caller signal.
- * @param timeoutMs - The timeout in milliseconds for the request.
- * @param callerSignal - An optional AbortSignal provided by the caller to allow external cancellation of the request.
- * @returns - An object containing the abort signal, a function to check if the request timed out, and a dispose function to clean up resources.
- */
 function createRequestSignal(
   timeoutMs: number,
   callerSignal?: AbortSignal
@@ -358,25 +308,15 @@ function createRequestSignal(
   };
 }
 
-/**
- * Determines whether to use the native Node fallback based on the result of a JSON GET request and the fallbackOnHttpError flag.
- * @param result - The result of the JSON GET request.
- * @param fallbackOnHttpError - A boolean indicating whether to fallback on HTTP errors.
- * @returns - A boolean indicating whether to use the native Node fallback.
- */
 function shouldUseNativeFallback(result: JsonGetFailure, fallbackOnHttpError: boolean): boolean {
   return (
+    result.code === "network-error" ||
     result.code === "timeout" ||
     result.code === "invalid-json" ||
     (fallbackOnHttpError && result.code === "http-error")
   );
 }
 
-/**
- * Parses a JSON string into an object.
- * @param body - The JSON string to parse.
- * @returns - The parsed object.
- */
 function parseJson(body: string): unknown {
   try {
     return JSON.parse(body) as unknown;
@@ -385,31 +325,14 @@ function parseJson(body: string): unknown {
   }
 }
 
-/**
- * Normalizes the status code to ensure it is a non-negative integer or null.
- * @param status - The status code to normalize.
- * @returns - The normalized status code, or null if it is not a valid non-negative integer.
- */
 function normalizeStatus(status: number | undefined): number | null {
   return typeof status === "number" && Number.isInteger(status) && status >= 0 ? status : null;
 }
 
-/**
- * Creates a failure object with the specified code and status.
- * @param code - The failure code.
- * @param status - The status code, or null if not applicable.
- * @returns - The failure object.
- */
 function failure(code: JsonGetFailureCode, status: number | null = null): JsonGetFailure {
   return {ok: false, code, status};
 }
 
-/**
- * Error class representing a response that exceeds the maximum allowed size.
- */
 class ResponseTooLargeError extends Error {}
 
-/**
- * Error class representing an invalid JSON response.
- */
 class InvalidJsonError extends Error {}

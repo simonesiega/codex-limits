@@ -1,71 +1,46 @@
-import {createInterface, type Interface} from "node:readline/promises";
 import {stdin as processStdin, stdout as processStdout} from "node:process";
+import {createInterface} from "node:readline/promises";
 import {AGENT_INTEGRATIONS, AgentInstallError, type AgentIntegration} from "@/agents";
-import {sanitizeArguments} from "./safe-error";
+import {sanitizeArguments} from "@/package/commands/safe-error";
 
 type WriteOutput = (text: string) => void;
+type Prompt = ((question: string) => Promise<string>) & {close?: () => void};
 
-/**
- * Store the options for running the `codex-limits init` command.
- */
 export interface RunInitOptions {
-  // Output writer for stdout, defaults to process.stdout.
   stdout?: WriteOutput;
-
-  // Output writer for stderr, defaults to process.stderr.
   stderr?: WriteOutput;
-
-  // Test seam for the interactive prompt.
-  prompt?: (question: string) => Promise<string>;
-
-  // Whether stdin can be used interactively.
+  prompt?: Prompt;
   interactive?: boolean;
-
-  // Test seam for exercising multiple integrations.
   integrations?: AgentIntegration[];
 }
 
-/**
- * Store the parsed arguments for the `codex-limits init` command.
- */
-interface ParsedInitArgs {
-  kind: "help" | "install" | "invalid" | "prompt";
-  ids: string[];
-  error?: string;
-}
+type ParsedInitArgs =
+  | {kind: "help"}
+  | {kind: "install"; ids: string[]}
+  | {kind: "invalid"; error: string}
+  | {kind: "prompt"};
 
-/**
- * Install optional agent integrations for the `codex-limits init` command.
- * @param args - Command-line arguments for the init command.
- * @param options - Options for running the init command.
- * @returns - Exit code for the init command.
- */
+/** Runs interactive or explicitly selected agent integration setup. */
 export async function runInit(args: string[], options: RunInitOptions = {}): Promise<number> {
-  // Use the provided stdout and stderr writers, or default to process.stdout and process.stderr.
-  const stdout = options.stdout ?? ((text) => process.stdout.write(text));
+  const stdout = options.stdout ?? ((text) => processStdout.write(text));
   const stderr = options.stderr ?? ((text) => process.stderr.write(text));
-
-  const interactive = options.interactive ?? Boolean(process.stdin.isTTY && process.stdout.isTTY);
+  const interactive = options.interactive ?? Boolean(processStdin.isTTY && processStdout.isTTY);
   const integrations = options.integrations ?? AGENT_INTEGRATIONS;
   const initHelp = getInitHelp(integrations);
   const parsed = parseInitArgs(args, integrations);
 
-  // Handle the parsed arguments based on their kind.
   if (parsed.kind === "help") {
     stdout(initHelp);
     return 0;
   }
-
   if (parsed.kind === "invalid") {
-    stderr(`${parsed.error ?? "Invalid init arguments."}\n\n${initHelp}`);
+    stderr(`${parsed.error}\n\n${initHelp}`);
     return 1;
   }
-
   if (parsed.kind === "install") {
     return installSelected(parsed.ids, integrations, stdout, stderr);
   }
 
-  // No arguments provided
   if (!interactive && !options.prompt) {
     const firstFlag = integrations[0] ? `--${integrations[0].id}` : "--all";
     stdout(
@@ -76,10 +51,8 @@ export async function runInit(args: string[], options: RunInitOptions = {}): Pro
 
   stdout("codex-limits setup\n\n");
   stdout("Choose which agent integrations to install.\n\n");
-
   const prompt = options.prompt ?? createPrompt();
 
-  // Prompt the user for each integration and collect the selected IDs.
   try {
     const ids: string[] = [];
     for (const integration of integrations) {
@@ -89,7 +62,6 @@ export async function runInit(args: string[], options: RunInitOptions = {}): Pro
       }
     }
 
-    // No integrations selected
     if (ids.length === 0) {
       stdout("No integrations installed. You can run `codex-limits init` again later.\n");
       return 0;
@@ -100,17 +72,11 @@ export async function runInit(args: string[], options: RunInitOptions = {}): Pro
     stderr("codex-limits init: Interactive setup failed.\n");
     return 1;
   } finally {
-    // Close the prompt interface
-    closePrompt(prompt);
+    prompt.close?.();
   }
 }
 
-/**
- * Generate the help text for the `codex-limits init` command.
- * @param integrations - The list of available agent integrations.
- * @returns - The formatted help text for the init command.
- */
-function getInitHelp(integrations: AgentIntegration[]): string {
+function getInitHelp(integrations: readonly AgentIntegration[]): string {
   const integrationUsage = integrations
     .map(
       (integration) =>
@@ -130,21 +96,15 @@ function getInitHelp(integrations: AgentIntegration[]): string {
   `;
 }
 
-/**
- * Parse the command-line arguments for the `codex-limits init` command.
- * @param args - The command-line arguments to parse.
- * @param integrations - The list of available agent integrations.
- * @returns - The parsed arguments as a `ParsedInitArgs` object.
- */
-function parseInitArgs(args: readonly string[], integrations: AgentIntegration[]): ParsedInitArgs {
-  // No arguments provided
+function parseInitArgs(
+  args: readonly string[],
+  integrations: readonly AgentIntegration[]
+): ParsedInitArgs {
   if (args.length === 0) {
-    return {kind: "prompt", ids: []};
+    return {kind: "prompt"};
   }
-
-  // Help flag provided
   if (args.length === 1 && (args[0] === "--help" || args[0] === "-h")) {
-    return {kind: "help", ids: []};
+    return {kind: "help"};
   }
 
   const integrationFlags = new Map(
@@ -154,21 +114,13 @@ function parseInitArgs(args: readonly string[], integrations: AgentIntegration[]
 
   for (const arg of args) {
     if (!arg.startsWith("-")) {
-      return {
-        kind: "invalid",
-        ids: [],
-        error: `Unexpected init argument: ${sanitizeArguments([arg])}`,
-      };
+      return {kind: "invalid", error: `Unexpected init argument: ${sanitizeArguments([arg])}`};
     }
     if (arg !== "--all" && !integrationFlags.has(arg)) {
-      return {
-        kind: "invalid",
-        ids: [],
-        error: `Unknown init option: ${sanitizeArguments([arg])}`,
-      };
+      return {kind: "invalid", error: `Unknown init option: ${sanitizeArguments([arg])}`};
     }
     if (seen.has(arg)) {
-      return {kind: "invalid", ids: [], error: `Duplicate init option: ${arg}`};
+      return {kind: "invalid", error: `Duplicate init option: ${arg}`};
     }
     seen.add(arg);
   }
@@ -176,7 +128,6 @@ function parseInitArgs(args: readonly string[], integrations: AgentIntegration[]
   if (seen.has("--all") && seen.size > 1) {
     return {
       kind: "invalid",
-      ids: [],
       error: "Init option --all cannot be combined with integration options.",
     };
   }
@@ -192,23 +143,14 @@ function parseInitArgs(args: readonly string[], integrations: AgentIntegration[]
   };
 }
 
-/**
- * Install the selected agent integrations and report the results.
- * @param ids - The list of integration IDs to install.
- * @param integrations - The list of available agent integrations.
- * @param stdout - Output writer for stdout.
- * @param stderr - Output writer for stderr.
- * @returns - Exit code for the installation process (0 for success, 1 for failure).
- */
 async function installSelected(
-  ids: string[],
-  integrations: AgentIntegration[],
+  ids: readonly string[],
+  integrations: readonly AgentIntegration[],
   stdout: WriteOutput,
   stderr: WriteOutput
 ): Promise<number> {
   let failed = false;
 
-  // Install each selected integration and report the results.
   for (const id of ids) {
     const integration = integrations.find((candidate) => candidate.id === id);
     if (!integration) {
@@ -217,7 +159,6 @@ async function installSelected(
       continue;
     }
 
-    // Attempt to install the integration and handle any errors.
     try {
       const result = await integration.install();
       const state = result.changed ? "installed" : "already installed";
@@ -234,37 +175,16 @@ async function installSelected(
   if (!failed) {
     stdout("Restart the target agent terminal for changes to take effect.\n");
   }
-
   return failed ? 1 : 0;
 }
 
-/**
- * Creates a prompt for user input.
- * @returns - A function that prompts the user for input and returns a promise that resolves with the user's response.
- */
-function createPrompt(): ((question: string) => Promise<string>) & {close: () => void} {
+function createPrompt(): Prompt {
   const reader = createInterface({input: processStdin, output: processStdout});
-  const prompt = ((question: string) => reader.question(question)) as ((
-    question: string
-  ) => Promise<string>) & {close: () => void};
+  const prompt: Prompt = (question) => reader.question(question);
   prompt.close = () => reader.close();
   return prompt;
 }
 
-/**
- * Closes the prompt interface if it has a close method.
- * @param prompt - The prompt function to close.
- */
-function closePrompt(prompt: (question: string) => Promise<string>): void {
-  const maybeClose = prompt as Partial<Pick<Interface, "close">>;
-  maybeClose.close?.();
-}
-
-/**
- * Determines if a user's answer to a yes/no question is affirmative.
- * @param answer - The user's input answer to a yes/no question.
- * @returns - True if the answer is considered a "yes" (case-insensitive), false otherwise.
- */
 function isYes(answer: string): boolean {
   const normalized = answer.trim().toLowerCase();
   return normalized === "" || normalized === "y" || normalized === "yes";

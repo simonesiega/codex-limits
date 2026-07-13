@@ -2,9 +2,13 @@ import type {Dirent} from "node:fs";
 import {createReadStream} from "node:fs";
 import {lstat, opendir, realpath, stat} from "node:fs/promises";
 import {join} from "node:path";
-import type {CodexSessionFile, CodexSessionReadResult, CodexSessionSnapshot} from "../types";
-import {isPathWithin, toSafeRelativePath} from "../utils/safe-path";
-import {isRecord, readString} from "../utils/unknown";
+import type {
+  CodexSessionFile,
+  CodexSessionReadResult,
+  CodexSessionSnapshot,
+} from "@/package/core/types";
+import {isPathWithin, toSafeRelativePath} from "@/package/core/utils/safe-path";
+import {isRecord, readString} from "@/package/core/utils/unknown";
 
 const MAX_SESSION_DEPTH = 8;
 const MAX_SESSION_FILES_TO_PARSE = 20;
@@ -15,18 +19,12 @@ const MAX_SESSION_FILE_BYTES = 25_000_000;
 const MAX_SESSION_LINE_BYTES = 1_000_000;
 const ROLLOUT_FILE_PATTERN = /^rollout-.*\.jsonl$/i;
 
-/**
- * Store the path, modified time, and size of a session file candidate for inspection.
- */
 interface SessionCandidate {
   path: string;
   modifiedAtMs: number;
   size: number;
 }
 
-/**
- * Store the state of a session directory walk, including the number of directories and files found, whether a limit was hit, and whether any symbolic links were skipped.
- */
 interface SessionWalkState {
   directories: number;
   files: string[];
@@ -34,24 +32,15 @@ interface SessionWalkState {
   skippedSymlink: boolean;
 }
 
-/**
- * Store the result of extracting a snapshot from a session file, including the snapshot itself and whether any oversized lines were skipped.
- */
 interface SnapshotExtraction {
   snapshot: CodexSessionSnapshot | null;
   skippedOversizedLine: boolean;
 }
 
-/**
- * Reads the local Codex sessions from the given home path, returning details about the sessions and any warnings encountered during the read process.
- * @param homePath - The path to the local Codex home directory containing session files.
- * @returns - A `CodexSessionReadResult` object containing the home path, sessions root, session files, latest snapshot, and any warnings.
- */
+/** Finds the newest bounded local rate-limit snapshot without following nested symlinks. */
 export async function readCodexSessions(homePath: string): Promise<CodexSessionReadResult> {
   const sessionsRoot = join(homePath, "sessions");
   const warnings: string[] = [];
-
-  // Check if the sessions root is a symbolic link and skip it if so
   if (await isSymbolicLink(sessionsRoot)) {
     warnings.push("Skipped the symbolic-link Codex sessions directory.");
     return {homePath, sessionsRoot, files: [], latestSnapshot: null, warnings};
@@ -70,8 +59,6 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
       );
       continue;
     }
-
-    // Attempt to extract a snapshot from the session file, handling any errors that may occur
     try {
       const extraction = await extractSnapshotFromSessionFile(homePath, candidate.path);
       files.push(
@@ -90,7 +77,7 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
         latestSnapshot = extraction.snapshot;
       }
     } catch (error) {
-      const tooLarge = error instanceof SessionReadError && error.code === "too-large";
+      const tooLarge = error instanceof SessionTooLargeError;
       warnings.push(
         tooLarge
           ? `Skipped ${relativePath} because it grew too large to inspect safely.`
@@ -124,13 +111,6 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
   return {homePath, sessionsRoot, files, latestSnapshot, warnings};
 }
 
-/**
- * Finds session files within the specified sessions root directory.
- * @param homePath - The path to the local Codex home directory.
- * @param sessionsRoot - The path to the sessions root directory.
- * @param warnings - An array to collect any warnings encountered during the search.
- * @returns - A promise resolving to an array of session file candidates.
- */
 async function findSessionFiles(
   homePath: string,
   sessionsRoot: string,
@@ -161,7 +141,7 @@ async function findSessionFiles(
   const candidates: SessionCandidate[] = [];
   for (const path of state.files) {
     const candidate = await statSessionFile(homePath, realSessionsRoot, path, warnings);
-    if (isSessionCandidate(candidate)) {
+    if (candidate) {
       candidates.push(candidate);
     }
   }
@@ -171,14 +151,6 @@ async function findSessionFiles(
   );
 }
 
-/**
- * Stat a session file and return its details if it's a valid session file.
- * @param homePath - The path to the local Codex home directory.
- * @param realSessionsRoot - The real path to the sessions root directory.
- * @param path - The path to the session file candidate.
- * @param warnings - An array to collect any warnings encountered during the stat operation.
- * @returns - A promise resolving to a `SessionCandidate` if the file is valid, or null otherwise.
- */
 async function statSessionFile(
   homePath: string,
   realSessionsRoot: string,
@@ -198,24 +170,6 @@ async function statSessionFile(
   }
 }
 
-/**
- * Checks whether a value is a `SessionCandidate`.
- * @param value - The value to check.
- * @returns - True if the value is a `SessionCandidate`, false otherwise.
- */
-function isSessionCandidate(value: SessionCandidate | null): value is SessionCandidate {
-  return value !== null;
-}
-
-/**
- * Recursively walks through the sessions directory to find session files.
- * @param currentPath - The current directory path being inspected.
- * @param depth - The current depth of the directory walk.
- * @param state - The state object to track the discovery process.
- * @param warnings - An array to collect any warnings encountered during the walk.
- * @param homePath - The path to the local Codex home directory.
- * @returns - A promise resolving when the walk is complete.
- */
 async function walkSessions(
   currentPath: string,
   depth: number,
@@ -268,12 +222,6 @@ async function walkSessions(
   }
 }
 
-/**
- * Read the contents of a directory, returning a sorted list of entries while respecting a maximum entry limit.
- * @param currentPath - The path of the directory to read.
- * @param state - The state object tracking the discovery process, including whether the entry limit has been hit.
- * @returns - A promise resolving to an array of directory entries (`Dirent`), sorted by name in descending order.
- */
 async function readBoundedDirectory(
   currentPath: string,
   state: SessionWalkState
@@ -293,12 +241,6 @@ async function readBoundedDirectory(
   return entries.sort((left, right) => right.name.localeCompare(left.name));
 }
 
-/**
- * Extracts a snapshot from a session file, returning the snapshot and whether any oversized lines were skipped during the extraction process.
- * @param homePath - The path to the local Codex home directory.
- * @param sessionFile - The path to the session file from which to extract the snapshot.
- * @returns - A promise resolving to a `SnapshotExtraction` object containing the extracted snapshot (if any) and a flag indicating whether any oversized lines were skipped.
- */
 async function extractSnapshotFromSessionFile(
   homePath: string,
   sessionFile: string
@@ -313,11 +255,12 @@ async function extractSnapshotFromSessionFile(
   let discardingLine = false;
   let skippedOversizedLine = false;
 
+  // Discard only an oversized line, not the stream, so a later safe snapshot can still be used.
   for await (const rawChunk of stream) {
     const chunk = String(rawChunk);
     totalBytes += Buffer.byteLength(chunk, "utf8");
     if (totalBytes > MAX_SESSION_FILE_BYTES) {
-      throw new SessionReadError("too-large");
+      throw new SessionTooLargeError();
     }
 
     let offset = 0;
@@ -385,11 +328,6 @@ async function extractSnapshotFromSessionFile(
   return {snapshot: latest, skippedOversizedLine};
 }
 
-/**
- * Parses a single line from a session file to extract the thread ID, timestamp, and rate limits if present.
- * @param rawLine - The raw line from the session file to parse.
- * @returns - An object containing the extracted thread ID, timestamp, and rate limits, or null values if they are not present or the line is invalid.
- */
 function parseSnapshotLine(rawLine: string): {
   threadId: string | null;
   timestamp: string | null;
@@ -407,11 +345,6 @@ function parseSnapshotLine(rawLine: string): {
   };
 }
 
-/**
- * Parses a single line from a session file to extract a JSON object.
- * @param rawLine - The raw line from the session file to parse.
- * @returns - The parsed JSON object, or null if the line is not valid JSON.
- */
 function parseJsonLine(rawLine: string): Record<string, unknown> | null {
   const line = rawLine.trim();
   if (!line) {
@@ -426,11 +359,6 @@ function parseJsonLine(rawLine: string): Record<string, unknown> | null {
   }
 }
 
-/**
- * Reads the session thread ID from a parsed entry.
- * @param entry - The parsed entry from the session file.
- * @returns - The session thread ID, or null if not found.
- */
 function readSessionThreadId(entry: Record<string, unknown>): string | null {
   if (entry.type !== "session_meta" || !isRecord(entry.payload)) {
     return null;
@@ -438,11 +366,6 @@ function readSessionThreadId(entry: Record<string, unknown>): string | null {
   return readString(entry.payload, "id");
 }
 
-/**
- * Reads the rate limits from a parsed entry.
- * @param entry - The parsed entry from the session file.
- * @returns - The rate limits object, or null if not found.
- */
 function readRateLimits(entry: Record<string, unknown>): Record<string, unknown> | null {
   if (entry.type !== "event_msg" || !isRecord(entry.payload)) {
     return null;
@@ -453,15 +376,6 @@ function readRateLimits(entry: Record<string, unknown>): Record<string, unknown>
   return entry.payload.rate_limits;
 }
 
-/**
- * Creates a `CodexSessionFile` object from the provided parameters.
- * @param path - The path to the session file.
- * @param relativePath - The relative path to the session file.
- * @param modifiedAtMs - The timestamp of the last modification in milliseconds.
- * @param hasSnapshot - A flag indicating whether the session file has a snapshot.
- * @param error - An error message, or null if no error occurred.
- * @returns - A `CodexSessionFile` object.
- */
 function toSessionFile(
   path: string,
   relativePath: string,
@@ -472,11 +386,6 @@ function toSessionFile(
   return {path, relativePath, modifiedAtMs, hasSnapshot, error};
 }
 
-/**
- * Checks whether the specified path is a symbolic link.
- * @param path - The path to check.
- * @returns - A promise resolving to true if the path is a symbolic link, false otherwise.
- */
 async function isSymbolicLink(path: string): Promise<boolean> {
   try {
     return (await lstat(path)).isSymbolicLink();
@@ -485,14 +394,4 @@ async function isSymbolicLink(path: string): Promise<boolean> {
   }
 }
 
-/**
- * Custom error class for session reading errors, specifically for cases where a session file is too large to process safely.
- */
-class SessionReadError extends Error {
-  readonly code: "too-large";
-
-  constructor(code: "too-large") {
-    super(code);
-    this.code = code;
-  }
-}
+class SessionTooLargeError extends Error {}

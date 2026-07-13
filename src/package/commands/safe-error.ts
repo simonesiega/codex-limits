@@ -1,14 +1,10 @@
 import {isAbsolute} from "node:path";
-import {redactSensitiveText} from "../core/utils/redact";
+import {redactSensitiveText} from "@/package/core/utils/redact";
 
 const SENSITIVE_OPTION =
   /(?:access[-_]?token|account[-_]?id|authorization|cookie|secret|api[-_]?key)/i;
 
-/**
- * Formats rejected arguments while hiding credential values and private paths.
- * @param args - The command-line arguments to sanitize.
- * @returns - The sanitized string of arguments.
- */
+/** Sanitizes rejected CLI arguments before they are echoed to stderr. */
 export function sanitizeArguments(args: readonly string[]): string {
   const safe: string[] = [];
   let redactNext = false;
@@ -47,11 +43,7 @@ export function sanitizeArguments(args: readonly string[]): string {
   return safe.join(" ");
 }
 
-/**
- * Returns a deterministic CLI failure message without exposing raw exception messages.
- * @param operation - The operation that failed.
- * @returns - The failure message.
- */
+/** Returns a deterministic failure message without raw exception details. */
 export function operationFailure(operation: "coupons" | "dashboard" | "init" | "status"): string {
   switch (operation) {
     case "coupons":

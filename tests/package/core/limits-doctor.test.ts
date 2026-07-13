@@ -2,7 +2,7 @@ import {expect, test} from "bun:test";
 import {mkdir, mkdtemp, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {getCodexLimits} from "../../../src/package/core/limits";
+import {getCodexLimits} from "@/package/core/limits";
 
 test("getCodexLimits combines local usage and live coupons", async () => {
   const home = await createUsageHome();

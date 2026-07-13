@@ -1,7 +1,7 @@
 import {Box, Text} from "ink";
 import type {ReactElement} from "react";
-import {theme} from "../../theme";
-import {truncateText} from "../../text";
+import {theme} from "@/package/tui/theme";
+import {truncateText} from "@/package/tui/text";
 
 const BLOCK_TITLE = [
   " ██████╗ ██████╗ ██████╗ ███████╗██╗  ██╗    ██╗     ██╗███╗   ███╗██╗████████╗███████╗ ",
@@ -27,21 +27,13 @@ const COMPACT_BLOCK_TITLE = [
   "  ╚══════╝╚═╝╚═╝     ╚═╝╚═╝   ╚═╝   ╚══════╝ ",
 ] as const;
 
-/** Props for the TUI title component. */
 export interface TitleProps {
-  /** Terminal width used to center the title. */
   width: number;
-  /** Whether the large ASCII logo fits and should be rendered. */
   showLarge: boolean;
-  /** Whether the compact ASCII logo fits and should be rendered. */
   showStyled: boolean;
 }
 
-/**
- * Renders the centered static CODEX LIMITS title.
- * @param props - Title layout props.
- * @returns -Ink title element.
- */
+/** Selects the largest static title that fits the chosen layout. */
 export function Title({width, showLarge, showStyled}: TitleProps): ReactElement {
   if (showLarge && width >= BLOCK_TITLE[0].length) {
     return (

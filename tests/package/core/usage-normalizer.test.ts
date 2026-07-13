@@ -1,11 +1,8 @@
 import {expect, test} from "bun:test";
-import {formatDuration} from "../../../src/package/core/utils/date-time";
-import {redactSensitiveText} from "../../../src/package/core/utils/redact";
-import type {CodexStateReadResult} from "../../../src/package/core/types";
-import {
-  parseUsageFromState,
-  unavailableLocalUsage,
-} from "../../../src/package/core/usage/normalizer";
+import {formatDuration} from "@/package/core/utils/date-time";
+import {redactSensitiveText} from "@/package/core/utils/redact";
+import type {CodexStateReadResult} from "@/package/core/types";
+import {parseUsageFromState, unavailableLocalUsage} from "@/package/core/usage/normalizer";
 
 test("parseUsageFromState normalizes remaining and used percentages", () => {
   const result = parseUsageFromState(

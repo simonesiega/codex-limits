@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {parseCommand, type ParsedCommand} from "../../../src/package/commands/cli-parser";
+import {parseCommand, type ParsedCommand} from "@/package/commands/cli-parser";
 
 test("parseCommand accepts the complete public command grammar", () => {
   const cases: Array<{args: string[]; expected: ParsedCommand}> = [

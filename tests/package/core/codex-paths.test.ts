@@ -2,7 +2,7 @@ import {expect, test} from "bun:test";
 import {mkdtemp, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join, normalize} from "node:path";
-import {detectCodexHome, getCodexHomeCandidatePaths} from "../../../src/package/core/codex/paths";
+import {detectCodexHome, getCodexHomeCandidatePaths} from "@/package/core/codex/paths";
 
 test("detectCodexHome respects CODEX_LIMITS_HOME", async () => {
   const home = await mkdtemp(join(tmpdir(), "codex-limits-home-"));

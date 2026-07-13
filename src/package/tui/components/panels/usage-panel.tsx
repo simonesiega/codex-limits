@@ -1,26 +1,17 @@
 import {Box} from "ink";
 import type {ReactElement} from "react";
-import type {TuiUsageCard} from "../../view-model";
-import {Panel} from "../primitives/panel";
-import {UsageCard} from "./usage-card";
+import type {TuiUsageCard} from "@/package/tui/view-model";
+import {Panel} from "@/package/tui/components/primitives/panel";
+import {UsageCard} from "@/package/tui/components/panels/usage-card";
 
-/** Props for the usage limits panel. */
 export interface UsagePanelProps {
-  /** Cards to render. */
   cards: TuiUsageCard[];
-  /** Terminal width used to size cards. */
   width: number;
-  /** Whether cards should stack vertically. */
   stacked: boolean;
-  /** Whether to reduce vertical spacing. */
   dense?: boolean;
 }
 
-/**
- * Renders the 5-hour and weekly usage limit cards.
- * @param props - Usage cards and responsive layout options.
- * @returns - Ink usage panel element.
- */
+/** Renders responsive 5-hour and weekly usage cards. */
 export function UsagePanel({cards, width, stacked, dense = false}: UsagePanelProps): ReactElement {
   const bodyWidth = Math.max(width - 4, 1);
   const gutter = stacked ? 0 : Math.max(Math.round(bodyWidth * 0.03), 2);

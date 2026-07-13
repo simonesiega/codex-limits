@@ -1,9 +1,6 @@
 // Type of layout mode based on terminal dimensions.
 export type LayoutMode = "compact" | "standard" | "ultra" | "wide";
 
-/**
- * Store layout information for a TUI (Text User Interface) application.
- */
 export interface TuiLayout {
   terminalWidth: number;
   contentWidth: number;
@@ -14,12 +11,7 @@ export interface TuiLayout {
   showStyledLogo: boolean;
 }
 
-/**
- * Creates a TUI layout based on the provided terminal dimensions.
- * @param columns - Number of terminal columns.
- * @param rows - Number of terminal rows.
- * @returns - TuiLayout object containing layout information for the TUI application.
- */
+/** Derives deterministic layout breakpoints from the startup terminal dimensions. */
 export function createTuiLayout(columns: number, rows: number): TuiLayout {
   const terminalWidth = Math.max(Math.floor(columns), 1);
   const terminalRows = Math.max(Math.floor(rows), 1);
@@ -38,12 +30,6 @@ export function createTuiLayout(columns: number, rows: number): TuiLayout {
   };
 }
 
-/**
- * Get the layout mode based on terminal dimensions.
- * @param columns - Number of terminal columns.
- * @param rows - Number of terminal rows.
- * @returns - The layout mode as a string ("compact", "standard", "ultra", or "wide").
- */
 function getLayoutMode(columns: number, rows: number): LayoutMode {
   if (columns < 70 || rows < 18) {
     return "ultra";

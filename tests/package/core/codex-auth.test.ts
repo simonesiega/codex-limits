@@ -2,7 +2,7 @@ import {expect, test} from "bun:test";
 import {mkdtemp, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {resolveCodexCredentialResult} from "../../../src/package/core/auth/codex-auth";
+import {resolveCodexCredentialResult} from "@/package/core/auth/codex-auth";
 
 const SECRET_TOKEN = "fake-secret-access-token";
 const SECRET_ACCOUNT = "fake-private-account-id";

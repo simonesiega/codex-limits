@@ -1,32 +1,30 @@
-import {resolveCodexCredentialResult} from "../auth/codex-auth";
-import {diagnosticsToWarnings} from "../diagnostics";
-import {authenticatedJsonGet, sanitizeEndpoint} from "../network/authenticated-json-get";
-import {diagnosticForJsonFailure} from "../network/transport-diagnostics";
+import {resolveCodexCredentialResult} from "@/package/core/auth/codex-auth";
+import {diagnosticsToWarnings} from "@/package/core/diagnostics";
+import {
+  authenticatedJsonGet,
+  sanitizeEndpoint,
+} from "@/package/core/network/authenticated-json-get";
+import {diagnosticForJsonFailure} from "@/package/core/network/transport-diagnostics";
 import type {
   AuthenticatedJsonRequest,
   CodexLimitsOptions,
   JsonGetFailure,
   UsageResult,
-} from "../types";
-import {readEnvValue, resolveEnvironment} from "../utils/env";
-import {mapLiveUsagePayload, unavailableLiveUsage} from "./live-payload";
+} from "@/package/core/types";
+import {mapLiveUsagePayload, unavailableLiveUsage} from "@/package/core/usage/live-payload";
+import {readEnvValue, resolveEnvironment} from "@/package/core/utils/env";
 
 export const LIVE_USAGE_ENDPOINT = "https://chatgpt.com/backend-api/codex/usage";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 const MAX_USAGE_RESPONSE_BYTES = 1_000_000;
 
-/**
- * Fetches current usage-limit windows from the ChatGPT/Codex backend.
- * @param options - The options for the request.
- * @returns - A promise resolving to the usage result.
- */
+/** Fetches current usage windows through the shared bounded authenticated transport. */
 export async function getLiveUsage(options: CodexLimitsOptions = {}): Promise<UsageResult> {
   const endpoint = resolveUsageEndpoint(options);
   const publicEndpoint = sanitizeEndpoint(endpoint);
   const credentialResult = await resolveCodexCredentialResult(options);
 
-  // If credentials are not available, return an unavailable usage result with appropriate warnings.
   if (!credentialResult.credentials) {
     const warnings = diagnosticsToWarnings(credentialResult.diagnostics);
     return unavailableLiveUsage(
@@ -44,23 +42,16 @@ export async function getLiveUsage(options: CodexLimitsOptions = {}): Promise<Us
     ...(options.signal ? {signal: options.signal} : {}),
   };
 
-  // Attempt to fetch the live usage data and handle any potential errors.
   try {
     const response = await (options.transport ?? authenticatedJsonGet)(request);
-    if (!response.ok) {
-      return unavailableFromFailure(response);
-    }
-    return mapLiveUsagePayload(response.payload, publicEndpoint, options.now ?? new Date());
+    return response.ok
+      ? mapLiveUsagePayload(response.payload, publicEndpoint, options.now ?? new Date())
+      : unavailableFromFailure(response);
   } catch {
     return unavailableFromFailure({ok: false, code: "network-error", status: null});
   }
 }
 
-/**
- * Builds the headers for the usage request.
- * @param credentials - The credentials containing the access token and account ID.
- * @returns - An object representing the headers for the request.
- */
 function buildUsageHeaders(credentials: {
   accessToken: string;
   accountId: string;
@@ -77,11 +68,6 @@ function buildUsageHeaders(credentials: {
   };
 }
 
-/**
- * Resolves the usage endpoint based on the provided options.
- * @param options - The options for the request.
- * @returns - The resolved usage endpoint.
- */
 function resolveUsageEndpoint(options: CodexLimitsOptions): string {
   const env = resolveEnvironment(options.env);
   return (
@@ -89,11 +75,6 @@ function resolveUsageEndpoint(options: CodexLimitsOptions): string {
   );
 }
 
-/**
- * Creates an unavailable usage result from a failed request.
- * @param failure - The failure object representing the error.
- * @returns - A UsageResult object representing the unavailable usage data.
- */
 function unavailableFromFailure(failure: JsonGetFailure): UsageResult {
   return unavailableLiveUsage(
     diagnosticsToWarnings([diagnosticForJsonFailure(failure, "Live usage")])

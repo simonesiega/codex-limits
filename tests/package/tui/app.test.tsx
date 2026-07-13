@@ -1,8 +1,8 @@
 import {expect, test} from "bun:test";
 import {render} from "ink-testing-library";
-import {App} from "../../../src/package/tui/app";
-import {buildProgressBar} from "../../../src/package/tui/components/primitives/progress-bar";
-import {createTuiLayout} from "../../../src/package/tui/layout";
+import {App} from "@/package/tui/app";
+import {buildProgressBar} from "@/package/tui/components/primitives/progress-bar";
+import {createTuiLayout} from "@/package/tui/layout";
 import {createFakeLimitsResult} from "../fixtures/fake-results";
 
 test("App renders available data without footer actions", () => {
@@ -192,6 +192,8 @@ test("layout boundaries are deterministic from startup dimensions", () => {
 test("buildProgressBar renders percentages predictably", () => {
   expect(buildProgressBar(50, 10)).toBe("█████░░░░░");
   expect(buildProgressBar(null, 8)).toBe("░░░░░░░░");
+  expect(buildProgressBar(50, -1)).toBe("");
+  expect(buildProgressBar(50, Number.NaN)).toBe("");
 });
 
 function stripAnsi(value: string): string {

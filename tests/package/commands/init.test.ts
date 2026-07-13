@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 import type {AgentIntegration} from "@/agents";
-import {runInit} from "../../../src/package/commands/init";
+import {runInit} from "@/package/commands/init";
 
 function createIntegration(
   id = "opencode",

@@ -1,23 +1,16 @@
 import {Box, Text} from "ink";
 import type {ReactElement} from "react";
-import {theme} from "../../theme";
-import {truncateText} from "../../text";
-import type {TuiUsageCard} from "../../view-model";
-import {ProgressBar} from "../primitives/progress-bar";
+import {theme} from "@/package/tui/theme";
+import {truncateText} from "@/package/tui/text";
+import type {TuiUsageCard} from "@/package/tui/view-model";
+import {ProgressBar} from "@/package/tui/components/primitives/progress-bar";
 
-/** Props for a usage-limit card. */
 export interface UsageCardProps {
-  /** Usage card display model. */
   card: TuiUsageCard;
-  /** Card width for responsive layouts. */
   width: number;
 }
 
-/**
- * Renders one usage-limit card with remaining percent and reset text.
- * @param props - Usage card data and width.
- * @returns -Ink usage-card element.
- */
+/** Renders one normalized usage window card. */
 export function UsageCard({card, width}: UsageCardProps): ReactElement {
   const contentWidth = Math.max(width - 4, 1);
   const barWidth = Math.max(Math.min(contentWidth, 32), 1);

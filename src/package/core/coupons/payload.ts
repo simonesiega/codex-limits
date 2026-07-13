@@ -1,14 +1,17 @@
-import type {CouponItem, CouponResult} from "../types";
-import {formatDuration, formatLongDate, parseDateValue} from "../utils/date-time";
-import {isRecord, readString} from "../utils/unknown";
+import type {CouponItem, CouponResult} from "@/package/core/types";
+import {formatDuration, formatLongDate, parseDateValue} from "@/package/core/utils/date-time";
+import {isRecord, readString} from "@/package/core/utils/unknown";
 
-/**
- * Maps the payload from the live reset coupon endpoint to a `CouponResult` object, handling any malformed data and generating appropriate warnings.
- * @param payload - The raw payload received from the live reset coupon endpoint.
- * @param endpoint - The URL of the live reset coupon endpoint, used for reference in the result.
- * @param now - The current date and time, used for calculating expiration durations.
- * @returns - A `CouponResult` object representing the parsed and validated coupon data, including any warnings about malformed entries.
- */
+const CREDIT_KEYS = ["credits", "reset_credits", "items"] as const;
+const AVAILABLE_KEYS = ["available_count", "availableCount", "available"] as const;
+const EARNED_KEYS = [
+  "total_earned_count",
+  "earned_this_period",
+  "earnedThisPeriod",
+  "totalEarnedCount",
+] as const;
+
+/** Validates and normalizes an untrusted reset-credit endpoint payload. */
 export function mapResetCouponsPayload(
   payload: unknown,
   endpoint: string,
@@ -20,7 +23,7 @@ export function mapResetCouponsPayload(
     ]);
   }
 
-  const creditField = readArray(payload, ["credits", "reset_credits", "items"]);
+  const creditField = readArray(payload, CREDIT_KEYS);
   if (creditField.malformed) {
     return unavailableCoupons(endpoint, [
       "Live reset coupon endpoint returned an unexpected payload.",
@@ -35,14 +38,10 @@ export function mapResetCouponsPayload(
     .map((credit, index) => ({...credit, index: index + 1}));
   const nextExpiring =
     items.find((item) => item.status?.toLowerCase() === "available") ?? items[0] ?? null;
-  const available = readNumber(payload, ["available_count", "availableCount", "available"]);
-  const earnedThisPeriod = readNumber(payload, [
-    "total_earned_count",
-    "earned_this_period",
-    "earnedThisPeriod",
-    "totalEarnedCount",
-  ]);
+  const available = readNumber(payload, AVAILABLE_KEYS);
+  const earnedThisPeriod = readNumber(payload, EARNED_KEYS);
   const warnings: string[] = [];
+
   if (rawCredits.length !== items.length) {
     warnings.push("Live reset coupon endpoint ignored malformed coupon entries.");
   }
@@ -66,12 +65,7 @@ export function mapResetCouponsPayload(
   };
 }
 
-/**
- * Unavailable coupon result generator, used when the live reset coupon endpoint returns an unexpected payload or is otherwise unavailable.
- * @param endpoint - The URL of the live reset coupon endpoint, used for reference in the result.
- * @param warnings - An array of warning messages to include in the result.
- * @returns - A `CouponResult` object representing the unavailable coupon state.
- */
+/** Builds the stable empty coupon result used for all unavailable paths. */
 export function unavailableCoupons(endpoint: string, warnings: string[] = []): CouponResult {
   return {
     status: "unavailable",
@@ -89,33 +83,10 @@ export function unavailableCoupons(endpoint: string, warnings: string[] = []): C
   };
 }
 
-/**
- * Checks if the payload contains any recognized coupon fields.
- * @param payload - The raw payload received from the live reset coupon endpoint.
- * @returns - True if the payload contains any recognized coupon fields, false otherwise.
- */
 function hasRecognizedCouponField(payload: Record<string, unknown>): boolean {
-  return [
-    "credits",
-    "reset_credits",
-    "items",
-    "available_count",
-    "availableCount",
-    "available",
-    "total_earned_count",
-    "earned_this_period",
-    "earnedThisPeriod",
-    "totalEarnedCount",
-  ].some((key) => key in payload);
+  return [...CREDIT_KEYS, ...AVAILABLE_KEYS, ...EARNED_KEYS].some((key) => key in payload);
 }
 
-/**
- * Parses an individual coupon item from the payload, validating its fields and calculating expiration information.
- * @param value - The raw coupon item value from the payload.
- * @param index - The index of the coupon item in the payload, used for reference in warnings.
- * @param now - The current date and time, used for calculating expiration durations.
- * @returns - A `CouponItem` object representing the parsed and validated coupon item, or null if the item is malformed.
- */
 function parseCouponItem(value: unknown, index: number, now: Date): CouponItem | null {
   if (!isRecord(value)) {
     return null;
@@ -126,10 +97,10 @@ function parseCouponItem(value: unknown, index: number, now: Date): CouponItem |
   const expiresAtDate = parseDateValue(rawExpiresAt);
   const grantedAtDate = parseDateValue(rawGrantedAt);
   const rawStatus = readString(value, "status");
-
   const status = rawStatus && /^[a-z][a-z0-9_-]{0,63}$/i.test(rawStatus) ? rawStatus : null;
   const grantedAt = grantedAtDate ? rawGrantedAt : null;
   const expiresAt = expiresAtDate ? rawExpiresAt : null;
+
   if (!status && !grantedAt && !expiresAt) {
     return null;
   }
@@ -144,32 +115,14 @@ function parseCouponItem(value: unknown, index: number, now: Date): CouponItem |
   };
 }
 
-/**
- * Compares two coupon items by their expiration dates, used for sorting coupon items in ascending order of expiration.
- * @param left - The first coupon item to compare.
- * @param right - The second coupon item to compare.
- * @returns - A negative number if the first item expires before the second, a positive number if it expires after, or zero if they have the same expiration date.
- */
 function compareCouponsByExpiry(left: CouponItem, right: CouponItem): number {
   return dateSortValue(left.expiresAt) - dateSortValue(right.expiresAt);
 }
 
-/**
- * Sorts a date string into a numeric value representing the time in milliseconds since the Unix epoch.
- * @param value - The date string to sort.
- * @returns - A numeric value representing the time in milliseconds since the Unix epoch, or positive infinity if the date string is null or invalid.
- */
 function dateSortValue(value: string | null): number {
-  const date = parseDateValue(value);
-  return date ? date.getTime() : Number.POSITIVE_INFINITY;
+  return parseDateValue(value)?.getTime() ?? Number.POSITIVE_INFINITY;
 }
 
-/**
- * Reads an array from a record object, checking for the presence of specified keys and validating that the value is an array.
- * @param value - The record object from which to read the array.
- * @param keys - An array of keys to check for in the record object.
- * @returns - An object containing the array value (or an empty array if not found) and a boolean indicating whether the value was malformed.
- */
 function readArray(
   value: Record<string, unknown>,
   keys: readonly string[]
@@ -188,12 +141,6 @@ function readArray(
   return {value: [], malformed: found};
 }
 
-/**
- * Reads a number from a record object, checking for the presence of specified keys and validating that the value is a finite non-negative number.
- * @param value - The record object from which to read the number.
- * @param keys - An array of keys to check for in the record object.
- * @returns - An object containing the number value (or null if not found) and a boolean indicating whether the value was malformed.
- */
 function readNumber(
   value: Record<string, unknown>,
   keys: readonly string[]

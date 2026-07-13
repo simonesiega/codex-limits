@@ -3,9 +3,10 @@ import {mkdir, mkdtemp, rm, writeFile} from "node:fs/promises";
 import {createServer} from "node:http";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {getUsageLimits} from "../../../src/package/core/limits";
-import {getLiveUsage} from "../../../src/package/core/usage/live";
-import type {FetchLike} from "../../../src/package/core/types";
+import {getUsageLimits} from "@/package/core/limits";
+import type {FetchLike} from "@/package/core/types";
+import {mapLiveUsagePayload} from "@/package/core/usage/live-payload";
+import {getLiveUsage} from "@/package/core/usage/live";
 
 test("getLiveUsage fetches current usage with Codex credentials", async () => {
   const calls: Array<{url: string; authorization: string; accountId: string}> = [];
@@ -140,6 +141,26 @@ test("getUsageLimits reports unsafe endpoint overrides without crashing", async 
   expect(result.status).toBe("unavailable");
   expect(result.warnings).toContain("Live usage endpoint must use HTTPS or loopback HTTP.");
   expect(JSON.stringify(result)).not.toContain("/private/usage.json");
+});
+
+test("mapLiveUsagePayload bounds traversal of unusually wide payloads", () => {
+  const payload = Object.fromEntries(
+    Array.from({length: 1_100}, (_, index) => [
+      `field-${index}`,
+      index === 1_099
+        ? {rate_limit: {primary_window: {used_percent: 20, reset_at: 1_767_229_200}}}
+        : {},
+    ])
+  );
+
+  const result = mapLiveUsagePayload(
+    payload,
+    "https://example.test/usage",
+    new Date("2026-01-01T00:00:00.000Z")
+  );
+
+  expect(result.status).toBe("unavailable");
+  expect(result.warnings).toEqual(["Live usage endpoint returned an unexpected payload."]);
 });
 
 test("getUsageLimits falls back to local sessions when live usage is unavailable", async () => {

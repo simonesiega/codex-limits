@@ -1,4 +1,4 @@
-import type {CodexLimitsResult, CouponResult} from "../../../src/package/core/types";
+import type {CodexLimitsResult, CouponResult} from "@/package/core/types";
 
 export function createFakeLimitsResult(): CodexLimitsResult {
   return {

@@ -1,11 +1,7 @@
-import type {CodexLimitsResult, UsageWindow} from "../core/types";
-import {formatPercent, formatUnknown, formatWarnings} from "./format-shared";
+import {formatPercent, formatUnknown, formatWarnings} from "@/package/commands/format-shared";
+import type {CodexLimitsResult, UsageWindow} from "@/package/core/types";
 
-/**
- * Formats the non-interactive status command output.
- * @param result - Normalized Codex limits result.
- * @returns Human-readable status output ending with a newline.
- */
+/** Formats normalized usage limits as stable plain text. */
 export function formatStatus(result: CodexLimitsResult): string {
   const lines = [
     "Usage Limits",
@@ -23,17 +19,10 @@ export function formatStatus(result: CodexLimitsResult): string {
   return `${lines.join("\n")}\n`;
 }
 
-/**
- * Formats one usage window summary for status output.
- * @param window - Usage window to format.
- * @returns Human-readable usage lines.
- */
 function formatUsageWindow(window: UsageWindow | null): string[] {
-  if (!window) {
-    return ["Usage limit: Unknown"];
-  }
-
-  return [
-    `${window.label}: ${formatPercent(window.remainingPercent)} remaining, resets in ${formatUnknown(window.resetsIn)}`,
-  ];
+  return window
+    ? [
+        `${window.label}: ${formatPercent(window.remainingPercent)} remaining, resets in ${formatUnknown(window.resetsIn)}`,
+      ]
+    : ["Usage limit: Unknown"];
 }

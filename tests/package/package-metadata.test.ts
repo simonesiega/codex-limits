@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test";
 import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
-import {PACKAGE_VERSION} from "../../src/package/version";
+import {PACKAGE_VERSION} from "@/package/version";
 
 interface PackageMetadata {
   name: string;

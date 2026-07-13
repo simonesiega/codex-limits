@@ -1,24 +1,15 @@
 import {Box, Text} from "ink";
 import type {ReactNode, ReactElement} from "react";
-import {theme} from "../../theme";
+import {theme} from "@/package/tui/theme";
 
-/** Props for the shared TUI panel component. */
 export interface PanelProps {
-  /** Panel title. */
   title: string;
-  /** Panel width constrained to the initial terminal width. */
   width: number;
-  /** Whether to reduce vertical spacing. */
   dense?: boolean;
-  /** Panel body content. */
   children: ReactNode;
 }
 
-/**
- * Renders a bordered panel with a bold title.
- * @param props - Panel title and children.
- * @returns - Ink panel element.
- */
+/** Renders the shared bordered dashboard section. */
 export function Panel({title, width, dense = false, children}: PanelProps): ReactElement {
   const displayTitle = title.toUpperCase();
 

@@ -1,11 +1,7 @@
 import {expect, test} from "bun:test";
 import {createServer} from "node:http";
-import {authenticatedJsonGet} from "../../../src/package/core/network/authenticated-json-get";
-import type {
-  AuthenticatedJsonRequest,
-  FetchLike,
-  JsonGetFailureCode,
-} from "../../../src/package/core/types";
+import {authenticatedJsonGet} from "@/package/core/network/authenticated-json-get";
+import type {AuthenticatedJsonRequest, FetchLike, JsonGetFailureCode} from "@/package/core/types";
 
 const HEADERS = {
   Authorization: "Bearer fake-secret-token",

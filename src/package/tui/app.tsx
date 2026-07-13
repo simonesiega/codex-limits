@@ -1,33 +1,23 @@
 import {Box, Text, render} from "ink";
 import type {ReactElement} from "react";
-import type {CodexLimitsResult} from "../core/types";
-import {CouponsPanel} from "./components/panels/coupons-panel";
-import {UsagePanel} from "./components/panels/usage-panel";
-import {Title} from "./components/primitives/title";
-import {createTuiLayout} from "./layout";
-import {theme} from "./theme";
-import {truncateText} from "./text";
-import {createTuiViewModel, type TuiViewModel} from "./view-model";
+import type {CodexLimitsResult} from "@/package/core/types";
+import {CouponsPanel} from "@/package/tui/components/panels/coupons-panel";
+import {UsagePanel} from "@/package/tui/components/panels/usage-panel";
+import {Title} from "@/package/tui/components/primitives/title";
+import {createTuiLayout} from "@/package/tui/layout";
+import {theme} from "@/package/tui/theme";
+import {truncateText} from "@/package/tui/text";
+import {createTuiViewModel, type TuiViewModel} from "@/package/tui/view-model";
 
-/** Props for the root Ink app. */
 export interface AppProps {
-  /** Normalized Codex limits result to render. */
   result: CodexLimitsResult;
-  /** Initial terminal column count. */
   terminalColumns?: number;
-  /** Initial terminal row count. */
   terminalRows?: number;
-  /** Optional width override used by older tests. */
   width?: number;
-  /** Optional clock override used by tests. */
   now?: Date;
 }
 
-/**
- * Renders the root Ink app with the specified props.
- * @param param0 - App props including result, terminal dimensions, and optional overrides.
- * @returns - Ink app element.
- */
+/** Maps normalized core data into the responsive Ink dashboard. */
 export function App({result, terminalColumns, terminalRows, width, now}: AppProps): ReactElement {
   const columns = terminalColumns ?? width ?? process.stdout.columns ?? 80;
   const rows = terminalRows ?? process.stdout.rows ?? 24;
@@ -67,13 +57,6 @@ export function App({result, terminalColumns, terminalRows, width, now}: AppProp
   );
 }
 
-/**
- * Renders a text-only summary of the Codex limits result for narrow terminals.
- * @param view - TUI view model containing usage and coupon data.
- * @param terminalWidth - Terminal width used to truncate text.
- * @param terminalRows - Terminal row count used to limit visible coupon rows.
- * @returns - Ink text summary element.
- */
 function renderTextSummary(
   view: TuiViewModel,
   terminalWidth: number,
@@ -115,20 +98,11 @@ function renderTextSummary(
   );
 }
 
-/**
- * Formats a usage card into a single line of text for the text summary.
- * @param card - Usage card data or undefined if not available.
- * @returns - Formatted usage line string.
- */
 function formatUsageLine(card: TuiViewModel["usageCards"][number] | undefined): string {
   return card ? `${card.remainingLabel}, ${card.resetLabel}` : "Unknown";
 }
 
-/**
- * Renders the Ink app with the specified Codex limits result and waits for exit.
- * @param result - Normalized Codex limits result to render.
- * @returns - Promise that resolves when the Ink app exits.
- */
+/** Renders the dashboard and waits until Ink exits. */
 export async function renderApp(result: CodexLimitsResult): Promise<void> {
   const terminalColumns = process.stdout.columns ?? 80;
   const terminalRows = process.stdout.rows ?? 24;

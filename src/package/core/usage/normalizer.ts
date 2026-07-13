@@ -1,5 +1,6 @@
-import {formatDuration, parseDateValue} from "../utils/date-time";
-import {redactSensitiveText} from "../utils/redact";
+import {formatDuration, parseDateValue} from "@/package/core/utils/date-time";
+import {redactSensitiveText} from "@/package/core/utils/redact";
+import {isRecord} from "@/package/core/utils/unknown";
 import type {
   AvailabilityStatus,
   CodexSessionReadResult,
@@ -9,7 +10,7 @@ import type {
   UsageSource,
   UsageWindow,
   UsageWindows,
-} from "../types";
+} from "@/package/core/types";
 
 const MAX_SEARCH_DEPTH = 5;
 const FIVE_HOUR_LABEL = "5-hour usage limit";
@@ -67,12 +68,7 @@ const RESETS_AT_KEYS = [
 ] as const;
 const RESETS_IN_KEYS = ["resetsIn", "resetIn", "resets_in", "reset_in", "timeUntilReset"] as const;
 
-/**
- * Parses normalized local usage data from Codex rollout JSONL session logs.
- * @param sessions - Local session inspection result.
- * @param now - Current time used to compute reset durations.
- * @returns - Normalized local usage result.
- */
+/** Normalizes the latest bounded local session snapshot. */
 export function parseUsageFromSessions(
   sessions: CodexSessionReadResult,
   now: Date = new Date()
@@ -88,12 +84,7 @@ export function parseUsageFromSessions(
   );
 }
 
-/**
- * Parses Codex primary and secondary rate-limit windows from a rate_limits object.
- * @param rateLimits - Codex rate_limits object.
- * @param now - Current time used to compute reset durations.
- * @returns - Normalized 5-hour and weekly windows.
- */
+/** Maps recognized primary and secondary rate-limit windows. */
 export function parseUsageWindowsFromRateLimits(
   rateLimits: Record<string, unknown>,
   now: Date = new Date()
@@ -104,23 +95,11 @@ export function parseUsageWindowsFromRateLimits(
   };
 }
 
-/**
- * Adds source metadata to normalized local usage windows.
- * @param result - Local usage result.
- * @param source - Usage source metadata.
- * @returns - Usage result with source metadata.
- */
 export function withUsageSource(result: LocalUsageResult, source: UsageSource): UsageResult {
   return {...result, source};
 }
 
-/**
- * Builds a usage result from already-normalized windows.
- * @param windows - Normalized usage windows.
- * @param source - Usage source metadata.
- * @param warnings - Non-sensitive warnings to include.
- * @returns - Usage result with derived availability.
- */
+/** Builds a sourced usage result and derives its availability. */
 export function buildUsageResult(
   windows: UsageWindows,
   source: UsageSource,
@@ -129,12 +108,7 @@ export function buildUsageResult(
   return {...buildLocalUsageResult(windows, warnings), source};
 }
 
-/**
- * Parses normalized local usage data from safe Codex state JSON files.
- * @param state - Safe local state files and warnings collected from the Codex home.
- * @param now - Current time used to compute reset durations.
- * @returns - Normalized local usage result.
- */
+/** Merges usage windows found in safe local state files. */
 export function parseUsageFromState(
   state: CodexStateReadResult,
   now: Date = new Date()
@@ -153,11 +127,7 @@ export function parseUsageFromState(
   return buildLocalUsageResult(windows, state.warnings);
 }
 
-/**
- * Returns an unavailable local usage result with safe warnings.
- * @param warnings - Non-sensitive warnings to include.
- * @returns - Normalized unavailable local usage result.
- */
+/** Builds the stable unavailable local usage shape. */
 export function unavailableLocalUsage(warnings: string[] = []): LocalUsageResult {
   return {
     status: "unavailable",
@@ -166,12 +136,7 @@ export function unavailableLocalUsage(warnings: string[] = []): LocalUsageResult
   };
 }
 
-/**
- * Merges two local usage results, preferring the primary result and filling gaps from fallback.
- * @param primary - Preferred local usage result.
- * @param fallback - Fallback local usage result.
- * @returns - Merged local usage result.
- */
+/** Fills gaps in preferred local usage with fallback state data. */
 export function mergeLocalUsage(
   primary: LocalUsageResult,
   fallback: LocalUsageResult
@@ -181,12 +146,6 @@ export function mergeLocalUsage(
   return buildLocalUsageResult(windows, [...primary.warnings, ...fallback.warnings]);
 }
 
-/**
- * Parses local usage data from an unknown JSON value.
- * @param value - Parsed JSON value from a safe local file.
- * @param now - Current time used to compute reset durations.
- * @returns - Parsed usage windows.
- */
 function parseUsageFromUnknown(value: unknown, now: Date): Pick<LocalUsageResult, "windows"> {
   if (!isRecord(value)) {
     return {windows: {fiveHour: null, weekly: null}};
@@ -206,13 +165,6 @@ function parseUsageFromUnknown(value: unknown, now: Date): Pick<LocalUsageResult
   };
 }
 
-/**
- * Parses a single normalized usage window from a record.
- * @param value - Object that may contain usage and reset fields.
- * @param label - Stable label for the usage window.
- * @param now - Current time used to compute reset durations.
- * @returns - Normalized usage window, or null when no window values are present.
- */
 function parseUsageWindow(
   value: Record<string, unknown> | null,
   label: string,
@@ -240,12 +192,6 @@ function parseUsageWindow(
   return hasWindowData(window) ? window : null;
 }
 
-/**
- * Builds a local usage result and derives its availability status.
- * @param windows - Parsed 5-hour and weekly usage windows.
- * @param warnings - Non-sensitive warnings to include.
- * @returns - Normalized local usage result.
- */
 function buildLocalUsageResult(windows: UsageWindows, warnings: string[]): LocalUsageResult {
   return {
     status: statusForWindows(windows),
@@ -254,11 +200,6 @@ function buildLocalUsageResult(windows: UsageWindows, warnings: string[]): Local
   };
 }
 
-/**
- * Computes availability from normalized usage windows.
- * @param windows - Usage windows to inspect.
- * @returns - Availability status for local usage data.
- */
 function statusForWindows(windows: UsageWindows): AvailabilityStatus {
   const complete = isCompleteWindow(windows.fiveHour) && isCompleteWindow(windows.weekly);
   if (complete) {
@@ -272,12 +213,6 @@ function statusForWindows(windows: UsageWindows): AvailabilityStatus {
   return "unavailable";
 }
 
-/**
- * Merges two usage-window groups, filling missing values from fallback windows.
- * @param primary - Preferred windows.
- * @param fallback - Fallback windows.
- * @returns - Merged usage windows.
- */
 function mergeUsageWindows(primary: UsageWindows, fallback: UsageWindows): UsageWindows {
   return {
     fiveHour: mergeUsageWindow(primary.fiveHour, fallback.fiveHour, FIVE_HOUR_LABEL),
@@ -285,13 +220,6 @@ function mergeUsageWindows(primary: UsageWindows, fallback: UsageWindows): Usage
   };
 }
 
-/**
- * Merges two usage windows with the same label.
- * @param primary - Preferred window.
- * @param fallback - Fallback window.
- * @param label - Stable window label.
- * @returns - Merged usage window, or null when both are empty.
- */
 function mergeUsageWindow(
   primary: UsageWindow | null,
   fallback: UsageWindow | null,
@@ -310,11 +238,6 @@ function mergeUsageWindow(
   };
 }
 
-/**
- * Checks whether a usage window has at least one known value.
- * @param window - Window to inspect.
- * @returns - True when any value is known.
- */
 function hasWindowData(window: UsageWindow | null): boolean {
   return (
     window !== null &&
@@ -325,11 +248,6 @@ function hasWindowData(window: UsageWindow | null): boolean {
   );
 }
 
-/**
- * Checks whether a usage window has the values needed for the dashboard.
- * @param window - Window to inspect.
- * @returns - True when percentage and reset data are known.
- */
 function isCompleteWindow(window: UsageWindow | null): boolean {
   return (
     window !== null &&
@@ -339,13 +257,7 @@ function isCompleteWindow(window: UsageWindow | null): boolean {
   );
 }
 
-/**
- * Finds the first nested object under any recognized key.
- * @param value - Object to search.
- * @param keys - Candidate property names.
- * @param depth - Current recursion depth.
- * @returns - Matching object or null when none is found.
- */
+// Local state shapes vary across Codex versions, so searches are recursive but depth-bounded.
 function findRecord(
   value: Record<string, unknown>,
   keys: readonly string[],
@@ -376,12 +288,6 @@ function findRecord(
   return null;
 }
 
-/**
- * Reads a direct record under any recognized key.
- * @param value - Object to read from.
- * @param keys - Candidate property names.
- * @returns - Matching object or null when none is found.
- */
 function readRecord(
   value: Record<string, unknown>,
   keys: readonly string[]
@@ -396,14 +302,6 @@ function readRecord(
   return null;
 }
 
-/**
- * Finds the first value under any recognized key.
- * @param value - Object to search.
- * @param keys - Candidate property names.
- * @param allowNested - Whether nested objects should be searched.
- * @param depth - Current recursion depth.
- * @returns - Matching value or undefined when none is found.
- */
 function findValue(
   value: Record<string, unknown>,
   keys: readonly string[],
@@ -438,11 +336,6 @@ function findValue(
   return undefined;
 }
 
-/**
- * Converts a local usage value into a 0-100 percentage when safe.
- * @param value - Unknown value from local JSON.
- * @returns - Finite clamped percentage or null when conversion is not safe.
- */
 function toPercent(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
     return clampPercent(value);
@@ -458,33 +351,14 @@ function toPercent(value: unknown): number | null {
   return null;
 }
 
-/**
- * Clamps and rounds a percentage value.
- * @param value - Percentage value to clamp.
- * @returns - Percentage between 0 and 100 with one decimal place.
- */
 function clampPercent(value: number): number {
   return Math.round(Math.min(Math.max(value, 0), 100) * 10) / 10;
 }
 
-/**
- * Converts an unknown value into a non-empty string when safe.
- * @param value - Unknown value from local JSON.
- * @returns - Non-empty string or null when conversion is not safe.
- */
 function readStringValue(value: unknown): string | null {
   if (typeof value === "string" && value.trim().length > 0) {
     return value.trim();
   }
 
   return null;
-}
-
-/**
- * Checks whether a value is a plain JSON object.
- * @param value - Unknown value to inspect.
- * @returns - True when the value is a non-array object.
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

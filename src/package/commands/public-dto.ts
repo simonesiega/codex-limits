@@ -1,9 +1,7 @@
-import type {CodexLimitsResult, CouponItem, CouponSummary, UsageWindow} from "../core/types";
-import {redactWarnings} from "../core/utils/redact";
+import type {CodexLimitsResult, CouponItem, CouponSummary, UsageWindow} from "@/package/core/types";
+import {redactWarnings} from "@/package/core/utils/redact";
 
-/**
- * Store the JSON representation of a usage window for the `codex-limits --json` command.
- */
+/** Stable JSON representation of a usage window. */
 export interface UsageWindowDto {
   label: string;
   remainingPercent: number | null;
@@ -12,9 +10,7 @@ export interface UsageWindowDto {
   resetsIn: string | null;
 }
 
-/**
- * Store the JSON representation of a reset-credit coupon item for the `codex-limits --json` command.
- */
+/** Stable JSON representation of one reset-credit coupon. */
 export interface CouponItemDto {
   index: number;
   status: string | null;
@@ -24,9 +20,7 @@ export interface CouponItemDto {
   expiresIn: string | null;
 }
 
-/**
- * Store the JSON representation of reset-credit coupon data for the `codex-limits --json` command.
- */
+/** Stable JSON representation of reset-credit coupon data. */
 export interface CouponSummaryDto {
   available: number | null;
   earnedThisPeriod: number | null;
@@ -36,9 +30,7 @@ export interface CouponSummaryDto {
   warnings: string[];
 }
 
-/**
- * Store the JSON representation of the overall limits data for the `codex-limits --json` command.
- */
+/** Stable JSON representation returned by `codex-limits --json`. */
 export interface CodexLimitsDto {
   windows: {
     fiveHour: UsageWindowDto | null;
@@ -48,11 +40,7 @@ export interface CodexLimitsDto {
   warnings: string[];
 }
 
-/**
- * Converts the normalized limits result into the public JSON contract.
- * @param result - The normalized limits result.
- * @returns - The public JSON representation of the limits data.
- */
+/** Selects and redacts the fields in the public limits JSON contract. */
 export function toCodexLimitsDto(result: CodexLimitsResult): CodexLimitsDto {
   return {
     windows: {
@@ -64,11 +52,7 @@ export function toCodexLimitsDto(result: CodexLimitsResult): CodexLimitsDto {
   };
 }
 
-/**
- * Converts the normalized coupon summary into the public JSON contract.
- * @param result - The normalized coupon summary.
- * @returns - The public JSON representation of the coupon summary.
- */
+/** Selects and redacts the fields in the public coupon JSON contract. */
 export function toCouponSummaryDto(result: CouponSummary): CouponSummaryDto {
   return {
     available: result.available,
@@ -80,29 +64,18 @@ export function toCouponSummaryDto(result: CouponSummary): CouponSummaryDto {
   };
 }
 
-/**
- * Converts the normalized usage window into the public JSON contract.
- * @param window - The normalized usage window.
- * @returns - The public JSON representation of the usage window.
- */
 function toUsageWindowDto(window: UsageWindow | null): UsageWindowDto | null {
-  if (!window) {
-    return null;
-  }
-  return {
-    label: window.label,
-    remainingPercent: window.remainingPercent,
-    usedPercent: window.usedPercent,
-    resetsAt: window.resetsAt,
-    resetsIn: window.resetsIn,
-  };
+  return window
+    ? {
+        label: window.label,
+        remainingPercent: window.remainingPercent,
+        usedPercent: window.usedPercent,
+        resetsAt: window.resetsAt,
+        resetsIn: window.resetsIn,
+      }
+    : null;
 }
 
-/**
- * Converts the normalized coupon item into the public JSON contract.
- * @param item - The normalized coupon item.
- * @returns - The public JSON representation of the coupon item.
- */
 function toCouponItemDto(item: CouponItem): CouponItemDto {
   return {
     index: item.index,

@@ -2,21 +2,17 @@ import {constants} from "node:fs";
 import {access, stat} from "node:fs/promises";
 import {homedir} from "node:os";
 import {join, normalize} from "node:path";
-import {readEnvValue, resolveEnvironment} from "../utils/env";
 import type {
   CodexHomeCandidate,
   CodexHomeCandidatePath,
   CodexHomeDetection,
   CodexHomeOptions,
-} from "../types";
+} from "@/package/core/types";
+import {readEnvValue, resolveEnvironment} from "@/package/core/utils/env";
 
 const CODEX_LIMITS_HOME = "CODEX_LIMITS_HOME";
 
-/**
- * Returns candidate Codex home paths without touching the filesystem.
- * @param options - Optional filesystem and environment overrides.
- * @returns - Ordered candidate paths, with CODEX_LIMITS_HOME first when set.
- */
+/** Returns ordered Codex home candidates without touching the filesystem. */
 export function getCodexHomeCandidatePaths(
   options: CodexHomeOptions = {}
 ): CodexHomeCandidatePath[] {
@@ -29,11 +25,9 @@ export function getCodexHomeCandidatePaths(
   const appData = options.appData ?? readEnvValue(env, "APPDATA");
   const localAppData = options.localAppData ?? readEnvValue(env, "LOCALAPPDATA");
   const paths: CodexHomeCandidatePath[] = [];
-  const overrideHome = readEnvValue(env, CODEX_LIMITS_HOME);
-  const codexHome = readEnvValue(env, "CODEX_HOME");
 
-  appendCandidate(paths, overrideHome, "env");
-  appendCandidate(paths, codexHome, "env");
+  appendCandidate(paths, readEnvValue(env, CODEX_LIMITS_HOME), "env");
+  appendCandidate(paths, readEnvValue(env, "CODEX_HOME"), "env");
 
   if (home) {
     appendCandidate(paths, join(home, ".codex"), "default");
@@ -48,15 +42,10 @@ export function getCodexHomeCandidatePaths(
 
   appendCandidate(paths, appData ? join(appData, "Codex") : null, "default");
   appendCandidate(paths, localAppData ? join(localAppData, "Codex") : null, "default");
-
   return dedupePaths(paths);
 }
 
-/**
- * Finds the first readable local Codex home directory, if one exists.
- * @param options - Optional filesystem and environment overrides.
- * @returns - Detection details including candidates checked and the first readable directory.
- */
+/** Finds the first readable Codex home while retaining candidate diagnostics. */
 export async function detectCodexHome(options: CodexHomeOptions = {}): Promise<CodexHomeDetection> {
   const env = resolveEnvironment(options.env);
   const overrideHome = readEnvValue(env, CODEX_LIMITS_HOME);
@@ -74,30 +63,16 @@ export async function detectCodexHome(options: CodexHomeOptions = {}): Promise<C
   };
 }
 
-/**
- * Adds a normalized candidate path when a value is present.
- * @param paths - Mutable candidate list being built.
- * @param path - Candidate path to append.
- * @param source - Whether the path came from the environment or defaults.
- * @returns - Nothing; the candidate list is updated in place.
- */
 function appendCandidate(
   paths: CodexHomeCandidatePath[],
   path: string | null,
   source: CodexHomeCandidatePath["source"]
 ): void {
-  if (!path) {
-    return;
+  if (path) {
+    paths.push({path: normalize(path), source});
   }
-
-  paths.push({path: normalize(path), source});
 }
 
-/**
- * Checks whether a path is a readable directory.
- * @param path - Candidate directory path.
- * @returns - True when the path exists and is a directory, otherwise false.
- */
 async function canReadDirectory(path: string): Promise<boolean> {
   try {
     const details = await stat(path);
@@ -105,7 +80,7 @@ async function canReadDirectory(path: string): Promise<boolean> {
       return false;
     }
 
-    // Top-level Codex home symlinks are allowed; nested readers never follow symlink entries.
+    // Top-level home symlinks are allowed; nested readers independently reject symlink entries.
     await access(path, constants.R_OK);
     return true;
   } catch {
@@ -113,25 +88,17 @@ async function canReadDirectory(path: string): Promise<boolean> {
   }
 }
 
-/**
- * Removes duplicate candidate paths while preserving the first occurrence.
- * @param paths - Candidate paths that may contain duplicates.
- * @returns - Deduplicated candidate paths.
- */
-function dedupePaths(paths: CodexHomeCandidatePath[]): CodexHomeCandidatePath[] {
+function dedupePaths(paths: readonly CodexHomeCandidatePath[]): CodexHomeCandidatePath[] {
   const seen = new Set<string>();
   const result: CodexHomeCandidatePath[] = [];
 
   for (const candidate of paths) {
     const normalizedPath = normalize(candidate.path);
     const key = process.platform === "win32" ? normalizedPath.toLowerCase() : normalizedPath;
-    if (seen.has(key)) {
-      continue;
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push({path: normalizedPath, source: candidate.source});
     }
-
-    seen.add(key);
-    result.push({path: normalizedPath, source: candidate.source});
   }
-
   return result;
 }
