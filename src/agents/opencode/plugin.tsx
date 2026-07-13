@@ -1,73 +1,55 @@
 import type {TuiCommand, TuiPluginApi, TuiPluginModule} from "@opencode-ai/plugin/tui";
-import {getCodexLimits} from "../../package/core/limits";
-import type {CodexLimitsResult} from "../../package/core/types";
-import {formatOpencodeLimits} from "./format";
+import {formatOpencodeLimits} from "@/agents/opencode/format";
+import {getCodexLimits} from "@/package/core/limits";
+import type {CodexLimitsResult} from "@/package/core/types";
 
-// Text shown in the OpenCode UI for the Codex Limits plugin.
 const TITLE = "Codex Limits";
 const DESCRIPTION = "Check Codex limits, resets, and credits.";
 const SAFE_LOAD_ERROR = "Could not load Codex limits.";
 
-/**
- * Store the dependencies for the OpenCode plugin, allowing for deterministic testing by injecting mock implementations.
- * @property getLimits - Optional function to retrieve the Codex limits, allowing for mock implementations in tests.
- * @property nextFrame - Optional function to wait for the next frame, allowing for mock implementations in tests.
- */
 interface OpencodePluginDependencies {
   getLimits?: () => Promise<CodexLimitsResult>;
   nextFrame?: () => Promise<void>;
 }
 
-/**
- * Creates the OpenCode plugin for the Codex Limits agent.
- * @param dependencies - Optional dependencies for the OpenCode plugin.
- * @returns - The OpenCode plugin module for the Codex Limits agent, including the plugin ID and TUI function.
- */
+/** Creates the OpenCode TUI plugin with optional test dependencies. */
 export function createOpencodePlugin(
   dependencies: OpencodePluginDependencies = {}
 ): TuiPluginModule {
-  const registrations = new WeakMap<TuiPluginApi, () => void>();
+  const activeApis = new WeakSet<TuiPluginApi>();
   const loadLimits = dependencies.getLimits ?? getCodexLimits;
-  const waitForNextFrame = dependencies.nextFrame ?? nextFrame;
+  const waitForNextFrame =
+    dependencies.nextFrame ?? (() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
 
   return {
     id: "codex-limits",
     tui: async (api) => {
-      if (registrations.has(api)) {
+      if (activeApis.has(api)) {
         return;
       }
 
-      // Create the command for the Codex Limits plugin and register it with the OpenCode TUI API.
       const command = createCommand(api, loadLimits, waitForNextFrame);
+      let unregister: (() => void) | undefined;
 
-      const disposes: Array<() => void> = [];
-
-      // Register the command with the OpenCode TUI API, handling both legacy and new registration methods for compatibility.
       try {
-        const legacyDispose = api.command?.register(() => [command]);
-        if (isDispose(legacyDispose)) {
-          disposes.push(legacyDispose);
-        }
-
-        const keymapDispose = registerCommandLayer(api, command);
-        if (isDispose(keymapDispose)) {
-          disposes.push(keymapDispose);
-        }
+        const registration = registerCommand(api, command);
+        unregister = typeof registration === "function" ? registration : undefined;
       } catch {
-        disposeAll(disposes);
         throw new Error("Could not register the codex-limits OpenCode command.");
       }
 
-      let disposed = false;
       const dispose = (): void => {
-        if (disposed) {
+        if (!activeApis.delete(api)) {
           return;
         }
-        disposed = true;
-        registrations.delete(api);
-        disposeAll(disposes);
+        try {
+          unregister?.();
+        } catch {
+          // OpenCode shutdown should continue when a third-party disposer fails.
+        }
       };
-      registrations.set(api, dispose);
+
+      activeApis.add(api);
       try {
         api.lifecycle.onDispose(dispose);
       } catch {
@@ -78,13 +60,6 @@ export function createOpencodePlugin(
   };
 }
 
-/**
- * Creates the TUI command for the Codex Limits plugin.
- * @param api - The OpenCode TUI plugin API, providing access to the OpenCode UI and lifecycle events.
- * @param loadLimits - Function to load the Codex limits, allowing for mock implementations in tests.
- * @param waitForNextFrame - Function to wait for the next frame, allowing for mock implementations in tests.
- * @returns - The TUI command for the Codex Limits plugin.
- */
 function createCommand(
   api: TuiPluginApi,
   loadLimits: () => Promise<CodexLimitsResult>,
@@ -99,92 +74,66 @@ function createCommand(
     category: "Codex",
     slash: {name: "codex-limits"},
     onSelect: async (dialog) => {
+      // The shared dialog must only show the newest request when earlier requests finish later.
       const currentInvocation = ++invocation;
       dialog?.clear();
       api.ui.dialog.clear();
       await waitForNextFrame();
 
       const target = api.ui.dialog;
+      const show = (message: string): void =>
+        target.replace(() => api.ui.DialogAlert({title: TITLE, message}));
       target.setSize("large");
-      target.replace(() => alert(api, "Loading Codex limits..."));
+      show("Loading Codex limits...");
 
-      // Load the Codex limits and display them in the OpenCode UI.
       try {
         const result = await loadLimits();
         if (currentInvocation === invocation) {
-          target.replace(() => alert(api, formatOpencodeLimits(result)));
+          show(formatOpencodeLimits(result));
         }
       } catch {
         if (currentInvocation === invocation) {
           api.ui.toast({variant: "error", title: TITLE, message: SAFE_LOAD_ERROR});
-          target.replace(() => alert(api, SAFE_LOAD_ERROR));
+          show(SAFE_LOAD_ERROR);
         }
       }
     },
   };
 }
 
-/**
- * Registers the TUI command for the Codex Limits plugin with the OpenCode TUI API.
- * @param api - The OpenCode TUI plugin API, providing access to the OpenCode UI and lifecycle events.
- * @param command - The TUI command for the Codex Limits plugin.
- * @returns - A function to dispose of the registered command layer, or undefined if registration failed.
- */
-function registerCommandLayer(api: TuiPluginApi, command: TuiCommand): void | (() => void) {
-  const keymap = (
-    api as {
-      keymap?: {
-        registerLayer?: (layer: {commands: TuiCommand[]; bindings: never[]}) => void | (() => void);
-      };
-    }
-  ).keymap;
-  return keymap?.registerLayer?.({commands: [command], bindings: []});
-}
+function registerCommand(api: TuiPluginApi, command: TuiCommand): void | (() => void) {
+  const compatibleApi = api as {
+    command?: TuiPluginApi["command"];
+    keymap?: TuiPluginApi["keymap"];
+  };
 
-/**
- * Disposes of all provided disposal functions.
- * @param disposes - An array of functions to dispose of.
- */
-function disposeAll(disposes: readonly (() => void)[]): void {
-  for (const dispose of disposes) {
-    try {
-      dispose();
-    } catch {
-      // Disposal is best effort and idempotent; adapter shutdown must not crash OpenCode.
-    }
+  // Current OpenCode implements `api.command` through keymap; registering both creates duplicates.
+  if (typeof compatibleApi.keymap?.registerLayer === "function") {
+    return compatibleApi.keymap.registerLayer({
+      commands: [
+        {
+          namespace: "palette",
+          name: command.value,
+          title: command.title,
+          desc: command.description,
+          category: command.category,
+          slashName: command.slash?.name,
+          slashAliases: command.slash?.aliases,
+          run: () => command.onSelect?.(),
+        },
+      ],
+      bindings: [],
+    });
   }
+
+  if (typeof compatibleApi.command?.register === "function") {
+    return compatibleApi.command.register(() => [command]);
+  }
+
+  throw new Error("No supported OpenCode command API is available.");
 }
 
-/**
- * Checks if the provided value is a function, indicating that it can be used as a disposal function.
- * @param value - The value to check.
- * @returns - True if the value is a function, false otherwise.
- */
-function isDispose(value: void | (() => void)): value is () => void {
-  return typeof value === "function";
-}
+const plugin = createOpencodePlugin();
 
-/**
- * Displays an alert dialog in the OpenCode UI.
- * @param api - The OpenCode TUI plugin API, providing access to the OpenCode UI and lifecycle events.
- * @param message - The message to display in the alert dialog.
- * @returns - The result of the alert dialog operation.
- */
-function alert(api: TuiPluginApi, message: string) {
-  return api.ui.DialogAlert({title: TITLE, message});
-}
-
-/**
- * Waits for the next frame to be rendered.
- * @returns - A promise that resolves when the next frame is rendered.
- */
-function nextFrame(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
-}
-
-// Create the OpenCode plugin module for the Codex Limits agent.
-const module = createOpencodePlugin();
-
-// Export the OpenCode plugin module and its TUI function for use in the OpenCode environment.
-export default module;
-export const tui = module.tui;
+export default plugin;
+export const tui = plugin.tui;

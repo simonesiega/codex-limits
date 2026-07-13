@@ -1,6 +1,6 @@
 import {createInterface, type Interface} from "node:readline/promises";
 import {stdin as processStdin, stdout as processStdout} from "node:process";
-import {AGENT_INTEGRATIONS, AgentInstallError, type AgentIntegration} from "../../agents";
+import {AGENT_INTEGRATIONS, AgentInstallError, type AgentIntegration} from "@/agents";
 import {sanitizeArguments} from "./safe-error";
 
 type WriteOutput = (text: string) => void;

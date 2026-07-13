@@ -1,4 +1,4 @@
-import opencodePlugin from "../agents/opencode/plugin";
+import opencodePlugin from "@/agents/opencode/plugin";
 
 /** Public root-module contract loaded by OpenCode. */
 export interface CodexLimitsTuiPluginModule {

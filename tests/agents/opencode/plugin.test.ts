@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import plugin, {createOpencodePlugin} from "../../../src/agents/opencode/plugin";
+import plugin, {createOpencodePlugin} from "@/agents/opencode/plugin";
 import {createFakeLimitsResult} from "../../package/fixtures/fake-results";
 
 test("opencode plugin registers the slash command through legacy command api", async () => {
@@ -36,29 +36,30 @@ test("opencode plugin registers the slash command through legacy command api", a
   expect(disposed).toBe(true);
 });
 
-test("opencode plugin also registers the slash command through keymap", async () => {
-  const commands: Array<{slash?: {name: string}; value: string}> = [];
+test("opencode plugin prefers the current keymap command api", async () => {
   const layers: Array<{
-    commands: Array<{slash?: {name: string}; value: string}>;
+    commands: Array<{
+      namespace: string;
+      name: string;
+      title: string;
+      desc?: string;
+      slashName?: string;
+    }>;
     bindings: never[];
   }> = [];
+  let legacyRegistrations = 0;
   let disposeCount = 0;
 
   await plugin.tui(
     {
       command: {
-        register: (callback: () => Array<{slash?: {name: string}; value: string}>) => {
-          commands.push(...callback());
-          return () => {
-            disposeCount += 1;
-          };
+        register: () => {
+          legacyRegistrations += 1;
+          return () => undefined;
         },
       },
       keymap: {
-        registerLayer: (layer: {
-          commands: Array<{slash?: {name: string}; value: string}>;
-          bindings: never[];
-        }) => {
+        registerLayer: (layer: (typeof layers)[number]) => {
           layers.push(layer);
           return () => {
             disposeCount += 1;
@@ -79,13 +80,57 @@ test("opencode plugin also registers the slash command through keymap", async ()
     {} as never
   );
 
-  expect(commands).toHaveLength(1);
-  expect(commands[0]?.value).toBe("codex-limits.show");
-  expect(commands[0]?.slash?.name).toBe("codex-limits");
+  expect(legacyRegistrations).toBe(0);
   expect(layers).toHaveLength(1);
-  expect(layers[0]?.commands[0]?.value).toBe("codex-limits.show");
-  expect(layers[0]?.commands[0]?.slash?.name).toBe("codex-limits");
-  expect(disposeCount).toBe(2);
+  expect(layers[0]?.commands[0]?.namespace).toBe("palette");
+  expect(layers[0]?.commands[0]?.name).toBe("codex-limits.show");
+  expect(layers[0]?.commands[0]?.slashName).toBe("codex-limits");
+  expect(disposeCount).toBe(1);
+});
+
+test("opencode plugin reports a safe registration failure", async () => {
+  const localPlugin = createOpencodePlugin();
+  const api = {
+    keymap: {
+      registerLayer: () => {
+        throw new Error("private registration detail");
+      },
+    },
+    lifecycle: {onDispose: () => () => undefined},
+    ui: {dialog: {}},
+  } as never;
+
+  await expect(localPlugin.tui(api, undefined, {} as never)).rejects.toThrow(
+    "Could not register the codex-limits OpenCode command."
+  );
+});
+
+test("opencode plugin cleans up when lifecycle registration fails", async () => {
+  const localPlugin = createOpencodePlugin();
+  let disposeCount = 0;
+  const api = {
+    command: {
+      register: () => () => {
+        disposeCount += 1;
+      },
+    },
+    keymap: {
+      registerLayer: () => () => {
+        disposeCount += 1;
+      },
+    },
+    lifecycle: {
+      onDispose: () => {
+        throw new Error("private lifecycle detail");
+      },
+    },
+    ui: {dialog: {}},
+  } as never;
+
+  await expect(localPlugin.tui(api, undefined, {} as never)).rejects.toThrow(
+    "Could not register the codex-limits OpenCode lifecycle."
+  );
+  expect(disposeCount).toBe(1);
 });
 
 test("opencode registration and disposal are idempotent for the same API", async () => {
@@ -126,25 +171,24 @@ test("opencode registration and disposal are idempotent for the same API", async
   disposeLifecycle?.();
   disposeLifecycle?.();
 
-  expect(commandRegistrations).toBe(1);
+  expect(commandRegistrations).toBe(0);
   expect(layerRegistrations).toBe(1);
-  expect(commandDisposals).toBe(1);
+  expect(commandDisposals).toBe(0);
   expect(layerDisposals).toBe(1);
 });
 
 test("/codex-limits loads shared core data directly without an LLM prompt", async () => {
-  let command: {onSelect?: (dialog?: {clear: () => void}) => Promise<void>} | undefined;
+  let command: {run?: () => Promise<void>} | undefined;
   const messages: string[] = [];
-  let selectedDialogClears = 0;
   let globalDialogClears = 0;
   const localPlugin = createOpencodePlugin({
     getLimits: async () => createFakeLimitsResult(),
     nextFrame: async () => undefined,
   });
   const api = {
-    command: {
-      register: (callback: () => Array<typeof command>) => {
-        command = callback()[0];
+    keymap: {
+      registerLayer: (layer: {commands: Array<typeof command>}) => {
+        command = layer.commands[0];
         return () => undefined;
       },
     },
@@ -163,13 +207,8 @@ test("/codex-limits loads shared core data directly without an LLM prompt", asyn
   } as never;
 
   await localPlugin.tui(api, undefined, {} as never);
-  await command?.onSelect?.({
-    clear: () => {
-      selectedDialogClears += 1;
-    },
-  });
+  await command?.run?.();
 
-  expect(selectedDialogClears).toBe(1);
   expect(globalDialogClears).toBe(1);
   expect(messages[0]).toBe("Loading Codex limits...");
   expect(messages[1]).toContain("93% remaining");

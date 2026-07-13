@@ -1,13 +1,10 @@
-import {installOpencodePlugin} from "./opencode/install";
-import type {AgentIntegration} from "./types";
+import {installOpencodePlugin} from "@/agents/opencode/install";
+import type {AgentIntegration} from "@/agents/types";
 
-export {AgentInstallError} from "./types";
-export type {AgentInstallResult, AgentIntegration} from "./types";
+export {AgentInstallError} from "@/agents/types";
+export type {AgentInstallResult, AgentIntegration} from "@/agents/types";
 
-/**
- * The list of registered agent integrations
- * including their stable integration IDs, names, descriptions, and installation functions.
- */
+/** Optional agent integrations available through `codex-limits init`. */
 export const AGENT_INTEGRATIONS: AgentIntegration[] = [
   {
     id: "opencode",
@@ -16,12 +13,3 @@ export const AGENT_INTEGRATIONS: AgentIntegration[] = [
     install: installOpencodePlugin,
   },
 ];
-
-/**
- * Finds an agent integration by its stable integration ID.
- * @param id - Identifier of the agent integration to find.
- * @returns - The agent integration with the specified ID, or undefined if not found.
- */
-export function findAgentIntegration(id: string): AgentIntegration | undefined {
-  return AGENT_INTEGRATIONS.find((integration) => integration.id === id);
-}

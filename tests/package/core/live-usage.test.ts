@@ -171,7 +171,7 @@ test("getUsageLimits falls back to local sessions when live usage is unavailable
         CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
       },
       homeDirectory: join(home, "unused"),
-      fetch: async () => ({ok: false, status: 404, json: async () => ({})}),
+      transport: async () => ({ok: false, code: "http-error", status: 404}),
       now: new Date("2026-01-01T00:00:00.000Z"),
     });
 

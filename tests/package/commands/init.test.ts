@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import type {AgentIntegration} from "../../../src/agents";
+import type {AgentIntegration} from "@/agents";
 import {runInit} from "../../../src/package/commands/init";
 
 function createIntegration(
