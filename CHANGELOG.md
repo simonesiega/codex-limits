@@ -16,7 +16,7 @@ All notable changes to codex-limits are documented in this file.
 
 ### Security
 
-## [0.1.x] - 2026-07-11
+## [0.1.4] - 2026-07-13
 
 ### Added
 
