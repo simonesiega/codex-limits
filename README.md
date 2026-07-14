@@ -1,7 +1,5 @@
 <h1 align="center">
-  <img src="docs/photos/logo/logo.png" alt="codex-limits logo" width="180" />
-  <br />
-  Codex Limits
+  <img src="docs/photos/logo/title-animation.svg" alt="Codex Limits" width="1040" />
 </h1>
 
 <p align="center">

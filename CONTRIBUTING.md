@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/photos/logo/logo.png" alt="codex-limits logo" width="180" />
+</p>
+
 <h1 align="center">
   Contributing to Codex Limits
 </h1>

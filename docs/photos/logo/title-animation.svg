@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 852 132" role="img" aria-labelledby="title description">
+  <title id="title">Codex Limits</title>
+  <desc id="description">An animated terminal-style Codex Limits title</desc>
+  <style>
+    .title {
+      fill: #24292f;
+      font-family: "Fira Code", "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-size: 16px;
+      font-weight: 600;
+      white-space: pre;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .title {
+        fill: #f0f6fc;
+      }
+    }
+  </style>
+  <defs>
+    <clipPath id="typing-mask">
+      <rect x="0" y="0" width="0" height="132">
+        <animate attributeName="width" values="0;852;852;0" keyTimes="0;0.55;0.92;1" dur="6s" repeatCount="indefinite" />
+      </rect>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#typing-mask)">
+    <text class="title" x="8" y="20" xml:space="preserve"> ██████╗ ██████╗ ██████╗ ███████╗██╗  ██╗    ██╗     ██╗███╗   ███╗██╗████████╗███████╗</text>
+    <text class="title" x="8" y="40" xml:space="preserve">██╔════╝██╔═══██╗██╔══██╗██╔════╝╚██╗██╔╝    ██║     ██║████╗ ████║██║╚══██╔══╝██╔════╝</text>
+    <text class="title" x="8" y="60" xml:space="preserve">██║     ██║   ██║██║  ██║█████╗   ╚███╔╝     ██║     ██║██╔████╔██║██║   ██║   ███████╗</text>
+    <text class="title" x="8" y="80" xml:space="preserve">██║     ██║   ██║██║  ██║██╔══╝   ██╔██╗     ██║     ██║██║╚██╔╝██║██║   ██║   ╚════██║</text>
+    <text class="title" x="8" y="100" xml:space="preserve">╚██████╗╚██████╔╝██████╔╝███████╗██╔╝ ██╗    ███████╗██║██║ ╚═╝ ██║██║   ██║   ███████║</text>
+    <text class="title" x="8" y="120" xml:space="preserve"> ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝    ╚══════╝╚═╝╚═╝     ╚═╝╚═╝   ╚═╝   ╚══════╝</text>
+  </g>
+</svg>
