@@ -1,3 +1,4 @@
+import type {AgentIntegration, AgentIntegrationStatus} from "@/agents";
 import {
   getOutputFormat,
   JSON_OPTION,
@@ -6,10 +7,16 @@ import {
 import {formatDoctor} from "@/package/commands/doctor/format";
 import {formatJson} from "@/package/commands/format-json";
 import type {DoctorDto} from "@/package/commands/public-dto";
-import type {CliIo, DoctorServices, PackageServices} from "@/package/commands/runtime";
+import type {
+  AgentServices,
+  CliIo,
+  DoctorServices,
+  PackageServices,
+} from "@/package/commands/runtime";
 
 interface DoctorCommandDependencies {
   io: Pick<CliIo, "stdout">;
+  agents: AgentServices;
   doctor: DoctorServices;
   packageInfo: PackageServices;
 }
@@ -29,9 +36,9 @@ export function createDoctorCommand(
       "Checks recognized local configuration and live connectivity without displaying sensitive values.",
     failureMessage: "Could not run Codex Limits diagnostics.",
     async execute(values) {
-      const [codex, opencodeIntegration] = await Promise.all([
+      const [codex, integrationEntries] = await Promise.all([
         dependencies.doctor.loadCodexDiagnostics(),
-        dependencies.doctor.inspectOpencodeIntegration(),
+        Promise.all(dependencies.agents.integrations.map(inspectAgentIntegration)),
       ]);
       const result: DoctorDto = {
         packageVersion: dependencies.packageInfo.version,
@@ -41,12 +48,24 @@ export function createDoctorCommand(
         authenticationFound: codex.authenticationFound,
         localUsageFound: codex.localUsageFound,
         liveEndpoint: codex.liveEndpoint,
-        opencodeIntegration,
+        agentIntegrations: Object.fromEntries(integrationEntries),
       };
       dependencies.io.stdout(
-        getOutputFormat(values) === "json" ? formatJson(result) : formatDoctor(result)
+        getOutputFormat(values) === "json"
+          ? formatJson(result)
+          : formatDoctor(result, dependencies.agents.integrations)
       );
       return 0;
     },
   };
+}
+
+async function inspectAgentIntegration(
+  integration: AgentIntegration
+): Promise<readonly [string, AgentIntegrationStatus]> {
+  try {
+    return [integration.id, await integration.inspect()];
+  } catch {
+    return [integration.id, "unknown"];
+  }
 }

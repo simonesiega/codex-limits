@@ -52,10 +52,22 @@ test("parser accepts root, nested, compatibility, and order-independent options"
       options: {},
     },
     {
+      args: ["agents", "install", "pi"],
+      kind: "command",
+      commandId: "agents.install",
+      options: {},
+    },
+    {
       args: ["init", "--opencode"],
       kind: "command",
       commandId: "init",
       options: {"init.agent.opencode": true},
+    },
+    {
+      args: ["init", "--pi"],
+      kind: "command",
+      commandId: "init",
+      options: {"init.agent.pi": true},
     },
     {args: ["--help"], kind: "help"},
     {args: ["agents"], kind: "help"},

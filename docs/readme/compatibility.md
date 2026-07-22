@@ -14,7 +14,7 @@ This page describes the runtime, operating-system, Codex data, network, terminal
 
 Bun is used for dependency management, tests, development commands, and production builds. It is not required to run the published CLI. Runtime dependencies are bundled into `dist`, so the published package does not declare separate production dependencies.
 
-The root package module is intended for the OpenCode plugin loader. Its public module contract consists of a default plugin export and the named `tui` export; the internal core modules are not public package exports.
+The root package module is intended for the OpenCode plugin loader. Its public module contract consists of a default plugin export and the named `tui` export; the internal core modules are not public package exports. Pi loads the separate `dist/pi.js` extension declared in the package's `pi.extensions` manifest.
 
 ## Tested environments
 
@@ -26,6 +26,7 @@ The following environments are covered by the repository's automated checks or c
 | Current local checks   | Windows build `10.0.26200` with Node.js 22.20.0 and Bun 1.3.14                                                     |
 | Terminal rendering     | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix |
 | OpenCode agent adapter | Mocked current keymap and legacy command API shapes; no exact OpenCode host release is tested end-to-end           |
+| pi agent adapter       | Mocked command/UI APIs with real TUI components; package discovery validated in pi 0.81.1 print mode               |
 
 The supported runtime and operating-system ranges are broader than this test matrix. In particular, macOS compatibility follows the cross-platform implementation but is not currently covered by the repository's automated workflow.
 
@@ -105,6 +106,14 @@ Install the OpenCode integration with `codex-limits agents install opencode` (or
 Compatibility is determined from the API shape available at runtime rather than from a list of exact OpenCode versions. Automated adapter tests use host mocks for both supported API shapes; the repository does not currently claim end-to-end validation against named OpenCode releases.
 
 The command is `/codex-limits`. It loads the shared core locally and does not send an LLM prompt. See [Agent integrations](agent-integrations.md) for installation and troubleshooting.
+
+## pi compatibility
+
+Install the pi integration with `codex-limits agents install pi` (or the compatible `codex-limits init --pi` form). The installer registers the current package root in `~/.pi/agent/settings.json`, or in the directory selected by `PI_CODING_AGENT_DIR`. The npm package also supports pi's native `pi install npm:@simonesiega/codex-limits` flow through its extension manifest.
+
+The extension uses pi's command registration and custom overlay APIs. It is developed against `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 0.81.x, which require Node.js 22.19 or newer. These packages are optional peers and are supplied by the pi host rather than bundled into the extension. This does not change the standalone CLI's Node.js 20 requirement. Local validation confirmed that pi 0.81.1 discovers the installed package and handles `/codex-limits` without invoking the model in print mode; the interactive overlay is covered with host mocks and real TUI components rather than a terminal-level end-to-end test.
+
+The `/codex-limits` command loads the shared core locally, opens a themed read-only overlay, and never sends a prompt or limit data to the LLM. Outside pi's interactive TUI it skips loading and sends no message to the model. See the dedicated [pi integration guide](agents/pi.md) for installation, removal, and troubleshooting.
 
 ## Support policy
 

@@ -138,20 +138,20 @@ Command handlers should let the router replace unexpected exceptions with their 
 
 ## Adding a new agent
 
-New agents should be added with a small adapter and registered explicitly. Use the existing [`src/agents/opencode`](src/agents/opencode) adapter as the reference for structuring, installing, testing, and safely handling new agent integrations.
+New agents should use the same small adapter shape as [`src/agents/opencode`](src/agents/opencode) and [`src/agents/pi`](src/agents/pi): `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. Put reusable presentation and safe configuration behavior in `src/agents/shared`.
 
-| Step | Action                                                                                                                              |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | Create a folder under `src/agents/<agent-name>`.                                                                                    |
-| 2    | Keep the adapter focused on the target agent API.                                                                                   |
-| 3    | Reuse the shared package core for Codex limit data.                                                                                 |
-| 4    | Register the adapter in `src/agents/index.ts`.                                                                                      |
-| 5    | Add automated tests for behavior changes when feasible. When automation is not practical, document the manual validation performed. |
-| 6    | Add `docs/readme/agents/<agent-name>.md`.                                                                                           |
-| 7    | Add the integration to [Agent Integrations](docs/readme/agent-integrations.md).                                                     |
-| 8    | Update the README supported-agent summary.                                                                                          |
-| 9    | Add or update screenshots when the visual output changes.                                                                           |
-| 10   | Run the documentation link and schema checks.                                                                                       |
+| Step | Action                                                                                                                          |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Create `src/agents/<agent-name>` with the standard four-file adapter layout.                                                    |
+| 2    | Define metadata, optional environment help, `install`, and `inspect` in `integration.ts`.                                       |
+| 3    | Keep `plugin.ts` focused on the target host API and load Codex data only through the shared package core.                       |
+| 4    | Register the integration descriptor once in `src/agents/index.ts`; shared install and doctor commands consume it automatically. |
+| 5    | Add installer, formatter, and host-behavior tests. When end-to-end automation is impractical, document the manual validation.   |
+| 6    | Add `docs/readme/agents/<agent-name>.md`.                                                                                       |
+| 7    | Add the integration to [Agent Integrations](docs/readme/agent-integrations.md).                                                 |
+| 8    | Update the README supported-agent summary and any target-specific package/build metadata.                                       |
+| 9    | Add or update screenshots when the visual output changes.                                                                       |
+| 10   | Run the documentation link and schema checks.                                                                                   |
 
 The goal of every integration is the same: show Codex limit information quickly, safely, and without sending unnecessary work to the LLM.
 

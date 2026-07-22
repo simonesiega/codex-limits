@@ -1,8 +1,7 @@
 import {platform} from "node:os";
 import {stdin as processStdin, stdout as processStdout} from "node:process";
 import {createInterface} from "node:readline/promises";
-import {AGENT_INTEGRATIONS, type AgentIntegration, type AgentIntegrationStatus} from "@/agents";
-import {inspectOpencodePlugin} from "@/agents/opencode/install";
+import {AGENT_INTEGRATIONS, type AgentIntegration} from "@/agents";
 import {getResetCoupons} from "@/package/core/coupons/reset-coupons";
 import {getCodexDiagnostics} from "@/package/core/doctor";
 import {getCodexLimits} from "@/package/core/limits";
@@ -35,7 +34,6 @@ export interface AgentServices {
 
 export interface DoctorServices {
   loadCodexDiagnostics: () => Promise<CodexDiagnosticsResult>;
-  inspectOpencodeIntegration: () => Promise<AgentIntegrationStatus>;
   nodeVersion: string;
   operatingSystem: string;
 }
@@ -82,7 +80,6 @@ export function createCliRuntime(overrides: CliRuntimeOverrides = {}): CliRuntim
     agents: {integrations: AGENT_INTEGRATIONS},
     doctor: {
       loadCodexDiagnostics: getCodexDiagnostics,
-      inspectOpencodeIntegration: inspectOpencodePlugin,
       nodeVersion: process.versions.node,
       operatingSystem: getOperatingSystemName(platform()),
     },

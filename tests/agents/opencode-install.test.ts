@@ -1,7 +1,10 @@
 import {expect, test} from "bun:test";
 import {lstat, readFile, symlink, writeFile} from "node:fs/promises";
 import {join} from "node:path";
-import {inspectOpencodePlugin, installOpencodePlugin} from "@/agents/opencode/install";
+import {
+  inspectOpencodeIntegration as inspectOpencodePlugin,
+  installOpencodeIntegration as installOpencodePlugin,
+} from "@/agents/opencode/install";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 interface ConfigPaths {

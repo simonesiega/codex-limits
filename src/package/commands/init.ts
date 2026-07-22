@@ -26,7 +26,7 @@ export function createInitCommand(
   const agentOptions = dependencies.integrations.map<OptionDefinition>((integration) => ({
     key: `${AGENT_OPTION_PREFIX}${integration.id}`,
     long: `--${integration.id}`,
-    description: `Install the ${integration.name} integration`,
+    description: `Install the ${integration.displayName} integration`,
     kind: "boolean",
     conflicts: [ALL_OPTION_KEY],
     conflictMessage: ALL_CONFLICT_MESSAGE,

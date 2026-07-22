@@ -8,7 +8,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
-- Added `codex-limits doctor` and `codex-limits doctor --json` for safe environment, connectivity, local usage, authentication, and OpenCode integration diagnostics.
+- Added `codex-limits doctor` and `codex-limits doctor --json` for safe environment, connectivity, local usage, authentication, OpenCode, and pi integration diagnostics.
+- Added the pi agent integration with `codex-limits agents install pi` and a read-only `/codex-limits` overlay that does not send limit data to the LLM.
 
 ### Changed
 

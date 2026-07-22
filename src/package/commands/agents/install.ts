@@ -105,13 +105,13 @@ async function installSelected(
     try {
       result = await integration.install();
     } catch (error) {
-      dependencies.io.stderr(`${integration.name}: ${formatInstallError(error)}\n`);
+      dependencies.io.stderr(`${integration.id}: ${formatInstallError(error)}\n`);
       failed = true;
       continue;
     }
 
     const state = result.changed ? "installed" : "already installed";
-    dependencies.io.stdout(`${integration.name}: ${state}${formatConfigPaths(result)}\n`);
+    dependencies.io.stdout(`${integration.id}: ${state}${formatConfigPaths(result)}\n`);
   }
 
   if (!failed) {
@@ -126,7 +126,9 @@ async function promptForIntegrations(
 ): Promise<string[]> {
   const ids: string[] = [];
   for (const integration of integrations) {
-    const answer = await prompt(`Install ${integration.name}? ${integration.description} [Y/n] `);
+    const answer = await prompt(
+      `Install ${integration.displayName}? ${integration.description} [Y/n] `
+    );
     if (isYes(answer)) {
       ids.push(integration.id);
     }

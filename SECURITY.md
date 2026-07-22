@@ -65,9 +65,11 @@ The CLI performs bounded, read-only inspection of recognized Codex home candidat
 
 For live usage and coupon information, the project contacts the default ChatGPT Codex endpoints. The only endpoint override is `CODEX_LIMITS_USAGE_ENDPOINT`, mainly for testing or advanced setups. Overrides must use HTTPS, except for loopback HTTP during local testing. Authenticated requests reject redirects, use bounded timeouts and responses, and never include credential headers in diagnostics.
 
-Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send private Codex data to the agent, and not expose sensitive values inside the agent UI.
+Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send private Codex data to the agent, and not expose sensitive values inside the agent UI. The pi extension runs only its local command handler and does not inject a user or custom message into the model context.
 
-The `codex-limits doctor` command exposes only package/runtime labels and bounded availability statuses. Its Codex and OpenCode checks never return credential values, private paths, endpoint URLs, configuration contents, or raw local files. The optional live reachability check uses the same authenticated, bounded, redirect-free usage transport as the dashboard.
+Agent installers use bounded JSON reads and owner-only atomic replacements. The pi installer registers the already installed local package root and does not download a package or execute dependency lifecycle scripts.
+
+The `codex-limits doctor` command exposes only package/runtime labels and bounded availability statuses. Its Codex, OpenCode, and pi checks never return credential values, private paths, endpoint URLs, configuration contents, or raw local files. The optional live reachability check uses the same authenticated, bounded, redirect-free usage transport as the dashboard.
 
 ### Command safety boundaries
 
@@ -88,7 +90,7 @@ Relevant examples include:
 - agent integrations exposing private Codex data inside the agent UI;
 - unexpected writes to local Codex data;
 - unexpected network behavior related to usage or coupon discovery;
-- unsafe handling of `CODEX_LIMITS_HOME`, `CODEX_LIMITS_ACCESS_TOKEN`, `CODEX_LIMITS_ACCOUNT_ID`, or `CODEX_LIMITS_USAGE_ENDPOINT`.
+- unsafe handling of `CODEX_LIMITS_HOME`, `CODEX_LIMITS_ACCESS_TOKEN`, `CODEX_LIMITS_ACCOUNT_ID`, `CODEX_LIMITS_USAGE_ENDPOINT`, or `PI_CODING_AGENT_DIR`.
 
 ## Safety expectations
 

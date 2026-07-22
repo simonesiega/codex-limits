@@ -56,7 +56,7 @@ export interface DoctorDto {
   authenticationFound: boolean;
   localUsageFound: boolean;
   liveEndpoint: LiveEndpointStatus;
-  opencodeIntegration: AgentIntegrationStatus;
+  agentIntegrations: Record<string, AgentIntegrationStatus>;
 }
 
 /** Selects and redacts the fields in the public limits JSON contract. */

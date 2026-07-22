@@ -64,6 +64,7 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
           name: "CODEX_LIMITS_USAGE_ENDPOINT",
           description: "Override the live usage endpoint",
         },
+        ...runtime.agents.integrations.flatMap((integration) => integration.environment ?? []),
       ],
       safetyNotes: [
         "Dashboard, status, coupon, and doctor commands are read-only.",
@@ -78,6 +79,7 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
       createCouponsCommand({io: runtime.io, coupons: runtime.coupons}),
       createDoctorCommand({
         io: runtime.io,
+        agents: runtime.agents,
         doctor: runtime.doctor,
         packageInfo: runtime.packageInfo,
       }),
@@ -104,7 +106,7 @@ function assertValidIntegrations(integrations: readonly AgentIntegration[]): voi
       throw new Error(`Duplicate agent integration id: ${integration.id}.`);
     }
     if (
-      !isSafeIntegrationText(integration.name, 80) ||
+      !isSafeIntegrationText(integration.displayName, 80) ||
       !isSafeIntegrationText(integration.description, 240)
     ) {
       throw new Error(`Agent integration ${integration.id} has invalid display metadata.`);

@@ -146,6 +146,8 @@ Using the same reference time and timezone as the complete example:
 `codex-limits doctor --json` returns this shape:
 
 ```ts
+type AgentIntegrationStatus = "installed" | "not-installed" | "unknown";
+
 interface DoctorJson {
   packageVersion: string;
   nodeVersion: string;
@@ -154,7 +156,7 @@ interface DoctorJson {
   authenticationFound: boolean;
   localUsageFound: boolean;
   liveEndpoint: "not-checked" | "reachable" | "unreachable";
-  opencodeIntegration: "installed" | "not-installed" | "unknown";
+  agentIntegrations: Record<string, AgentIntegrationStatus>;
 }
 ```
 
@@ -169,11 +171,14 @@ Example:
   "authenticationFound": true,
   "localUsageFound": true,
   "liveEndpoint": "reachable",
-  "opencodeIntegration": "installed"
+  "agentIntegrations": {
+    "opencode": "installed",
+    "pi": "installed"
+  }
 }
 ```
 
-`authenticationFound` means complete credentials were discovered; it never exposes or serializes those values. `localUsageFound` means at least one recognized local usage window was read. `liveEndpoint` is `not-checked` when authentication is unavailable, `reachable` when the endpoint returns an HTTP response, and `unreachable` for invalid endpoint configuration, timeouts, or network failures. `opencodeIntegration` is `unknown` only when the bounded OpenCode configuration check cannot safely determine its state.
+`authenticationFound` means complete credentials were discovered; it never exposes or serializes those values. `localUsageFound` means at least one recognized local usage window was read. `liveEndpoint` is `not-checked` when authentication is unavailable, `reachable` when the endpoint returns an HTTP response, and `unreachable` for invalid endpoint configuration, timeouts, or network failures. `agentIntegrations` maps every registered agent ID to its bounded installation check; a value is `unknown` only when that adapter cannot safely determine its state.
 
 ## Field reference
 

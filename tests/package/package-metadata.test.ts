@@ -12,8 +12,12 @@ interface PackageMetadata {
   types: string;
   engines: {node: string};
   scripts: Record<string, string>;
+  keywords: string[];
   dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, {optional?: boolean}>;
   devDependencies: Record<string, string>;
+  pi?: {extensions?: string[]};
 }
 
 async function readPackageMetadata(): Promise<PackageMetadata> {
@@ -33,6 +37,8 @@ test("package metadata preserves the npm, binary, and root plugin contracts", as
   });
   expect(packageJson.types).toBe("./types/index.d.ts");
   expect(packageJson.engines.node).toBe(">=20");
+  expect(packageJson.pi).toEqual({extensions: ["./dist/pi.js"]});
+  expect(packageJson.keywords).toContain("pi-package");
 });
 
 test("generated declarations expose exactly the default plugin and named tui contract", async () => {
@@ -52,13 +58,23 @@ test("package metadata includes runtime documentation and excludes bundled runti
   expect(packageJson.files).toContain("docs/photos");
   expect(packageJson.files).toContain("SECURITY.md");
   expect(packageJson.dependencies ?? {}).toEqual({});
+  expect(packageJson.peerDependencies).toEqual({
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+  });
+  expect(packageJson.peerDependenciesMeta).toEqual({
+    "@earendil-works/pi-coding-agent": {optional: true},
+    "@earendil-works/pi-tui": {optional: true},
+  });
 });
 
-test("TUI build dependencies preserve the Node 20 package contract", async () => {
+test("agent host dependencies preserve the published runtime contracts", async () => {
   const packageJson = await readPackageMetadata();
 
   expect(packageJson.devDependencies.ink).toBe("^6.8.0");
   expect(packageJson.devDependencies["react-devtools-core"]).toBe("^7.0.1");
+  expect(packageJson.devDependencies["@earendil-works/pi-coding-agent"]).toBe("^0.81.1");
+  expect(packageJson.devDependencies["@earendil-works/pi-tui"]).toBe("^0.81.1");
 });
 
 test("validation and prepack scripts do not recurse", async () => {

@@ -32,7 +32,29 @@ if (!bundle.success) {
   throw new Error("Production bundle failed.");
 }
 
-await writeThirdPartyNotices(Object.keys(bundle.metafile.inputs));
+const piBundle = await Bun.build({
+  entrypoints: [join(root, "src", "agents", "pi", "plugin.ts")],
+  outdir: distDirectory,
+  naming: {entry: "pi.js"},
+  target: "node",
+  format: "esm",
+  minify: true,
+  external: ["@earendil-works/pi-coding-agent", "@earendil-works/pi-tui"],
+  define: {"process.env.NODE_ENV": JSON.stringify("production")},
+  sourcemap: "none",
+  metafile: true,
+});
+if (!piBundle.success) {
+  for (const log of piBundle.logs) {
+    console.error(log);
+  }
+  throw new Error("Pi extension bundle failed.");
+}
+
+await writeThirdPartyNotices([
+  ...Object.keys(bundle.metafile.inputs),
+  ...Object.keys(piBundle.metafile.inputs),
+]);
 
 try {
   const declarations = Bun.spawn(

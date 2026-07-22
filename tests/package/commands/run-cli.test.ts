@@ -1,10 +1,27 @@
 import {expect, test} from "bun:test";
+import type {AgentIntegration} from "@/agents";
 import {formatCoupons} from "@/package/commands/coupons/format";
 import {runCli} from "@/package/commands/run-cli";
 import {sanitizePublicErrorMessage} from "@/package/commands/safe-error";
 import {formatStatus} from "@/package/commands/status/format";
 import {unavailableCoupons} from "@/package/core/coupons/reset-coupons";
 import {createFakeCouponResult, createFakeLimitsResult} from "@tests/package/fixtures/fake-results";
+
+function createDiagnosticIntegration(
+  id: string,
+  displayName: string,
+  inspect: AgentIntegration["inspect"]
+): AgentIntegration {
+  return {
+    id,
+    displayName,
+    description: `Enable ${displayName}.`,
+    async install() {
+      return {changed: false};
+    },
+    inspect,
+  };
+}
 
 test("runCli renders TUI for the default command", async () => {
   let rendered = false;
@@ -91,18 +108,25 @@ test("runCli prints safe doctor text and JSON diagnostics", async () => {
       localUsageFound: true,
       liveEndpoint: "reachable" as const,
     }),
-    inspectOpencodeIntegration: async () => "installed" as const,
     nodeVersion: "22.0.0",
     operatingSystem: "Windows",
+  };
+  const agents = {
+    integrations: [
+      createDiagnosticIntegration("opencode", "OpenCode", async () => "installed"),
+      createDiagnosticIntegration("pi", "pi", async () => "installed"),
+    ],
   };
 
   const textExitCode = await runCli(["doctor"], {
     io: {stdout: (text) => textOutput.push(text)},
+    agents,
     doctor,
     packageInfo: {version: "0.1.3"},
   });
   const jsonExitCode = await runCli(["doctor", "--json"], {
     io: {stdout: (text) => jsonOutput.push(text)},
+    agents,
     doctor,
     packageInfo: {version: "0.1.3"},
   });
@@ -121,6 +145,7 @@ test("runCli prints safe doctor text and JSON diagnostics", async () => {
       "Local usage found:     Yes",
       "Live endpoint:         Reachable",
       "OpenCode integration:  Installed",
+      "pi integration:        Installed",
       "",
       "No sensitive values were displayed.",
       "",
@@ -134,11 +159,14 @@ test("runCli prints safe doctor text and JSON diagnostics", async () => {
     authenticationFound: true,
     localUsageFound: true,
     liveEndpoint: "reachable",
-    opencodeIntegration: "installed",
+    agentIntegrations: {
+      opencode: "installed",
+      pi: "installed",
+    },
   });
 });
 
-test("runCli writes no partial doctor JSON or sensitive errors when a check fails", async () => {
+test("runCli writes no partial doctor JSON or sensitive errors when a core check fails", async () => {
   const output: string[] = [];
   const errors: string[] = [];
   const exitCode = await runCli(["doctor", "--json"], {
@@ -150,8 +178,8 @@ test("runCli writes no partial doctor JSON or sensitive errors when a check fail
       loadCodexDiagnostics: async () => {
         throw new Error("Bearer fake-secret-token at C:/private/auth.json");
       },
-      inspectOpencodeIntegration: async () => "unknown",
     },
+    agents: {integrations: []},
   });
 
   expect(exitCode).toBe(1);
@@ -159,6 +187,40 @@ test("runCli writes no partial doctor JSON or sensitive errors when a check fail
   expect(errors.join("")).toBe("codex-limits: Could not run Codex Limits diagnostics.\n");
   expect(errors.join("")).not.toContain("fake-secret-token");
   expect(errors.join("")).not.toContain("private");
+});
+
+test("runCli isolates unsafe agent inspection failures as unknown diagnostics", async () => {
+  const output: string[] = [];
+  const errors: string[] = [];
+  const exitCode = await runCli(["doctor", "--json"], {
+    io: {
+      stdout: (text) => output.push(text),
+      stderr: (text) => errors.push(text),
+    },
+    doctor: {
+      loadCodexDiagnostics: async () => ({
+        codexHomeDetected: false,
+        authenticationFound: false,
+        localUsageFound: false,
+        liveEndpoint: "not-checked",
+      }),
+    },
+    agents: {
+      integrations: [
+        createDiagnosticIntegration("private-agent", "Private agent", async () => {
+          throw new Error("Bearer fake-secret-token at C:/private/auth.json");
+        }),
+      ],
+    },
+  });
+
+  expect(exitCode).toBe(0);
+  expect(errors).toEqual([]);
+  expect(JSON.parse(output.join("")).agentIntegrations).toEqual({
+    "private-agent": "unknown",
+  });
+  expect(output.join("")).not.toContain("fake-secret-token");
+  expect(output.join("")).not.toContain("private/auth");
 });
 
 test("runCli writes no partial JSON when a loader fails", async () => {
@@ -228,6 +290,7 @@ test("runCli generates nested and compatibility command help", async () => {
   expect(agentsOutput.join("")).toContain("install  Install optional agent integrations");
   expect(installOutput.join("")).toContain("[<agent...>]");
   expect(initOutput.join("")).toContain("codex-limits init --opencode");
+  expect(initOutput.join("")).toContain("codex-limits init --pi");
 });
 
 test("runCli returns non-zero with relevant help for invalid input", async () => {

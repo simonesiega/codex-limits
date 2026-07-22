@@ -145,10 +145,13 @@ test("registry validation rejects unsafe or drifting contributor metadata", () =
           integrations: [
             {
               id: "unsafe",
-              name: "unsafe\u009b31m",
+              displayName: "unsafe\u009b31m",
               description: "Unsafe integration metadata.",
               async install() {
                 return {changed: false};
+              },
+              async inspect() {
+                return "not-installed";
               },
             },
           ],
@@ -203,6 +206,7 @@ test("root and nested help are generated from registry metadata", () => {
   expect(rootHelp).toContain("CODEX_LIMITS_HOME");
   expect(rootHelp).toContain("Access token for live usage and reset coupons");
   expect(rootHelp).toContain("Account ID for live usage and reset coupons");
+  expect(rootHelp).toContain("PI_CODING_AGENT_DIR");
   expect(agentsHelp).toContain("install  Install optional agent integrations");
   expect(installHelp).toContain("[<agent...>]");
 

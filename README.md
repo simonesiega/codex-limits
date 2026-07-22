@@ -22,7 +22,7 @@
 
 <p align="center">
   <a href="#local-development">
-    <img src="https://img.shields.io/badge/test_coverage-95.9%25_lines-brightgreen" alt="Test coverage: 95.9% lines" />
+    <img src="https://img.shields.io/badge/test_coverage-96.3%25_lines-brightgreen" alt="Test coverage: 96.3% lines" />
   </a>
 </p>
 
@@ -83,10 +83,11 @@ Install an optional agent integration by name:
 codex-limits agents install <agent-name>
 ```
 
-For example, install the OpenCode integration:
+For example, install the OpenCode or pi integration:
 
 ```bash
 codex-limits agents install opencode
+codex-limits agents install pi
 ```
 
 The existing `codex-limits init --<agent-name>` syntax remains supported as a compatibility command.
@@ -99,6 +100,8 @@ The existing `codex-limits init --<agent-name>` syntax remains supported as a co
 | Codex               | For normal use, Codex should already be installed and authenticated so `codex-limits` can discover its local data and credentials. Advanced setups can provide supported environment overrides instead.           |
 | Operating systems   | Windows, macOS, and Linux are supported through their standard Codex data locations. Use `CODEX_LIMITS_HOME` or `CODEX_HOME` if your data is stored elsewhere.                                                    |
 | Internet connection | Local usage fallback can work offline. An internet connection is required for current live usage and reset-credit coupon information; unavailable network data is reported safely without breaking the dashboard. |
+
+The standalone CLI supports Node.js 20 and newer. The optional pi integration runs inside the pi host; pi 0.81.x requires Node.js 22.19 or newer.
 
 ## Overview
 
@@ -119,6 +122,7 @@ For installation details, adapter behavior, architecture, and contribution guida
 | Agent    | Status    | Agent command   | Guide                                                    | Description                                                                                                     |
 | -------- | --------- | --------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | OpenCode | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/opencode.md) | Opens a fast, read-only Codex limits dashboard directly inside OpenCode without sending the request to the LLM. |
+| pi       | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/pi.md)       | Opens a themed, read-only Codex limits overlay directly inside pi without sending the request to the LLM.       |
 
 Agent integrations are not enabled automatically during package installation. They must be installed with `codex-limits agents install` (or the compatible `codex-limits init` syntax) and are only available in the agent terminal after a restart. See [Adding new agents](#adding-new-agents) if you want to add support for another agent.
 
@@ -132,9 +136,17 @@ The OpenCode integration adds a `/codex-limits` command that opens a compact mod
   <img src="docs/photos/agents/opencode/opencode_result.png" alt="OpenCode codex-limits integration screenshot" width="740" />
 </p>
 
+#### pi
+
+The pi integration adds a `/codex-limits` command that opens a themed overlay inside the agent interface. It shows the same read-only usage windows and reset-credit summary without sending the request or limit data to the LLM.
+
+<p align="center">
+  <img src="docs/photos/agents/pi/pi_result.png" alt="pi codex-limits integration screenshot" width="740" />
+</p>
+
 ### Adding new agents
 
-New agents can be added by creating a dedicated adapter under `src/agents/<agent-name>` and registering it in `src/agents/index.ts`. Each integration should keep the same goal: show Codex limit information quickly, safely, and without exposing tokens, account IDs, cookies, auth headers, or raw local files.
+New agents use the same four-file adapter layout under `src/agents/<agent-name>`: `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. The integration descriptor owns its metadata, environment help, installer, and read-only diagnostic check; registering that descriptor in `src/agents/index.ts` automatically connects shared installation, compatibility help, and doctor diagnostics. Each integration should show Codex limit information quickly and safely without exposing tokens, account IDs, cookies, auth headers, or raw local files.
 
 See the [Contributing](./CONTRIBUTING.md) guide if you want to add support for another agent.
 
@@ -167,6 +179,7 @@ Environment variables are only used as a fallback when automatic discovery is no
 | `CODEX_LIMITS_ACCOUNT_ID`     | Provides the account ID paired with `CODEX_LIMITS_ACCESS_TOKEN`.                         |
 | `CODEX_LIMITS_USAGE_ENDPOINT` | Overrides the live usage endpoint with HTTPS or loopback HTTP for advanced setups/tests. |
 | `CODEX_LIMITS_SKIP_INIT`      | Suppresses optional global-install setup guidance from the non-interactive postinstall.  |
+| `PI_CODING_AGENT_DIR`         | Overrides pi's global agent configuration directory for integration setup and checks.    |
 
 ### Data access and safety
 
@@ -190,7 +203,7 @@ Local Codex data is inspected read-only with bounded file, directory, JSONL, and
 
 ### Diagnostics
 
-Run the read-only doctor command when Codex data, live usage, or the OpenCode integration is unavailable:
+Run the read-only doctor command when Codex data, live usage, or an agent integration is unavailable:
 
 ```bash
 codex-limits doctor
@@ -207,11 +220,12 @@ Authentication found:  Yes
 Local usage found:     Yes
 Live endpoint:         Reachable
 OpenCode integration:  Installed
+pi integration:        Installed
 
 No sensitive values were displayed.
 ```
 
-The doctor checks only whether recognized resources are available. It never prints credential values, private paths, endpoint URLs, configuration contents, or raw Codex data. The live check makes the same bounded authenticated read-only usage request as the dashboard; it is reported as `Not checked` when complete authentication is unavailable. Use `codex-limits doctor --json` for the stable machine-readable form documented in [JSON output](docs/readme/json-output.md#doctor-document).
+The doctor checks only whether recognized resources are available, including the OpenCode and pi integrations. It never prints credential values, private paths, endpoint URLs, configuration contents, or raw Codex data. The live check makes the same bounded authenticated read-only usage request as the dashboard; it is reported as `Not checked` when complete authentication is unavailable. Use `codex-limits doctor --json` for the stable machine-readable form documented in [JSON output](docs/readme/json-output.md#doctor-document).
 
 ### Agent management
 
@@ -244,7 +258,7 @@ Confirm that your user can read the selected Codex directory and its session fil
 
 ### Agent command not appearing after installation
 
-Run the named installer again, for example `codex-limits agents install opencode`, and confirm that it reports the integration as installed or already installed. Restart the target agent terminal so it reloads its configuration. If the command is still missing, verify that the displayed configuration paths belong to the agent installation you are using.
+Run the named installer again, for example `codex-limits agents install opencode` or `codex-limits agents install pi`, and confirm that it reports the integration as installed or already installed. Restart the target agent terminal so it reloads its configuration. If the command is still missing, verify that the displayed configuration paths belong to the agent installation you are using.
 
 ## Documentation
 
@@ -285,7 +299,7 @@ Useful development commands:
 | ------------------------- | ----------------------------------------------- | --------------------------------- | -------------------------------------- |
 | `codex-limits`            | Recognized Codex state and bounded session data | Nothing                           | Live usage and coupon endpoints        |
 | `status` / `coupons`      | Shared read-only core                           | Nothing                           | When live data is requested            |
-| `doctor`                  | Bounded Codex and OpenCode configuration checks | Nothing                           | Live usage endpoint when authenticated |
+| `doctor`                  | Bounded Codex and agent configuration checks    | Nothing                           | Live usage endpoint when authenticated |
 | `agents install` / `init` | Selected agent configuration                    | Adds the integration registration | Does not send an LLM prompt            |
 
 For vulnerability reports and local data safety details, see [`SECURITY.md`](./SECURITY.md).

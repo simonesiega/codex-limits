@@ -11,12 +11,15 @@ function createIntegration(
 ): AgentIntegration & {installs: number} {
   return {
     id,
-    name: id,
+    displayName: id,
     description: `Enable ${id}.`,
     installs: 0,
     async install() {
       this.installs += 1;
       return {changed: true, configPaths};
+    },
+    async inspect() {
+      return "not-installed";
     },
   };
 }

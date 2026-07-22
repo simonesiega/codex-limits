@@ -1,11 +1,20 @@
-import type {AgentIntegrationStatus} from "@/agents";
+import type {AgentIntegration, AgentIntegrationStatus} from "@/agents";
 import type {DoctorDto} from "@/package/commands/public-dto";
 import type {LiveEndpointStatus} from "@/package/core/types";
 
 const LABEL_WIDTH = 23;
 
 /** Formats safe doctor checks as aligned plain text. */
-export function formatDoctor(result: DoctorDto): string {
+export function formatDoctor(
+  result: DoctorDto,
+  integrations: readonly Pick<AgentIntegration, "id" | "displayName">[]
+): string {
+  const integrationLines = integrations.map((integration) =>
+    formatLine(
+      `${integration.displayName} integration:`,
+      formatIntegration(result.agentIntegrations[integration.id] ?? "unknown")
+    )
+  );
   const lines = [
     "Codex Limits diagnostics",
     "",
@@ -16,7 +25,7 @@ export function formatDoctor(result: DoctorDto): string {
     formatLine("Authentication found:", formatBoolean(result.authenticationFound)),
     formatLine("Local usage found:", formatBoolean(result.localUsageFound)),
     formatLine("Live endpoint:", formatLiveEndpoint(result.liveEndpoint)),
-    formatLine("OpenCode integration:", formatIntegration(result.opencodeIntegration)),
+    ...integrationLines,
     "",
     "No sensitive values were displayed.",
   ];
@@ -25,7 +34,8 @@ export function formatDoctor(result: DoctorDto): string {
 }
 
 function formatLine(label: string, value: string): string {
-  return `${label.padEnd(LABEL_WIDTH)}${value}`;
+  const separator = label.length >= LABEL_WIDTH ? " " : "";
+  return `${label.padEnd(LABEL_WIDTH)}${separator}${value}`;
 }
 
 function formatBoolean(value: boolean): string {

@@ -28,6 +28,8 @@ const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"
   bin?: Record<string, string>;
   exports?: Record<string, {import?: string; types?: string}>;
   dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  pi?: {extensions?: string[]};
 };
 
 assert(packageJson.name === "@simonesiega/codex-limits", "Unexpected npm package name.");
@@ -38,6 +40,10 @@ assert(
   Object.keys(packageJson.dependencies ?? {}).length === 0,
   "Runtime dependencies must be bundled."
 );
+assert(
+  packageJson.pi?.extensions?.length === 1 && packageJson.pi.extensions[0] === "./dist/pi.js",
+  "Unexpected pi extension manifest."
+);
 
 const cliPath = join(root, "dist", "cli.js");
 const cli = await readFile(cliPath, "utf8");
@@ -46,7 +52,7 @@ if (process.platform !== "win32") {
   assert(((await stat(cliPath)).mode & 0o111) !== 0, "CLI bundle is not executable.");
 }
 
-for (const file of ["dist/cli.js", "dist/index.js"]) {
+for (const file of ["dist/cli.js", "dist/index.js", "dist/pi.js"]) {
   const content = await readFile(join(root, file), "utf8");
   assert(!content.includes("src/package/"), `${file} contains a source-only path.`);
   assert(!/\bfrom\s*["'][^"']+\.(?:ts|tsx)["']/.test(content), `${file} imports TypeScript.`);
@@ -59,11 +65,17 @@ for (const file of ["dist/cli.js", "dist/index.js"]) {
     if (!specifier || specifier.startsWith(".") || specifier.startsWith("node:")) {
       continue;
     }
+    const allowedPeers =
+      file === "dist/pi.js" ? Object.keys(packageJson.peerDependencies ?? {}) : [];
     assert(
-      builtinModules.includes(specifier),
+      builtinModules.includes(specifier) || allowedPeers.includes(specifier),
       `${file} has undeclared runtime import ${specifier}.`
     );
   }
+}
+
+if (await hasLocalPiHostDependencies()) {
+  await smokePiExtensionBundle();
 }
 
 const thirdPartyNotices = await readFile(join(root, "dist", "THIRD_PARTY_NOTICES.txt"), "utf8");
@@ -97,11 +109,13 @@ try {
   for (const required of [
     "dist/cli.js",
     "dist/index.js",
+    "dist/pi.js",
     "dist/THIRD_PARTY_NOTICES.txt",
     "types/index.d.ts",
     "scripts/postinstall.cjs",
     ".env.example",
     "docs/photos/agents/opencode/opencode_result.png",
+    "docs/photos/agents/pi/pi_result.png",
     "docs/photos/logo/logo.png",
     "docs/photos/logo/title-animation.svg",
     "docs/photos/terminal/final_result_large.png",
@@ -170,6 +184,53 @@ try {
   await rm(temporaryRoot, {recursive: true, force: true});
 }
 
+async function hasLocalPiHostDependencies(): Promise<boolean> {
+  try {
+    await Promise.all(
+      ["pi-coding-agent", "pi-tui"].map((packageName) =>
+        stat(join(root, "node_modules", "@earendil-works", packageName, "package.json"))
+      )
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function smokePiExtensionBundle(): Promise<void> {
+  let commandName = "";
+  let commandHandler:
+    | ((args: string, context: {hasUI: boolean; mode: string; ui: object}) => Promise<void>)
+    | undefined;
+  let sentMessages = 0;
+  const moduleUrl = `${pathToFileURL(join(root, "dist", "pi.js")).href}?validate=${Date.now()}`;
+  const piModule = (await import(moduleUrl)) as {default?: (api: object) => void};
+
+  assert(typeof piModule.default === "function", "Pi bundle has no default extension export.");
+  piModule.default({
+    registerCommand: (
+      name: string,
+      definition: {
+        handler: (
+          args: string,
+          context: {hasUI: boolean; mode: string; ui: object}
+        ) => Promise<void>;
+      }
+    ) => {
+      commandName = name;
+      commandHandler = definition.handler;
+    },
+    sendUserMessage: () => {
+      sentMessages += 1;
+    },
+  });
+
+  assert(commandName === "codex-limits", "Pi bundle registered an unexpected command.");
+  assert(commandHandler, "Pi bundle did not register a command handler.");
+  await commandHandler("", {hasUI: false, mode: "print", ui: {}});
+  assert(sentMessages === 0, "Pi bundle sent an unexpected LLM message.");
+}
+
 async function smokeCli(packedRoot: string, version: string): Promise<void> {
   const home = join(packedRoot, ".smoke-home");
   await mkdir(home, {recursive: true});
@@ -186,6 +247,7 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
     APPDATA: join(home, "AppData", "Roaming"),
     LOCALAPPDATA: join(home, "AppData", "Local"),
     CODEX_LIMITS_HOME: join(home, "missing-codex-home"),
+    PI_CODING_AGENT_DIR: join(home, ".pi", "agent"),
   });
 
   const commands: Array<{args: string[]; json?: boolean; includes?: string}> = [
@@ -197,6 +259,12 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
     {args: ["doctor", "--json"], json: true},
     {args: ["agents", "--help"], includes: "Manage optional coding-agent integrations"},
     {args: ["agents", "install", "--help"], includes: "Install optional agent integrations"},
+    {args: ["agents", "install", "pi"], includes: "pi: installed"},
+    {
+      args: ["doctor", "--json"],
+      json: true,
+      includes: '"pi": "installed"',
+    },
     {args: ["init", "--help"], includes: "compatibility command"},
     {args: ["--json"], json: true},
     {args: ["coupons", "--json"], json: true},
@@ -221,6 +289,14 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
       );
     }
   }
+
+  const piSettings = JSON.parse(
+    await readFile(join(home, ".pi", "agent", "settings.json"), "utf8")
+  ) as {packages?: unknown[]};
+  assert(
+    piSettings.packages?.includes(packedRoot) === true,
+    "Packed CLI registered an unexpected pi package path."
+  );
 }
 
 async function run(command: string, args: string[], cwd: string): Promise<string> {

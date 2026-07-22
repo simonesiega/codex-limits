@@ -1,8 +1,11 @@
-import {randomUUID} from "node:crypto";
-import {mkdir, rename, rm, writeFile} from "node:fs/promises";
 import {homedir} from "node:os";
-import {dirname, join} from "node:path";
-import {AgentInstallError, type AgentIntegrationStatus} from "@/agents/types";
+import {join} from "node:path";
+import {writeAgentJsonAtomically} from "@/agents/shared/json-config";
+import {
+  AgentInstallError,
+  type AgentInstallResult,
+  type AgentIntegrationStatus,
+} from "@/agents/types";
 import {BoundedFileError, readBoundedUtf8File} from "@/package/core/utils/bounded-file";
 import {isRecord} from "@/package/core/utils/unknown";
 
@@ -17,9 +20,9 @@ interface OpencodeConfigOptions {
 }
 
 /** Adds the Codex Limits package to OpenCode's global plugin configurations. */
-export async function installOpencodePlugin(
+export async function installOpencodeIntegration(
   options: OpencodeConfigOptions = {}
-): Promise<{changed: boolean; configPaths: string[]}> {
+): Promise<AgentInstallResult> {
   const configDirectory = join(homedir(), ".config", "opencode");
   const configPath = options.configPath ?? join(configDirectory, "opencode.json");
   const tuiConfigPath = options.tuiConfigPath ?? join(configDirectory, "tui.json");
@@ -34,10 +37,10 @@ export async function installOpencodePlugin(
 
   try {
     if (configChanged) {
-      await writeJsonAtomically(configPath, config);
+      await writeAgentJsonAtomically(configPath, config);
     }
     if (tuiConfigChanged) {
-      await writeJsonAtomically(tuiConfigPath, tuiConfig);
+      await writeAgentJsonAtomically(tuiConfigPath, tuiConfig);
     }
   } catch {
     throw new AgentInstallError("Could not safely update the OpenCode configuration.");
@@ -47,7 +50,7 @@ export async function installOpencodePlugin(
 }
 
 /** Checks bounded OpenCode configurations without returning their contents or paths. */
-export async function inspectOpencodePlugin(
+export async function inspectOpencodeIntegration(
   options: OpencodeConfigOptions = {}
 ): Promise<AgentIntegrationStatus> {
   const configDirectory = join(homedir(), ".config", "opencode");
@@ -137,22 +140,4 @@ function isCodexLimitsPlugin(value: OpencodePluginEntry): boolean {
   // A pinned version or tag has the same package identity and must not be added a second time.
   const spec = Array.isArray(value) ? value[0] : value;
   return spec === OPENCODE_PLUGIN_SPEC || spec.startsWith(`${OPENCODE_PLUGIN_SPEC}@`);
-}
-
-async function writeJsonAtomically(path: string, value: Record<string, unknown>): Promise<void> {
-  const directory = dirname(path);
-  // A sibling temporary file keeps the final rename on one filesystem and prevents partial JSON writes.
-  const temporaryPath = join(directory, `.codex-limits-${randomUUID()}.tmp`);
-  await mkdir(directory, {recursive: true});
-
-  try {
-    // OpenCode configs may contain private values, so create the replacement owner-only.
-    await writeFile(temporaryPath, `${JSON.stringify(value, null, 2)}\n`, {
-      encoding: "utf8",
-      mode: 0o600,
-    });
-    await rename(temporaryPath, path);
-  } finally {
-    await rm(temporaryPath, {force: true}).catch(() => undefined);
-  }
 }

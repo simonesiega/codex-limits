@@ -53,7 +53,7 @@ coding agent command → agent adapter → shared core → read-only Codex limit
 - The **core package** is the authority for Codex data discovery, parsing, normalization, optional live data fetching, warnings, and redaction.
 - The **commands package** is responsible for CLI behavior. Command metadata belongs in the shared registry model, while each handler should receive only the runtime capabilities it uses.
 - The **TUI package** is a rendering layer. It must not read local Codex files, fetch live data directly, or define safety rules.
-- The **agents package** is an adapter layer. Each integration should stay thin and reuse the shared core.
+- The **agents package** is an adapter layer. Each integration should use the shared adapter contract, stay thin, and reuse the shared core.
 - The **tests folder** protects behavior, output stability, safety rules, and integration logic.
 - The **docs/photos folder** is only for visual assets used in documentation. Screenshots must never contain private tokens, account IDs, cookies, auth headers, or raw local files.
 
@@ -74,7 +74,7 @@ Terminal UI:
 - Ink / React-style terminal rendering
 
 Agent integrations:
-- OpenCode currently supported
+- OpenCode and pi currently supported
 - Additional adapters can be added under src/agents
 
 Testing:
