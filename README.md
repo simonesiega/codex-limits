@@ -16,13 +16,13 @@
 
 <p align="center">
   <img src="https://img.shields.io/npm/v/@simonesiega/codex-limits?label=npm" alt="npm version" />
-  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Bun-toolchain-black?logo=bun" alt="Bun toolchain" />
+  <img src="https://img.shields.io/badge/test_coverage-96.3%25_lines-brightgreen" alt="Test coverage: 96.3% lines" />
 </p>
 
 <p align="center">
   <a href="#local-development">
-    <img src="https://img.shields.io/badge/test_coverage-96.3%25_lines-brightgreen" alt="Test coverage: 96.3% lines" />
+    <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Bun-toolchain-black?logo=bun" alt="Bun toolchain" />
   </a>
 </p>
 
@@ -54,7 +54,7 @@ The screenshots show the **`codex-limits`** terminal dashboards: clean, read-onl
 - [License](#license)
 - [Contributors](#contributors)
 
-> Last verified against: `@simonesiega/codex-limits` v0.1.5
+> Last verified against: `@simonesiega/codex-limits` v0.1.6
 > Verification date: 2026-07-22
 
 ## Quick start
@@ -212,7 +212,7 @@ codex-limits doctor
 ```text
 Codex Limits diagnostics
 
-Package version:       0.1.5
+Package version:       0.1.6
 Node.js version:       22.0.0
 Operating system:      Windows
 Codex home detected:   Yes

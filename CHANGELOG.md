@@ -8,6 +8,20 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [0.1.6] - 2026-07-22
+
+### Breaking Changes
+
+### Added
+
 - Added `codex-limits doctor` and `codex-limits doctor --json` for safe environment, connectivity, local usage, authentication, OpenCode, and pi integration diagnostics.
 - Added the pi agent integration with `codex-limits agents install pi` and a read-only `/codex-limits` overlay that does not send limit data to the LLM.
 

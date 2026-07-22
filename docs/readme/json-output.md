@@ -164,7 +164,7 @@ Example:
 
 ```json
 {
-  "packageVersion": "0.1.5",
+  "packageVersion": "0.1.6",
   "nodeVersion": "22.0.0",
   "operatingSystem": "Windows",
   "codexHomeDetected": true,
