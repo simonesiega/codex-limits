@@ -12,6 +12,7 @@ All notable changes to codex-limits are documented in this file.
 
 ### Changed
 
+- Changed CI to run source checks once and validate packed artifacts across Node.js 20, 22, and 24 on Linux and Windows.
 - Changed CLI parsing and help to use one command definition source, with generated nested help and order-independent supported options.
 
 ### Fixed
@@ -23,6 +24,7 @@ All notable changes to codex-limits are documented in this file.
 
 ### Security
 
+- Disabled dependency lifecycle scripts during CI installs, pinned workflow actions to immutable commits, and explicitly requested npm provenance for published packages.
 - Shortened agent configuration paths under the user home to `~/...` and redacted paths outside it before printing installation results.
 - Sanitized and bounded command and agent errors, and rejected control characters in command metadata before terminal output.
 

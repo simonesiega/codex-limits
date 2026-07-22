@@ -22,7 +22,7 @@ The following environments are covered by the repository's automated checks or c
 
 | Area                   | Tested environments                                                                                                |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Automated packaged CLI | GitHub Actions `ubuntu-latest` with Node.js 20 and 24                                                              |
+| Automated packaged CLI | GitHub Actions on `ubuntu-latest` with Node.js 20, 22, and 24, plus `windows-latest` with Node.js 20               |
 | Current local checks   | Windows build `10.0.26200` with Node.js 22.20.0 and Bun 1.3.14                                                     |
 | Terminal rendering     | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix |
 | OpenCode agent adapter | Mocked current keymap and legacy command API shapes; no exact OpenCode host release is tested end-to-end           |
