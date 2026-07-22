@@ -46,6 +46,13 @@ test("date and redaction helpers avoid seconds and secrets", () => {
   expect(
     redactSensitiveText("https://example.test/?account_id=fake-private-account")
   ).not.toContain("fake-private-account");
+  expect(redactSensitiveText("access-token=fake-access-token")).toBe("[redacted]");
+  expect(redactSensitiveText("password: fake-password")).toBe("[redacted]");
+  expect(redactSensitiveText('password: "two private words"')).toBe("[redacted]");
+  expect(redactSensitiveText("Authorization: Basic fake-basic-credential")).toBe("[redacted]");
+  expect(redactSensitiveText("00000000-0000-0000-0000-000000000000")).toBe("[redacted]");
+  expect(redactSensitiveText("eyJmYWtl.fakepayload.fakesignature")).toBe("[redacted]");
+  expect(redactSensitiveText("safe\u001b[31m\u009b32m")).toBe("safe?[31m?32m");
 });
 
 function stateFromJson(json: unknown): CodexStateReadResult {

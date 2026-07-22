@@ -6,7 +6,7 @@ import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 const postinstallScript = fileURLToPath(import.meta.resolve("@root/scripts/postinstall.cjs"));
 
-test("postinstall only prints explicit init guidance for global installs", async () => {
+test("postinstall only prints explicit agent setup guidance for global installs", async () => {
   await withTempDirectory("codex-limits-postinstall-", async (installRoot) => {
     const {CI: _ci, CODEX_LIMITS_SKIP_INIT: _skipInit, ...env} = process.env;
     const proc = Bun.spawn([process.execPath, postinstallScript], {
@@ -24,7 +24,7 @@ test("postinstall only prints explicit init guidance for global installs", async
     expect(exitCode).toBe(0);
     expect(stderr).toBe("");
     expect(stdout).toBe(
-      "codex-limits: installed. Run `codex-limits init` to install optional agent integrations.\n"
+      "codex-limits: installed. Run `codex-limits agents install` to install optional agent integrations.\n"
     );
   });
 });

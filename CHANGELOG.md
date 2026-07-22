@@ -8,13 +8,20 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added the `codex-limits agents` command group with named, interactive, and all-agent integration installation while keeping the existing `init` syntax supported.
+
 ### Changed
+
+- Changed CLI parsing and help to use one command definition source, with generated nested help and order-independent supported options.
 
 ### Fixed
 
 ### Removed
 
 ### Security
+
+- Shortened agent configuration paths under the user home to `~/...` and redacted paths outside it before printing installation results.
+- Sanitized and bounded command and agent errors, and rejected control characters in command metadata before terminal output.
 
 ## [0.1.4] - 2026-07-13
 

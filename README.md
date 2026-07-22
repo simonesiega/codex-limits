@@ -71,17 +71,19 @@ codex-limits
 
 The list of available commands is shown when you run `codex-limits --help` or in the [Usage](#usage) section.
 
-Install optional agent integrations with their named flag:
+Install an optional agent integration by name:
 
 ```bash
-codex-limits init --<agent-name>
+codex-limits agents install <agent-name>
 ```
 
 For example, install the OpenCode integration:
 
 ```bash
-codex-limits init --opencode
+codex-limits agents install opencode
 ```
+
+The existing `codex-limits init --<agent-name>` syntax remains supported as a compatibility command.
 
 ## Requirements
 
@@ -98,7 +100,7 @@ When you are working with Codex or agent-based coding tools, usage limits can in
 
 **`codex-limits`** gives you that information in one clean terminal view. It shows your current 5-hour and weekly usage windows, remaining percentages, progress bars, reset times, and reset-credit coupons when available, so you can quickly check your status and continue coding without leaving the terminal.
 
-It also includes plain-text commands for quick checks, JSON output for scripts and automation, optional agent integrations through `codex-limits init`, and safe output that never prints tokens, account IDs, auth headers, cookies, or raw local files.
+It also includes plain-text commands for quick checks, JSON output for scripts and automation, optional agent integrations through `codex-limits agents`, and safe output that never prints tokens, account IDs, auth headers, cookies, or raw local files.
 
 ## Agent integrations
 
@@ -112,7 +114,7 @@ For installation details, adapter behavior, architecture, and contribution guida
 | -------- | --------- | --------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | OpenCode | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/opencode.md) | Opens a fast, read-only Codex limits dashboard directly inside OpenCode without sending the request to the LLM. |
 
-Agent integrations are not enabled automatically during package installation. They must be installed with `codex-limits init` and are only available in the agent terminal after a restart. See [Adding new agents](#adding-new-agents) if you want to add support for another agent.
+Agent integrations are not enabled automatically during package installation. They must be installed with `codex-limits agents install` (or the compatible `codex-limits init` syntax) and are only available in the agent terminal after a restart. See [Adding new agents](#adding-new-agents) if you want to add support for another agent.
 
 ### Selected agent integration screenshots
 
@@ -136,11 +138,11 @@ See the [Contributing](./CONTRIBUTING.md) guide if you want to add support for a
 
 | Area               | Path                   | Purpose                                                                                                                                           |
 | ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CLI entry          | `src/package/cli.ts`   | Starts the `codex-limits` command and routes to the dashboard, plain-text commands, JSON output, and `init`.                                      |
+| CLI entry          | `src/package/cli.ts`   | Starts the `codex-limits` command and delegates to the shared command registry.                                                                   |
 | Core logic         | `src/package/core`     | Detects Codex data, reads local usage, fetches optional live information, normalizes usage windows, and keeps sensitive values out of the output. |
-| CLI commands       | `src/package/commands` | Handles the dashboard, `status`, `coupons`, `--json`, and `init` commands.                                                                        |
+| CLI commands       | `src/package/commands` | Defines command metadata, shared parsing and help, scoped runtime services, and focused command handlers.                                         |
 | Terminal UI        | `src/package/tui`      | Renders the clean Ink-based dashboard from normalized usage data.                                                                                 |
-| Agent integrations | `src/agents`           | Contains optional coding-agent adapters that users install with `codex-limits init`.                                                              |
+| Agent integrations | `src/agents`           | Contains optional coding-agent adapters used by the `codex-limits agents` command group.                                                          |
 | Tests              | `tests`                | Contains the test suite used to validate core behavior, CLI output, safety rules, and integration logic.                                          |
 
 This structure keeps the project easy to extend: the core decides what the data means, while the CLI, TUI, and agents only decide how that information is shown.
@@ -166,28 +168,32 @@ Local Codex data is inspected read-only with bounded file, directory, JSONL, and
 
 ## Usage
 
-| Command                       | Description                                                    |
-| ----------------------------- | -------------------------------------------------------------- |
-| `codex-limits`                | Opens the interactive terminal dashboard.                      |
-| `codex-limits status`         | Prints a plain usage summary.                                  |
-| `codex-limits coupons`        | Prints reset-credit coupon information.                        |
-| `codex-limits coupons --json` | Prints machine-readable reset-credit coupon data only.         |
-| `codex-limits --json`         | Prints machine-readable usage and coupon data.                 |
-| `codex-limits init`           | Prompts for optional agent integrations in an interactive TTY. |
+| Command                                  | Description                                            |
+| ---------------------------------------- | ------------------------------------------------------ |
+| `codex-limits`                           | Opens the interactive terminal dashboard.              |
+| `codex-limits status`                    | Prints a plain usage summary.                          |
+| `codex-limits coupons`                   | Prints reset-credit coupon information.                |
+| `codex-limits coupons --json`            | Prints machine-readable reset-credit coupon data only. |
+| `codex-limits --json`                    | Prints machine-readable usage and coupon data.         |
+| `codex-limits agents`                    | Lists the available agent-management subcommands.      |
+| `codex-limits agents install <agent...>` | Installs one or more named agent integrations.         |
+| `codex-limits agents install --all`      | Installs every supported agent integration.            |
+| `codex-limits init`                      | Runs the compatible interactive installation flow.     |
 
-### `init` options
+### Agent management
 
-Use `codex-limits init` to install optional agent integrations. Installation only updates the selected agent configuration; it does not send a prompt to an LLM or modify Codex data.
+Use `codex-limits agents install` to install optional integrations. Installation only updates the selected agent configuration; it does not send a prompt to an LLM or modify Codex data.
 
-| Command                                              | What it does                                                                                                                                  |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `codex-limits init`                                  | Prompts for every supported integration when stdin and stdout are interactive terminals. If no integration is selected, nothing is installed. |
-| `codex-limits init --help` or `codex-limits init -h` | Prints the `init` command help without changing any configuration.                                                                            |
-| `codex-limits init --all`                            | Installs every supported integration without prompting.                                                                                       |
-| `codex-limits init --opencode`                       | Installs only the OpenCode integration, which adds `/codex-limits` to OpenCode.                                                               |
-| `codex-limits init --<agent-name>`                   | Installs only the named supported integration. Replace `<agent-name>` with an integration listed in [Supported agents](#supported-agents).    |
+| Command                                                         | What it does                                                                                                                                  |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codex-limits agents`                                           | Prints help for the agent-management command group.                                                                                           |
+| `codex-limits agents install`                                   | Prompts for every supported integration when stdin and stdout are interactive terminals. If no integration is selected, nothing is installed. |
+| `codex-limits agents install <agent...>`                        | Installs one or more named supported integrations without prompting.                                                                          |
+| `codex-limits agents install --all`                             | Installs every supported integration without prompting.                                                                                       |
+| `codex-limits agents install --help` or `-h`                    | Prints generated installation help without changing any configuration.                                                                        |
+| `codex-limits init --<agent-name>` or `codex-limits init --all` | Preserves the existing initialization syntax as a compatibility command.                                                                      |
 
-`--all` cannot be combined with a named integration flag. Duplicate, unknown, and positional arguments are rejected. In a non-interactive terminal, use `--all` or a named integration flag instead of running `codex-limits init` without options.
+`--all` cannot be combined with agent names. Duplicate and unknown agent names, unknown options, and extra positional arguments are rejected before any integration is installed. In a non-interactive terminal, provide `--all` or at least one agent name.
 
 ## Troubleshooting
 
@@ -203,9 +209,9 @@ Run `codex-limits status` to view the safe warning summary. Confirm that Codex a
 
 Confirm that your user can read the selected Codex directory and its session files. Do not run the CLI with elevated privileges unless your Codex installation explicitly requires it. Prefer correcting the directory permissions or selecting the correct directory with `CODEX_LIMITS_HOME`.
 
-### Agent command not appearing after initialization
+### Agent command not appearing after installation
 
-Run the named initializer again, for example `codex-limits init --opencode`, and confirm that it reports the integration as installed or already installed. Restart the target agent terminal so it reloads its configuration. If the command is still missing, verify that the displayed configuration paths belong to the agent installation you are using.
+Run the named installer again, for example `codex-limits agents install opencode`, and confirm that it reports the integration as installed or already installed. Restart the target agent terminal so it reloads its configuration. If the command is still missing, verify that the displayed configuration paths belong to the agent installation you are using.
 
 ## Documentation
 
@@ -242,11 +248,11 @@ Useful development commands:
 
 ## Security
 
-| Operation             | Reads                                           | Writes                            | Network                         |
-| --------------------- | ----------------------------------------------- | --------------------------------- | ------------------------------- |
-| `codex-limits`        | Recognized Codex state and bounded session data | Nothing                           | Live usage and coupon endpoints |
-| `status` / `coupons`  | Shared read-only core                           | Nothing                           | When live data is requested     |
-| `init --<agent-name>` | Selected agent configuration                    | Adds the integration registration | Does not send an LLM prompt     |
+| Operation                 | Reads                                           | Writes                            | Network                         |
+| ------------------------- | ----------------------------------------------- | --------------------------------- | ------------------------------- |
+| `codex-limits`            | Recognized Codex state and bounded session data | Nothing                           | Live usage and coupon endpoints |
+| `status` / `coupons`      | Shared read-only core                           | Nothing                           | When live data is requested     |
+| `agents install` / `init` | Selected agent configuration                    | Adds the integration registration | Does not send an LLM prompt     |
 
 For vulnerability reports and local data safety details, see [`SECURITY.md`](./SECURITY.md).
 

@@ -16,19 +16,22 @@ Then choose one of the setup modes:
 
 ```bash
 # Prompt for each supported integration in an interactive terminal
-codex-limits init
+codex-limits agents install
 
-# Install one integration directly, including in non-interactive terminals
-codex-limits init --<agent-name>
+# Install one or more integrations directly, including in non-interactive terminals
+codex-limits agents install <agent...>
 
 # Install every supported integration
-codex-limits init --all
+codex-limits agents install --all
 
-# Show integration-specific help
-codex-limits init --help
+# Show the agent-management commands or installation help
+codex-limits agents --help
+codex-limits agents install --help
 ```
 
-Replace `<agent-name>` with an identifier from the [Agents](#agents) table. `--all` cannot be combined with a named integration flag. Unknown, duplicate, and positional arguments are rejected before any integration is installed.
+Replace `<agent>` with an identifier from the [Agents](#agents) table. `--all` cannot be combined with agent names. Unknown or duplicate names and unknown options are rejected before any integration is installed.
+
+The existing `codex-limits init`, `codex-limits init --<agent-name>`, and `codex-limits init --all` forms remain supported as compatibility syntax and use the same installation flow.
 
 After a successful installation, restart the target agent terminal so it reloads its configuration.
 
@@ -36,9 +39,9 @@ After a successful installation, restart the target agent terminal so it reloads
 
 Each agent name links to its dedicated installation, usage, compatibility, and troubleshooting guide.
 
-| Agent                          | Official page                       | Status    | Command         | Installer                      |
-| ------------------------------ | ----------------------------------- | --------- | --------------- | ------------------------------ |
-| [OpenCode](agents/opencode.md) | [opencode.ai](https://opencode.ai/) | Supported | `/codex-limits` | `codex-limits init --opencode` |
+| Agent                          | Official page                       | Status    | Command         | Installer                              |
+| ------------------------------ | ----------------------------------- | --------- | --------------- | -------------------------------------- |
+| [OpenCode](agents/opencode.md) | [opencode.ai](https://opencode.ai/) | Supported | `/codex-limits` | `codex-limits agents install opencode` |
 
 ## Data and privacy
 

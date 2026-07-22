@@ -1,16 +1,19 @@
 import {expect, test} from "bun:test";
+import {formatCoupons} from "@/package/commands/coupons/format";
 import {runCli} from "@/package/commands/run-cli";
-import {formatCoupons} from "@/package/commands/coupons";
-import {formatStatus} from "@/package/commands/status";
+import {sanitizePublicErrorMessage} from "@/package/commands/safe-error";
+import {formatStatus} from "@/package/commands/status/format";
 import {unavailableCoupons} from "@/package/core/coupons/reset-coupons";
 import {createFakeCouponResult, createFakeLimitsResult} from "@tests/package/fixtures/fake-results";
 
 test("runCli renders TUI for the default command", async () => {
   let rendered = false;
   const exitCode = await runCli([], {
-    getLimits: async () => createFakeLimitsResult(),
-    renderTui: () => {
-      rendered = true;
+    usage: {loadLimits: async () => createFakeLimitsResult()},
+    ui: {
+      renderDashboard: () => {
+        rendered = true;
+      },
     },
   });
 
@@ -22,9 +25,11 @@ test("runCli prints JSON only in JSON mode", async () => {
   const output: string[] = [];
   const errors: string[] = [];
   const exitCode = await runCli(["--json"], {
-    stdout: (text) => output.push(text),
-    stderr: (text) => errors.push(text),
-    getLimits: async () => createFakeLimitsResult(),
+    io: {
+      stdout: (text) => output.push(text),
+      stderr: (text) => errors.push(text),
+    },
+    usage: {loadLimits: async () => createFakeLimitsResult()},
   });
 
   const parsed = JSON.parse(output.join("")) as {
@@ -47,12 +52,12 @@ test("runCli preserves the complete limits and coupon JSON contracts", async () 
   const result = createFakeLimitsResult();
 
   await runCli(["--json"], {
-    stdout: (text) => limitsOutput.push(text),
-    getLimits: async () => result,
+    io: {stdout: (text) => limitsOutput.push(text)},
+    usage: {loadLimits: async () => result},
   });
   await runCli(["coupons", "--json"], {
-    stdout: (text) => couponsOutput.push(text),
-    getCoupons: async () => createFakeCouponResult(),
+    io: {stdout: (text) => couponsOutput.push(text)},
+    coupons: {loadCoupons: async () => createFakeCouponResult()},
   });
 
   const expectedCoupons = {
@@ -80,10 +85,14 @@ test("runCli writes no partial JSON when a loader fails", async () => {
   const output: string[] = [];
   const errors: string[] = [];
   const exitCode = await runCli(["--json"], {
-    stdout: (text) => output.push(text),
-    stderr: (text) => errors.push(text),
-    getLimits: async () => {
-      throw new Error("Bearer fake-secret-token at C:/private/auth.json");
+    io: {
+      stdout: (text) => output.push(text),
+      stderr: (text) => errors.push(text),
+    },
+    usage: {
+      loadLimits: async () => {
+        throw new Error("Bearer fake-secret-token at C:/private/auth.json");
+      },
     },
   });
 
@@ -94,53 +103,74 @@ test("runCli writes no partial JSON when a loader fails", async () => {
   expect(errors.join("")).not.toContain("private");
 });
 
-test("runCli prints status coupons help and version", async () => {
+test("runCli prints status, coupons, generated help, and version", async () => {
   const statusOutput: string[] = [];
   const couponsOutput: string[] = [];
   const helpOutput: string[] = [];
   const versionOutput: string[] = [];
 
   await runCli(["status"], {
-    stdout: (text) => statusOutput.push(text),
-    getLimits: async () => createFakeLimitsResult(),
+    io: {stdout: (text) => statusOutput.push(text)},
+    usage: {loadLimits: async () => createFakeLimitsResult()},
   });
   await runCli(["coupons"], {
-    stdout: (text) => couponsOutput.push(text),
-    getCoupons: async () => createFakeCouponResult(),
+    io: {stdout: (text) => couponsOutput.push(text)},
+    coupons: {loadCoupons: async () => createFakeCouponResult()},
   });
-  await runCli(["--help"], {stdout: (text) => helpOutput.push(text)});
-  await runCli(["--version"], {stdout: (text) => versionOutput.push(text), version: "9.9.9"});
+  await runCli(["--help"], {io: {stdout: (text) => helpOutput.push(text)}});
+  await runCli(["--version"], {
+    io: {stdout: (text) => versionOutput.push(text)},
+    packageInfo: {version: "9.9.9"},
+  });
 
   expect(statusOutput.join("")).toContain("Usage Limits");
   expect(couponsOutput.join("")).toContain("Reset Coupons");
   expect(helpOutput.join("")).toContain("codex-limits status");
+  expect(helpOutput.join("")).toContain("agents");
   expect(versionOutput.join("")).toBe("9.9.9\n");
 });
 
-test("runCli delegates init help", async () => {
-  const output: string[] = [];
-  const exitCode = await runCli(["init", "--help"], {stdout: (text) => output.push(text)});
+test("runCli generates nested and compatibility command help", async () => {
+  const agentsOutput: string[] = [];
+  const installOutput: string[] = [];
+  const initOutput: string[] = [];
 
-  expect(exitCode).toBe(0);
-  expect(output.join("")).toContain("Install optional agent integrations");
+  await runCli(["agents", "--help"], {
+    io: {stdout: (text) => agentsOutput.push(text)},
+  });
+  await runCli(["agents", "install", "--help"], {
+    io: {stdout: (text) => installOutput.push(text)},
+  });
+  await runCli(["init", "--help"], {
+    io: {stdout: (text) => initOutput.push(text)},
+  });
+
+  expect(agentsOutput.join("")).toContain("install  Install optional agent integrations");
+  expect(installOutput.join("")).toContain("[<agent...>]");
+  expect(initOutput.join("")).toContain("codex-limits init --opencode");
 });
 
-test("runCli returns non-zero for unknown commands", async () => {
+test("runCli returns non-zero with relevant help for invalid input", async () => {
   const errors: string[] = [];
-  const exitCode = await runCli(["unknown"], {stderr: (text) => errors.push(text)});
+  const exitCode = await runCli(["agents", "unknown"], {
+    io: {stderr: (text) => errors.push(text)},
+  });
 
   expect(exitCode).toBe(1);
-  expect(errors.join("")).toContain("Unknown command or option: unknown");
+  expect(errors.join("")).toContain("Unknown agents command: unknown");
+  expect(errors.join("")).toContain("codex-limits agents <command>");
 });
 
 test("coupon JSON omits source metadata and redacts warning credentials", async () => {
   const output: string[] = [];
   await runCli(["coupons", "--json"], {
-    stdout: (text) => output.push(text),
-    getCoupons: async () =>
-      unavailableCoupons("https://example.test/?access_token=fake-secret-token", [
-        "Authorization: Bearer fake-secret-token",
-      ]),
+    io: {stdout: (text) => output.push(text)},
+    coupons: {
+      loadCoupons: async () =>
+        unavailableCoupons("https://example.test/?access_token=fake-secret-token", [
+          "Authorization: Bearer fake-secret-token",
+        ]),
+    },
   });
 
   const text = output.join("");
@@ -157,6 +187,22 @@ test("coupon JSON omits source metadata and redacts warning credentials", async 
   expect(text).not.toContain("example.test");
   expect(text).not.toContain("fake-secret-token");
   expect(text).toContain("[redacted]");
+});
+
+test("public command errors reject paths, controls, and oversized messages", () => {
+  expect(
+    sanitizePublicErrorMessage(
+      "Bearer fake-secret-token at (C:/private/config.json)",
+      "Command failed."
+    )
+  ).toBe("Command failed.");
+  expect(sanitizePublicErrorMessage("Safe\u001b[31m\u009b32m message", "Command failed.")).toBe(
+    "Safe?[31m?32m message"
+  );
+  expect(sanitizePublicErrorMessage("details:C:/private/config.json", "Command failed.")).toBe(
+    "Command failed."
+  );
+  expect(sanitizePublicErrorMessage("x".repeat(241), "Command failed.")).toBe("Command failed.");
 });
 
 test("command formatters do not expose secret-like values", () => {

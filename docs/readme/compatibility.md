@@ -85,19 +85,19 @@ An internet connection is therefore recommended for current usage and required f
 
 ## Terminal and automation compatibility
 
-| Surface                | Requirement                                                |
-| ---------------------- | ---------------------------------------------------------- |
-| Interactive dashboard  | A terminal capable of running the Ink UI                   |
-| `status` and `coupons` | Any environment that can capture standard output           |
-| JSON output            | Any environment that can capture and parse standard output |
-| Interactive `init`     | Both standard input and standard output must be TTYs       |
-| Explicit `init`        | Works non-interactively with `--opencode` or `--all`       |
+| Surface                        | Requirement                                                |
+| ------------------------------ | ---------------------------------------------------------- |
+| Interactive dashboard          | A terminal capable of running the Ink UI                   |
+| `status` and `coupons`         | Any environment that can capture standard output           |
+| JSON output                    | Any environment that can capture and parse standard output |
+| Interactive agent installation | Both standard input and standard output must be TTYs       |
+| Explicit agent installation    | Works non-interactively with an agent name or `--all`      |
 
 Use [`codex-limits --json`](json-output.md) or `codex-limits coupons --json` in scripts. Errors use a non-zero exit code and are written to standard error; successful machine-readable output is written to standard output.
 
 ## OpenCode compatibility
 
-The OpenCode integration writes to both `~/.config/opencode/opencode.json` and `~/.config/opencode/tui.json`. It supports OpenCode hosts that expose either:
+Install the OpenCode integration with `codex-limits agents install opencode` (or the compatible `codex-limits init --opencode` form). The integration writes to both `~/.config/opencode/opencode.json` and `~/.config/opencode/tui.json`. It supports OpenCode hosts that expose either:
 
 - the current keymap layer registration API; or
 - the legacy command registration API.

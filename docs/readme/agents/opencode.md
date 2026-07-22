@@ -4,24 +4,24 @@ The OpenCode integration adds a read-only `/codex-limits` command that loads the
 
 ## Overview
 
-| Detail             | Value                            |
-| ------------------ | -------------------------------- |
-| Agent              | [OpenCode](https://opencode.ai/) |
-| Status             | Supported                        |
-| Agent command      | `/codex-limits`                  |
-| Init command       | `codex-limits init --opencode`   |
-| Installation scope | Global for the current user      |
+| Detail             | Value                                  |
+| ------------------ | -------------------------------------- |
+| Agent              | [OpenCode](https://opencode.ai/)       |
+| Status             | Supported                              |
+| Agent command      | `/codex-limits`                        |
+| Install command    | `codex-limits agents install opencode` |
+| Installation scope | Global for the current user            |
 
 ## Installation
 
-Install the CLI globally, then run the named initializer:
+Install the CLI globally, then run the named installer:
 
 ```bash
 npm install -g @simonesiega/codex-limits@latest
-codex-limits init --opencode
+codex-limits agents install opencode
 ```
 
-The explicit `--opencode` form works in interactive and non-interactive terminals. Restart OpenCode after installation so it reloads its configuration.
+The explicit agent name works in interactive and non-interactive terminals. The compatible `codex-limits init --opencode` form remains supported. Restart OpenCode after installation so it reloads its configuration.
 
 ### Configuration files
 
@@ -46,7 +46,7 @@ Both files are updated because compatible OpenCode versions discover TUI plugins
 - writes changed files through a sibling temporary file to avoid partial JSON;
 - refuses to modify malformed, non-object, oversized, or invalid `plugin` configurations.
 
-Configuration files larger than 1 MB are not modified. If one file is already configured and the other is not, only the missing plugin registration is added.
+Configuration files larger than 1 MB are not modified. If one file is already configured and the other is not, only the missing plugin registration is added. Installation results shorten paths under the user home to `~/...`; unexpected paths outside the home are displayed as `[path]`.
 
 ## Using `/codex-limits`
 
@@ -87,7 +87,7 @@ See the general [Compatibility guide](../compatibility.md) for tested runtimes, 
 
 ## Re-running or removing the integration
 
-Running `codex-limits init --opencode` again is safe. It reports `already installed` when both configuration files already contain the package.
+Running `codex-limits agents install opencode` again is safe. It reports `already installed` when both configuration files already contain the package.
 
 There is no uninstall command. To remove the integration, delete every `@simonesiega/codex-limits` entry from the `plugin` arrays in both OpenCode configuration files, then restart OpenCode. Do not remove unrelated plugins or configuration fields.
 
@@ -95,14 +95,14 @@ There is no uninstall command. To remove the integration, delete every `@simones
 
 ### The command does not appear
 
-1. Run `codex-limits init --opencode` again.
+1. Run `codex-limits agents install opencode` again.
 2. Confirm that the reported paths are the OpenCode configuration files used by your installation.
 3. Restart OpenCode completely.
 4. Check that both files contain a JSON `plugin` array with `@simonesiega/codex-limits`.
 
 ### Setup reports invalid JSON
 
-Correct the affected OpenCode configuration before running the initializer again. The installer intentionally does not overwrite malformed JSON or replace a non-array `plugin` field.
+Correct the affected OpenCode configuration before running the installer again. The installer intentionally does not overwrite malformed JSON or replace a non-array `plugin` field.
 
 ### Limits cannot be loaded
 

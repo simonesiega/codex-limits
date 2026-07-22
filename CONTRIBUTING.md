@@ -109,13 +109,15 @@ bun run build
 
 Keep changes small, readable, and easy to review.
 
-| Area               | Guideline                                                                                   |
-| ------------------ | ------------------------------------------------------------------------------------------- |
-| Core logic         | Keep usage detection, normalization, and safety rules inside `src/package/core`.            |
-| CLI commands       | Keep command handling inside `src/package/commands` and avoid duplicating parsing logic.    |
-| Terminal UI        | Keep Ink rendering inside `src/package/tui`; components should receive display-ready data.  |
-| Agent integrations | Keep adapters thin and reuse the shared core instead of reimplementing Codex limit parsing. |
-| Tests              | Add or update tests when behavior, safety rules, or output formatting changes.              |
+| Area               | Guideline                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------- |
+| Core logic         | Keep usage detection, normalization, and safety rules inside `src/package/core`.                  |
+| CLI commands       | Add commands through the shared registry and parser; keep handlers focused and capability-scoped. |
+| Terminal UI        | Keep Ink rendering inside `src/package/tui`; components should receive display-ready data.        |
+| Agent integrations | Keep adapters thin and reuse the shared core instead of reimplementing Codex limit parsing.       |
+| Tests              | Add or update tests when behavior, safety rules, or output formatting changes.                    |
+
+When adding a CLI command, create a focused command module and register it in `src/package/commands/command-registry.ts`. Put names, descriptions, usage, options, positional arguments, conflicts, and safety classification in that command definition so the shared parser and help generator stay synchronized. Command factories should accept only the runtime capabilities their handlers use.
 
 ## Safety rules
 
@@ -131,6 +133,8 @@ Do not print, log, snapshot, or commit:
 - private environment values.
 
 If a change touches local data discovery, live coupon data, warnings, output formatting, or agent integrations, make sure sensitive values are redacted before they can reach the CLI, TUI, JSON output, tests, or screenshots.
+
+Command handlers should let the router replace unexpected exceptions with their fixed command failure message. Use `AgentInstallError` only for bounded, deliberately user-safe adapter messages; never pass through a raw filesystem, network, or credential error.
 
 ## Adding a new agent
 

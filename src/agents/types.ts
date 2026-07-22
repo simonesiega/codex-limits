@@ -4,9 +4,9 @@ export interface AgentInstallResult {
 }
 
 export interface AgentIntegration {
-  id: string;
-  name: string;
-  description: string;
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
   install: () => Promise<AgentInstallResult>;
 }
 

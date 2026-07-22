@@ -29,7 +29,7 @@ If a tradeoff is required, choose correctness, redaction, and stability over con
 
 ```text
 src/package/core      → Shared domain logic. Owns Codex data discovery, usage parsing, live coupon data, normalization, warnings, and redaction.
-src/package/commands  → CLI command layer. Owns command routing for dashboard, status, coupons, JSON, init, help, and version.
+src/package/commands  → CLI command layer. Owns the declarative registry, shared parser/help, scoped runtime services, and focused command handlers.
 src/package/tui       → Ink terminal UI. Owns rendering only and consumes normalized display-ready data.
 src/agents            → Agent integration source. Owns supported agent adapters and registration.
 agents                → Generated/installable agent files when integrations require them.
@@ -51,7 +51,7 @@ coding agent command → agent adapter → shared core → read-only Codex limit
 ```
 
 - The **core package** is the authority for Codex data discovery, parsing, normalization, optional live data fetching, warnings, and redaction.
-- The **commands package** is responsible for CLI behavior and should not reimplement domain parsing.
+- The **commands package** is responsible for CLI behavior. Command metadata belongs in the shared registry model, while each handler should receive only the runtime capabilities it uses.
 - The **TUI package** is a rendering layer. It must not read local Codex files, fetch live data directly, or define safety rules.
 - The **agents package** is an adapter layer. Each integration should stay thin and reuse the shared core.
 - The **tests folder** protects behavior, output stability, safety rules, and integration logic.
@@ -94,6 +94,7 @@ Documentation:
 - Prefer **TypeScript everywhere**.
 - Keep `src/package/core` as the shared source of truth.
 - Keep command behavior in `src/package/commands`.
+- Register every command with an explicit `read-only`, `local-write`, or `remote-mutation` safety category.
 - Keep Ink rendering in `src/package/tui`.
 - Keep agent-specific logic in `src/agents/<agent-name>`.
 - Keep tests in `tests` and update them when behavior changes.
@@ -182,7 +183,7 @@ Style:
 - Use plain past-tense release-note phrasing: `Added ...`, `Changed ...`, `Fixed ...`, `Removed ...`.
 - Prefer one clear sentence. Add a second sentence only when needed to explain user impact or important release behavior.
 - Mention technical details only when they are part of the user-facing surface, such as a command, environment variable, JSON field, agent integration, package export, or platform.
-- Avoid entries like `Implemented requested OpenCode refactor`; write `Added the OpenCode init command for installing the /codex-limits agent integration`.
+- Avoid entries like `Implemented requested OpenCode refactor`; write `Added the OpenCode agent installer for adding the /codex-limits integration`.
 
 Attribution:
 

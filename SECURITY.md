@@ -67,6 +67,12 @@ For live usage and coupon information, the project contacts the default ChatGPT 
 
 Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send private Codex data to the agent, and not expose sensitive values inside the agent UI.
 
+### Command safety boundaries
+
+Every CLI command declares one enforced safety category. Dashboard, status, coupon, and agent-inspection commands are read-only and receive no write or account-mutation services. Agent installation is a local-write operation scoped to the selected agent configuration. Any future remote account mutation must use the separate `remote-mutation` category and declare an explicit boolean confirmation option before the router will execute it.
+
+The existing `codex-limits init` compatibility command and the preferred `codex-limits agents install` command share the same local-write implementation. Neither command modifies Codex data or sends an LLM prompt.
+
 ## What to report
 
 Please report any issue that could expose private data or break the read-only safety model of the project.

@@ -17,6 +17,6 @@ const skip =
 
 if (!skip && isGlobalInstall) {
   process.stdout.write(
-    "codex-limits: installed. Run `codex-limits init` to install optional agent integrations.\n"
+    "codex-limits: installed. Run `codex-limits agents install` to install optional agent integrations.\n"
   );
 }

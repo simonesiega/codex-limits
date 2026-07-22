@@ -4,8 +4,8 @@ import type {AgentIntegration} from "@/agents/types";
 export {AgentInstallError} from "@/agents/types";
 export type {AgentInstallResult, AgentIntegration} from "@/agents/types";
 
-/** Optional agent integrations available through `codex-limits init`. */
-export const AGENT_INTEGRATIONS: AgentIntegration[] = [
+/** Optional integrations available through the agent-management commands. */
+export const AGENT_INTEGRATIONS: readonly AgentIntegration[] = [
   {
     id: "opencode",
     name: "opencode",

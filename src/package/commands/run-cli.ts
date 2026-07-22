@@ -1,114 +1,66 @@
-import {parseCommand} from "@/package/commands/cli-parser";
-import {getHelpText} from "@/package/commands/cli-spec";
-import {formatCoupons} from "@/package/commands/coupons";
-import {formatJson} from "@/package/commands/format-json";
-import {runInit} from "@/package/commands/init";
-import {toCodexLimitsDto, toCouponSummaryDto} from "@/package/commands/public-dto";
-import {operationFailure} from "@/package/commands/safe-error";
-import {formatStatus} from "@/package/commands/status";
-import {getResetCoupons} from "@/package/core/coupons/reset-coupons";
-import {getCodexLimits} from "@/package/core/limits";
-import type {CodexLimitsResult, CouponResult} from "@/package/core/types";
-import {PACKAGE_VERSION} from "@/package/version";
+import {createCommandRegistry} from "@/package/commands/command-registry";
+import {getCommandSafetyViolation} from "@/package/commands/command-safety";
+import {formatHelp} from "@/package/commands/help";
+import {parseCliArguments} from "@/package/commands/parser";
+import {sanitizePublicErrorMessage} from "@/package/commands/safe-error";
+import {
+  createCliRuntime,
+  type CliRuntime,
+  type CliRuntimeOverrides,
+} from "@/package/commands/runtime";
 
-type WriteOutput = (text: string) => void;
-type RenderTui = (result: CodexLimitsResult) => Promise<void> | void;
+/** Routes one invocation through the shared registry and returns its process exit code. */
+export async function runCli(
+  args: readonly string[],
+  overrides: CliRuntimeOverrides = {}
+): Promise<number> {
+  const runtime = createCliRuntime(overrides);
+  const registry = createCommandRegistry(runtime);
+  const parsed = parseCliArguments(registry, args);
 
-export interface RunCliOptions {
-  version?: string;
-  stdout?: WriteOutput;
-  stderr?: WriteOutput;
-  getLimits?: () => Promise<CodexLimitsResult>;
-  getCoupons?: () => Promise<CouponResult>;
-  renderTui?: RenderTui;
-}
-
-/** Routes one invocation of the public CLI and returns its process exit code. */
-export async function runCli(args: string[], options: RunCliOptions = {}): Promise<number> {
-  const stdout = options.stdout ?? writeStdout;
-  const stderr = options.stderr ?? writeStderr;
-  const getLimits = options.getLimits ?? getCodexLimits;
-  const getCoupons = options.getCoupons ?? getResetCoupons;
-  const command = parseCommand(args);
-
-  switch (command.kind) {
+  switch (parsed.kind) {
     case "help":
-      stdout(getHelpText());
+      runtime.io.stdout(formatHelp(registry, parsed.subject));
       return 0;
     case "version":
-      stdout(`${options.version ?? PACKAGE_VERSION}\n`);
+      runtime.io.stdout(`${runtime.packageInfo.version}\n`);
       return 0;
-    case "invalid":
-      stderr(`Unknown command or option: ${command.input}\n\n${getHelpText()}`);
+    case "error":
+      runtime.io.stderr(
+        `${sanitizePublicErrorMessage(parsed.error.message, "Invalid command input.")}\n\n${formatHelp(registry, parsed.subject)}`
+      );
       return 1;
-    case "init":
-      try {
-        return await runInit(command.args, {stdout, stderr});
-      } catch {
-        stderr(operationFailure("init"));
+    case "command": {
+      const safetyViolation = getCommandSafetyViolation(parsed.command, parsed.values);
+      if (safetyViolation) {
+        runtime.io.stderr(`${safetyViolation}\n\n${formatHelp(registry, parsed.command)}`);
         return 1;
       }
-    case "dashboard":
       try {
-        const result = await getLimits();
-        await (options.renderTui ?? renderDefaultTui)(result);
-        return 0;
+        return await parsed.command.execute(parsed.values);
       } catch {
-        stderr(operationFailure("dashboard"));
+        let failureMessage = "Command failed.";
+        try {
+          failureMessage =
+            typeof parsed.command.failureMessage === "function"
+              ? parsed.command.failureMessage(parsed.values)
+              : parsed.command.failureMessage;
+        } catch {
+          // Failure reporting must remain deterministic even if dynamic command metadata fails.
+        }
+        runtime.io.stderr(
+          `codex-limits: ${sanitizePublicErrorMessage(failureMessage, "Command failed.")}\n`
+        );
         return 1;
       }
-    case "status":
-      return writeLoadedOutput(getLimits, formatStatus, "status", stdout, stderr);
-    case "limits-json":
-      return writeLoadedOutput(
-        getLimits,
-        (result) => formatJson(toCodexLimitsDto(result)),
-        "status",
-        stdout,
-        stderr
-      );
-    case "coupons":
-      return writeLoadedOutput(
-        getCoupons,
-        command.json
-          ? (result) => formatJson(toCouponSummaryDto(result))
-          : (result) => formatCoupons(result),
-        "coupons",
-        stdout,
-        stderr
-      );
+    }
   }
 }
 
-export {getHelpText};
-
-/** Formats before writing so failed JSON serialization cannot produce partial stdout. */
-async function writeLoadedOutput<T>(
-  load: () => Promise<T>,
-  format: (value: T) => string,
-  operation: "coupons" | "status",
-  stdout: WriteOutput,
-  stderr: WriteOutput
-): Promise<number> {
-  try {
-    const output = format(await load());
-    stdout(output);
-    return 0;
-  } catch {
-    stderr(operationFailure(operation));
-    return 1;
-  }
+/** Returns root help for callers that previously imported it from the router. */
+export function getHelpText(): string {
+  const runtime = createCliRuntime();
+  return formatHelp(createCommandRegistry(runtime));
 }
 
-async function renderDefaultTui(result: CodexLimitsResult): Promise<void> {
-  const {renderApp} = await import("@/package/tui/app");
-  await renderApp(result);
-}
-
-function writeStdout(text: string): void {
-  process.stdout.write(text);
-}
-
-function writeStderr(text: string): void {
-  process.stderr.write(text);
-}
+export type {CliRuntime, CliRuntimeOverrides};

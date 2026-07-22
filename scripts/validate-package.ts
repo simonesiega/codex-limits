@@ -173,6 +173,9 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
     {args: ["--version"], includes: `${version}\n`},
     {args: ["status"], includes: "Usage Limits"},
     {args: ["coupons"], includes: "Reset Coupons"},
+    {args: ["agents", "--help"], includes: "Manage optional coding-agent integrations"},
+    {args: ["agents", "install", "--help"], includes: "Install optional agent integrations"},
+    {args: ["init", "--help"], includes: "compatibility command"},
     {args: ["--json"], json: true},
     {args: ["coupons", "--json"], json: true},
   ];

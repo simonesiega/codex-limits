@@ -14,10 +14,7 @@ export function toSafeRelativePath(rootPath: string, candidatePath: string): str
 }
 
 function sanitizeDiagnosticPath(value: string): string {
-  const sanitized = redactSensitiveText(value)
-    .replace(/[\u0000-\u001f\u007f]/g, "?")
-    .replace(/\b[0-9a-f]{8}-[0-9a-f-]{27,}\b/gi, "[id]")
-    .replace(/[A-Za-z0-9_-]{32,}/g, "[id]");
+  const sanitized = redactSensitiveText(value);
   return sanitized.length <= 240 ? sanitized : `${sanitized.slice(0, 239)}…`;
 }
 
