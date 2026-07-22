@@ -16,6 +16,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
+- Fixed clean production builds and kept terminal rendering compatible with Node.js 20.
+
 ### Removed
 
 ### Security

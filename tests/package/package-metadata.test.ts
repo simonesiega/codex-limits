@@ -13,6 +13,7 @@ interface PackageMetadata {
   engines: {node: string};
   scripts: Record<string, string>;
   dependencies?: Record<string, string>;
+  devDependencies: Record<string, string>;
 }
 
 async function readPackageMetadata(): Promise<PackageMetadata> {
@@ -51,6 +52,13 @@ test("package metadata includes runtime documentation and excludes bundled runti
   expect(packageJson.files).toContain("docs/photos");
   expect(packageJson.files).toContain("SECURITY.md");
   expect(packageJson.dependencies ?? {}).toEqual({});
+});
+
+test("TUI build dependencies preserve the Node 20 package contract", async () => {
+  const packageJson = await readPackageMetadata();
+
+  expect(packageJson.devDependencies.ink).toBe("^6.8.0");
+  expect(packageJson.devDependencies["react-devtools-core"]).toBe("^7.0.1");
 });
 
 test("validation and prepack scripts do not recurse", async () => {
