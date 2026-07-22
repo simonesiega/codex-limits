@@ -106,7 +106,7 @@ When you are working with Codex or agent-based coding tools, usage limits can in
 
 **`codex-limits`** gives you that information in one clean terminal view. It shows the usage windows currently supplied by Codex, including weekly usage and the 5-hour window when available, together with remaining percentages, progress bars, reset times, and reset-credit coupons, so you can quickly check your status and continue coding without leaving the terminal.
 
-It also includes plain-text commands for quick checks, JSON output for scripts and automation, optional agent integrations through `codex-limits agents`, and safe output that never prints tokens, account IDs, auth headers, cookies, or raw local files.
+It also includes plain-text commands for quick checks, a safe `codex-limits doctor` diagnostic report, JSON output for scripts and automation, optional agent integrations through `codex-limits agents`, and safe output that never prints tokens, account IDs, auth headers, cookies, private paths, or raw local files.
 
 ## Agent integrations
 
@@ -181,10 +181,37 @@ Local Codex data is inspected read-only with bounded file, directory, JSONL, and
 | `codex-limits coupons`                   | Prints reset-credit coupon information.                |
 | `codex-limits coupons --json`            | Prints machine-readable reset-credit coupon data only. |
 | `codex-limits --json`                    | Prints machine-readable usage and coupon data.         |
+| `codex-limits doctor`                    | Prints safe environment and connectivity diagnostics.  |
+| `codex-limits doctor --json`             | Prints machine-readable diagnostics only.              |
 | `codex-limits agents`                    | Lists the available agent-management subcommands.      |
 | `codex-limits agents install <agent...>` | Installs one or more named agent integrations.         |
 | `codex-limits agents install --all`      | Installs every supported agent integration.            |
 | `codex-limits init`                      | Runs the compatible interactive installation flow.     |
+
+### Diagnostics
+
+Run the read-only doctor command when Codex data, live usage, or the OpenCode integration is unavailable:
+
+```bash
+codex-limits doctor
+```
+
+```text
+Codex Limits diagnostics
+
+Package version:       0.1.5
+Node.js version:       22.0.0
+Operating system:      Windows
+Codex home detected:   Yes
+Authentication found:  Yes
+Local usage found:     Yes
+Live endpoint:         Reachable
+OpenCode integration:  Installed
+
+No sensitive values were displayed.
+```
+
+The doctor checks only whether recognized resources are available. It never prints credential values, private paths, endpoint URLs, configuration contents, or raw Codex data. The live check makes the same bounded authenticated read-only usage request as the dashboard; it is reported as `Not checked` when complete authentication is unavailable. Use `codex-limits doctor --json` for the stable machine-readable form documented in [JSON output](docs/readme/json-output.md#doctor-document).
 
 ### Agent management
 
@@ -209,7 +236,7 @@ Make sure Codex has been run and authenticated at least once. If its data is sto
 
 ### Usage information unavailable
 
-Run `codex-limits status` to view the safe warning summary. Confirm that Codex authentication is current and that the machine can reach the ChatGPT Codex service. Local session data may still provide a fallback when live usage is unavailable; coupon information requires an internet connection.
+Run `codex-limits doctor` to check Codex home discovery, authentication presence, local usage, and live endpoint reachability without exposing sensitive values. Run `codex-limits status` to view the safe warning summary. Confirm that Codex authentication is current and that the machine can reach the ChatGPT Codex service. Local session data may still provide a fallback when live usage is unavailable; coupon information requires an internet connection.
 
 ### Permission errors
 
@@ -254,11 +281,12 @@ Useful development commands:
 
 ## Security
 
-| Operation                 | Reads                                           | Writes                            | Network                         |
-| ------------------------- | ----------------------------------------------- | --------------------------------- | ------------------------------- |
-| `codex-limits`            | Recognized Codex state and bounded session data | Nothing                           | Live usage and coupon endpoints |
-| `status` / `coupons`      | Shared read-only core                           | Nothing                           | When live data is requested     |
-| `agents install` / `init` | Selected agent configuration                    | Adds the integration registration | Does not send an LLM prompt     |
+| Operation                 | Reads                                           | Writes                            | Network                                |
+| ------------------------- | ----------------------------------------------- | --------------------------------- | -------------------------------------- |
+| `codex-limits`            | Recognized Codex state and bounded session data | Nothing                           | Live usage and coupon endpoints        |
+| `status` / `coupons`      | Shared read-only core                           | Nothing                           | When live data is requested            |
+| `doctor`                  | Bounded Codex and OpenCode configuration checks | Nothing                           | Live usage endpoint when authenticated |
+| `agents install` / `init` | Selected agent configuration                    | Adds the integration registration | Does not send an LLM prompt            |
 
 For vulnerability reports and local data safety details, see [`SECURITY.md`](./SECURITY.md).
 

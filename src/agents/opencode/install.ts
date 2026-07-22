@@ -2,7 +2,7 @@ import {randomUUID} from "node:crypto";
 import {mkdir, rename, rm, writeFile} from "node:fs/promises";
 import {homedir} from "node:os";
 import {dirname, join} from "node:path";
-import {AgentInstallError} from "@/agents/types";
+import {AgentInstallError, type AgentIntegrationStatus} from "@/agents/types";
 import {BoundedFileError, readBoundedUtf8File} from "@/package/core/utils/bounded-file";
 import {isRecord} from "@/package/core/utils/unknown";
 
@@ -11,9 +11,14 @@ const MAX_CONFIG_BYTES = 1_000_000;
 
 type OpencodePluginEntry = string | [string, Record<string, unknown>];
 
+interface OpencodeConfigOptions {
+  configPath?: string;
+  tuiConfigPath?: string;
+}
+
 /** Adds the Codex Limits package to OpenCode's global plugin configurations. */
 export async function installOpencodePlugin(
-  options: {configPath?: string; tuiConfigPath?: string} = {}
+  options: OpencodeConfigOptions = {}
 ): Promise<{changed: boolean; configPaths: string[]}> {
   const configDirectory = join(homedir(), ".config", "opencode");
   const configPath = options.configPath ?? join(configDirectory, "opencode.json");
@@ -39,6 +44,36 @@ export async function installOpencodePlugin(
   }
 
   return {changed: configChanged || tuiConfigChanged, configPaths: [configPath, tuiConfigPath]};
+}
+
+/** Checks bounded OpenCode configurations without returning their contents or paths. */
+export async function inspectOpencodePlugin(
+  options: OpencodeConfigOptions = {}
+): Promise<AgentIntegrationStatus> {
+  const configDirectory = join(homedir(), ".config", "opencode");
+  const configPath = options.configPath ?? join(configDirectory, "opencode.json");
+  const tuiConfigPath = options.tuiConfigPath ?? join(configDirectory, "tui.json");
+  const statuses = await Promise.all([
+    inspectOpencodeConfig(configPath, "https://opencode.ai/config.json"),
+    inspectOpencodeConfig(tuiConfigPath, "https://opencode.ai/tui.json"),
+  ]);
+
+  if (statuses.includes("installed")) {
+    return "installed";
+  }
+  return statuses.every((status) => status === "not-installed") ? "not-installed" : "unknown";
+}
+
+async function inspectOpencodeConfig(
+  path: string,
+  schema: string
+): Promise<AgentIntegrationStatus> {
+  try {
+    const config = await readOpencodeConfig(path, schema);
+    return readPluginArray(config.plugin).some(isCodexLimitsPlugin) ? "installed" : "not-installed";
+  } catch {
+    return "unknown";
+  }
 }
 
 async function readOpencodeConfig(path: string, schema: string): Promise<Record<string, unknown>> {

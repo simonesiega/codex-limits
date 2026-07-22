@@ -20,6 +20,13 @@ test("parser accepts root, nested, compatibility, and order-independent options"
     {args: [], kind: "command", commandId: "dashboard", options: {}},
     {args: ["status"], kind: "command", commandId: "status", options: {}},
     {args: ["coupons"], kind: "command", commandId: "coupons", options: {}},
+    {args: ["doctor"], kind: "command", commandId: "doctor", options: {}},
+    {
+      args: ["doctor", "--json"],
+      kind: "command",
+      commandId: "doctor",
+      options: {"output.json": true},
+    },
     {
       args: ["coupons", "--json"],
       kind: "command",

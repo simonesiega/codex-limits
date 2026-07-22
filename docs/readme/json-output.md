@@ -10,11 +10,16 @@ codex-limits --json
 
 # Coupon summary only
 codex-limits coupons --json
+
+# Safe environment and connectivity diagnostics
+codex-limits doctor --json
 ```
 
 `status --json` is not part of the CLI grammar. Use the root `--json` option for usage data.
 
 Successful commands write one pretty-printed JSON value, followed by a newline, to standard output and exit with code `0`. Loading or serialization failures write a safe message to standard error, write no partial JSON to standard output, and exit with code `1`.
+
+The doctor document reports only versions, a generic operating-system name, booleans, and bounded status values. It never includes credentials, private paths, endpoint URLs, configuration contents, or raw Codex files.
 
 Warnings and unavailable live data do not cause a non-zero exit code when the command can still produce a valid JSON document. Consumers should inspect the `warnings` arrays and nullable fields when determining data availability.
 
@@ -136,6 +141,40 @@ Using the same reference time and timezone as the complete example:
 }
 ```
 
+## Doctor document
+
+`codex-limits doctor --json` returns this shape:
+
+```ts
+interface DoctorJson {
+  packageVersion: string;
+  nodeVersion: string;
+  operatingSystem: string;
+  codexHomeDetected: boolean;
+  authenticationFound: boolean;
+  localUsageFound: boolean;
+  liveEndpoint: "not-checked" | "reachable" | "unreachable";
+  opencodeIntegration: "installed" | "not-installed" | "unknown";
+}
+```
+
+Example:
+
+```json
+{
+  "packageVersion": "0.1.5",
+  "nodeVersion": "22.0.0",
+  "operatingSystem": "Windows",
+  "codexHomeDetected": true,
+  "authenticationFound": true,
+  "localUsageFound": true,
+  "liveEndpoint": "reachable",
+  "opencodeIntegration": "installed"
+}
+```
+
+`authenticationFound` means complete credentials were discovered; it never exposes or serializes those values. `localUsageFound` means at least one recognized local usage window was read. `liveEndpoint` is `not-checked` when authentication is unavailable, `reachable` when the endpoint returns an HTTP response, and `unreachable` for invalid endpoint configuration, timeouts, or network failures. `opencodeIntegration` is `unknown` only when the bounded OpenCode configuration check cannot safely determine its state.
+
 ## Field reference
 
 ### Usage windows
@@ -216,6 +255,12 @@ Read the available coupon count:
 
 ```bash
 codex-limits coupons --json | jq '.available'
+```
+
+Check whether the live usage endpoint is reachable:
+
+```bash
+codex-limits doctor --json | jq -e '.liveEndpoint == "reachable"'
 ```
 
 Fail a shell script when the CLI fails, while keeping standard output machine-readable:

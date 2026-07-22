@@ -197,6 +197,21 @@ export interface UsageResult extends LocalUsageResult {
   source: UsageSource;
 }
 
+/** Reachability of the authenticated live usage endpoint. */
+export type LiveEndpointStatus = "not-checked" | "reachable" | "unreachable";
+
+/** Safe Codex environment checks returned by the doctor core. */
+export interface CodexDiagnosticsResult {
+  /** Whether a readable Codex home directory was detected. */
+  codexHomeDetected: boolean;
+  /** Whether complete Codex credentials were discovered without exposing them. */
+  authenticationFound: boolean;
+  /** Whether recognized usage windows were found in local Codex data. */
+  localUsageFound: boolean;
+  /** Whether the live usage endpoint responded to an authenticated request. */
+  liveEndpoint: LiveEndpointStatus;
+}
+
 /** One normalized reset-credit coupon. */
 export interface CouponItem {
   /** 1-based display index after sorting by expiration. */

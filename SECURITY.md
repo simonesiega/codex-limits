@@ -67,9 +67,11 @@ For live usage and coupon information, the project contacts the default ChatGPT 
 
 Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send private Codex data to the agent, and not expose sensitive values inside the agent UI.
 
+The `codex-limits doctor` command exposes only package/runtime labels and bounded availability statuses. Its Codex and OpenCode checks never return credential values, private paths, endpoint URLs, configuration contents, or raw local files. The optional live reachability check uses the same authenticated, bounded, redirect-free usage transport as the dashboard.
+
 ### Command safety boundaries
 
-Every CLI command declares one enforced safety category. Dashboard, status, coupon, and agent-inspection commands are read-only and receive no write or account-mutation services. Agent installation is a local-write operation scoped to the selected agent configuration. Any future remote account mutation must use the separate `remote-mutation` category and declare an explicit boolean confirmation option before the router will execute it.
+Every CLI command declares one enforced safety category. Dashboard, status, coupon, doctor, and agent-inspection commands are read-only and receive no write or account-mutation services. Agent installation is a local-write operation scoped to the selected agent configuration. Any future remote account mutation must use the separate `remote-mutation` category and declare an explicit boolean confirmation option before the router will execute it.
 
 The existing `codex-limits init` compatibility command and the preferred `codex-limits agents install` command share the same local-write implementation. Neither command modifies Codex data or sends an LLM prompt.
 

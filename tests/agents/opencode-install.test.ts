@@ -1,7 +1,7 @@
 import {expect, test} from "bun:test";
 import {lstat, readFile, symlink, writeFile} from "node:fs/promises";
 import {join} from "node:path";
-import {installOpencodePlugin} from "@/agents/opencode/install";
+import {inspectOpencodePlugin, installOpencodePlugin} from "@/agents/opencode/install";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 interface ConfigPaths {
@@ -23,6 +23,23 @@ function withOpencodeConfigs(run: (paths: ConfigPaths) => Promise<void>): Promis
 async function readJson<T>(path: string): Promise<T> {
   return JSON.parse(await readFile(path, "utf8")) as T;
 }
+
+test("inspectOpencodePlugin reports installed, absent, and unknown configurations safely", async () => {
+  await withOpencodeConfigs(async ({configPath, tuiConfigPath}) => {
+    expect(await inspectOpencodePlugin({configPath, tuiConfigPath})).toBe("not-installed");
+
+    await writeFile(
+      configPath,
+      JSON.stringify({plugin: ["@simonesiega/codex-limits@0.1.5"]}),
+      "utf8"
+    );
+    await writeFile(tuiConfigPath, "{ private-invalid-json", "utf8");
+    expect(await inspectOpencodePlugin({configPath, tuiConfigPath})).toBe("installed");
+
+    await writeFile(configPath, JSON.stringify({plugin: ["another-plugin"]}), "utf8");
+    expect(await inspectOpencodePlugin({configPath, tuiConfigPath})).toBe("unknown");
+  });
+});
 
 test("installOpencodePlugin creates global plugin config", async () => {
   await withOpencodeConfigs(async ({configPath, tuiConfigPath}) => {

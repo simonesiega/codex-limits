@@ -7,6 +7,7 @@ import type {
 } from "@/package/commands/command";
 import {createCouponsCommand} from "@/package/commands/coupons/command";
 import {createDashboardCommand} from "@/package/commands/dashboard/command";
+import {createDoctorCommand} from "@/package/commands/doctor/command";
 import {createInitCommand} from "@/package/commands/init";
 import {assertValidCommandRegistry} from "@/package/commands/registry-validation";
 import type {CliRuntime} from "@/package/commands/runtime";
@@ -65,7 +66,7 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
         },
       ],
       safetyNotes: [
-        "Dashboard, status, and coupon commands are read-only.",
+        "Dashboard, status, coupon, and doctor commands are read-only.",
         "Agent installation writes only to the explicitly selected agent configuration.",
         "Output never includes tokens, account IDs, auth headers, cookies, or raw local files.",
       ],
@@ -75,6 +76,11 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
       createDashboardCommand({io: runtime.io, usage: runtime.usage, ui: runtime.ui}),
       createStatusCommand({io: runtime.io, usage: runtime.usage}),
       createCouponsCommand({io: runtime.io, coupons: runtime.coupons}),
+      createDoctorCommand({
+        io: runtime.io,
+        doctor: runtime.doctor,
+        packageInfo: runtime.packageInfo,
+      }),
       createAgentsInstallCommand({
         io: runtime.io,
         integrations: runtime.agents.integrations,

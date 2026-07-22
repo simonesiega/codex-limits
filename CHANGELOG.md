@@ -8,6 +8,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added `codex-limits doctor` and `codex-limits doctor --json` for safe environment, connectivity, local usage, authentication, and OpenCode integration diagnostics.
+
 ### Changed
 
 ### Fixed

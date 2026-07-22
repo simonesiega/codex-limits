@@ -1,3 +1,6 @@
+/** Safe read-only installation state used by integration diagnostics. */
+export type AgentIntegrationStatus = "installed" | "not-installed" | "unknown";
+
 export interface AgentInstallResult {
   changed: boolean;
   configPaths?: string[];

@@ -1,9 +1,12 @@
+import {platform} from "node:os";
 import {stdin as processStdin, stdout as processStdout} from "node:process";
 import {createInterface} from "node:readline/promises";
-import {AGENT_INTEGRATIONS, type AgentIntegration} from "@/agents";
+import {AGENT_INTEGRATIONS, type AgentIntegration, type AgentIntegrationStatus} from "@/agents";
+import {inspectOpencodePlugin} from "@/agents/opencode/install";
 import {getResetCoupons} from "@/package/core/coupons/reset-coupons";
+import {getCodexDiagnostics} from "@/package/core/doctor";
 import {getCodexLimits} from "@/package/core/limits";
-import type {CodexLimitsResult, CouponResult} from "@/package/core/types";
+import type {CodexDiagnosticsResult, CodexLimitsResult, CouponResult} from "@/package/core/types";
 import {PACKAGE_VERSION} from "@/package/version";
 
 export type WriteOutput = (text: string) => void;
@@ -30,6 +33,13 @@ export interface AgentServices {
   integrations: readonly AgentIntegration[];
 }
 
+export interface DoctorServices {
+  loadCodexDiagnostics: () => Promise<CodexDiagnosticsResult>;
+  inspectOpencodeIntegration: () => Promise<AgentIntegrationStatus>;
+  nodeVersion: string;
+  operatingSystem: string;
+}
+
 export interface UiServices {
   renderDashboard: (result: CodexLimitsResult) => Promise<void> | void;
 }
@@ -43,6 +53,7 @@ export interface CliRuntime {
   usage: UsageServices;
   coupons: CouponServices;
   agents: AgentServices;
+  doctor: DoctorServices;
   ui: UiServices;
   packageInfo: PackageServices;
 }
@@ -52,6 +63,7 @@ export interface CliRuntimeOverrides {
   usage?: Partial<UsageServices>;
   coupons?: Partial<CouponServices>;
   agents?: Partial<AgentServices>;
+  doctor?: Partial<DoctorServices>;
   ui?: Partial<UiServices>;
   packageInfo?: Partial<PackageServices>;
 }
@@ -68,6 +80,12 @@ export function createCliRuntime(overrides: CliRuntimeOverrides = {}): CliRuntim
     usage: {loadLimits: getCodexLimits},
     coupons: {loadCoupons: getResetCoupons},
     agents: {integrations: AGENT_INTEGRATIONS},
+    doctor: {
+      loadCodexDiagnostics: getCodexDiagnostics,
+      inspectOpencodeIntegration: inspectOpencodePlugin,
+      nodeVersion: process.versions.node,
+      operatingSystem: getOperatingSystemName(platform()),
+    },
     ui: {renderDashboard: renderDefaultDashboard},
     packageInfo: {version: PACKAGE_VERSION},
   };
@@ -77,9 +95,24 @@ export function createCliRuntime(overrides: CliRuntimeOverrides = {}): CliRuntim
     usage: {...defaults.usage, ...overrides.usage},
     coupons: {...defaults.coupons, ...overrides.coupons},
     agents: {...defaults.agents, ...overrides.agents},
+    doctor: {...defaults.doctor, ...overrides.doctor},
     ui: {...defaults.ui, ...overrides.ui},
     packageInfo: {...defaults.packageInfo, ...overrides.packageInfo},
   };
+}
+
+function getOperatingSystemName(value: NodeJS.Platform): string {
+  const names: Partial<Record<NodeJS.Platform, string>> = {
+    aix: "AIX",
+    android: "Android",
+    darwin: "macOS",
+    freebsd: "FreeBSD",
+    linux: "Linux",
+    openbsd: "OpenBSD",
+    sunos: "Solaris",
+    win32: "Windows",
+  };
+  return names[value] ?? value;
 }
 
 function createTerminalPrompt(): Prompt {

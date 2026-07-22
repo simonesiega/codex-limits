@@ -81,6 +81,86 @@ test("runCli preserves the complete limits and coupon JSON contracts", async () 
   ]);
 });
 
+test("runCli prints safe doctor text and JSON diagnostics", async () => {
+  const textOutput: string[] = [];
+  const jsonOutput: string[] = [];
+  const doctor = {
+    loadCodexDiagnostics: async () => ({
+      codexHomeDetected: true,
+      authenticationFound: true,
+      localUsageFound: true,
+      liveEndpoint: "reachable" as const,
+    }),
+    inspectOpencodeIntegration: async () => "installed" as const,
+    nodeVersion: "22.0.0",
+    operatingSystem: "Windows",
+  };
+
+  const textExitCode = await runCli(["doctor"], {
+    io: {stdout: (text) => textOutput.push(text)},
+    doctor,
+    packageInfo: {version: "0.1.3"},
+  });
+  const jsonExitCode = await runCli(["doctor", "--json"], {
+    io: {stdout: (text) => jsonOutput.push(text)},
+    doctor,
+    packageInfo: {version: "0.1.3"},
+  });
+
+  expect(textExitCode).toBe(0);
+  expect(jsonExitCode).toBe(0);
+  expect(textOutput.join("")).toBe(
+    [
+      "Codex Limits diagnostics",
+      "",
+      "Package version:       0.1.3",
+      "Node.js version:       22.0.0",
+      "Operating system:      Windows",
+      "Codex home detected:   Yes",
+      "Authentication found:  Yes",
+      "Local usage found:     Yes",
+      "Live endpoint:         Reachable",
+      "OpenCode integration:  Installed",
+      "",
+      "No sensitive values were displayed.",
+      "",
+    ].join("\n")
+  );
+  expect(JSON.parse(jsonOutput.join(""))).toEqual({
+    packageVersion: "0.1.3",
+    nodeVersion: "22.0.0",
+    operatingSystem: "Windows",
+    codexHomeDetected: true,
+    authenticationFound: true,
+    localUsageFound: true,
+    liveEndpoint: "reachable",
+    opencodeIntegration: "installed",
+  });
+});
+
+test("runCli writes no partial doctor JSON or sensitive errors when a check fails", async () => {
+  const output: string[] = [];
+  const errors: string[] = [];
+  const exitCode = await runCli(["doctor", "--json"], {
+    io: {
+      stdout: (text) => output.push(text),
+      stderr: (text) => errors.push(text),
+    },
+    doctor: {
+      loadCodexDiagnostics: async () => {
+        throw new Error("Bearer fake-secret-token at C:/private/auth.json");
+      },
+      inspectOpencodeIntegration: async () => "unknown",
+    },
+  });
+
+  expect(exitCode).toBe(1);
+  expect(output).toEqual([]);
+  expect(errors.join("")).toBe("codex-limits: Could not run Codex Limits diagnostics.\n");
+  expect(errors.join("")).not.toContain("fake-secret-token");
+  expect(errors.join("")).not.toContain("private");
+});
+
 test("runCli writes no partial JSON when a loader fails", async () => {
   const output: string[] = [];
   const errors: string[] = [];

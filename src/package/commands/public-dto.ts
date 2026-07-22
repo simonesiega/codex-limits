@@ -1,4 +1,11 @@
-import type {CodexLimitsResult, CouponItem, CouponSummary, UsageWindow} from "@/package/core/types";
+import type {AgentIntegrationStatus} from "@/agents";
+import type {
+  CodexLimitsResult,
+  CouponItem,
+  CouponSummary,
+  LiveEndpointStatus,
+  UsageWindow,
+} from "@/package/core/types";
 import {redactWarnings} from "@/package/core/utils/redact";
 
 /** Stable JSON representation of a usage window. */
@@ -38,6 +45,18 @@ export interface CodexLimitsDto {
   };
   coupons: CouponSummaryDto | null;
   warnings: string[];
+}
+
+/** Stable JSON representation returned by `codex-limits doctor --json`. */
+export interface DoctorDto {
+  packageVersion: string;
+  nodeVersion: string;
+  operatingSystem: string;
+  codexHomeDetected: boolean;
+  authenticationFound: boolean;
+  localUsageFound: boolean;
+  liveEndpoint: LiveEndpointStatus;
+  opencodeIntegration: AgentIntegrationStatus;
 }
 
 /** Selects and redacts the fields in the public limits JSON contract. */

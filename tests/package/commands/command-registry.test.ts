@@ -34,6 +34,7 @@ test("registry formally separates read-only and local-write commands", () => {
     dashboard: "read-only",
     status: "read-only",
     coupons: "read-only",
+    doctor: "read-only",
     "agents.install": "local-write",
     init: "local-write",
   });
@@ -196,6 +197,7 @@ test("root and nested help are generated from registry metadata", () => {
   const installHelp = formatHelp(registry, install);
 
   expect(rootHelp).toContain("status   Print a non-interactive usage summary");
+  expect(rootHelp).toContain("doctor   Run safe environment and connectivity diagnostics");
   expect(rootHelp).toContain("agents   Manage optional coding-agent integrations");
   expect(rootHelp.indexOf("agents   Manage")).toBeLessThan(rootHelp.indexOf("init     Install"));
   expect(rootHelp).toContain("CODEX_LIMITS_HOME");
