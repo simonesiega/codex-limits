@@ -53,11 +53,11 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
         {name: "CODEX_HOME", description: "Override the local Codex data directory"},
         {
           name: "CODEX_LIMITS_ACCESS_TOKEN",
-          description: "Access token for live reset coupons",
+          description: "Access token for live usage and reset coupons",
         },
         {
           name: "CODEX_LIMITS_ACCOUNT_ID",
-          description: "Account ID for live reset coupons",
+          description: "Account ID for live usage and reset coupons",
         },
         {
           name: "CODEX_LIMITS_USAGE_ENDPOINT",

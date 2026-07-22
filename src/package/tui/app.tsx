@@ -64,36 +64,45 @@ function renderTextSummary(
   terminalRows: number
 ): ReactElement {
   const width = Math.max(Math.min(terminalWidth - 2, 96), 1);
-  const usageLineCount = Math.max(view.usageCards.length, 1);
-  const visibleRows = view.couponRows.slice(0, Math.max(terminalRows - 6 - usageLineCount, 0));
+  const fixedLines: ReactElement[] = [
+    <Text key="title" bold color={theme.title}>
+      {truncateText("CODEX LIMITS", width)}
+    </Text>,
+    <Text key="subtitle" color={theme.muted}>
+      {truncateText("Codex usage windows and reset credits", width)}
+    </Text>,
+    ...(view.usageCards.length === 0
+      ? [<Text key="usage-empty">{truncateText(view.usageEmptyLabel, width)}</Text>]
+      : view.usageCards.map((card) => (
+          <Text key={`usage-${card.title}`}>
+            {truncateText(`${formatUsageTitle(card.title)}: ${formatUsageLine(card)}`, width)}
+          </Text>
+        ))),
+    <Text key="available-coupons">
+      {truncateText(`Available coupons: ${view.couponSummary.availableCoupons}`, width)}
+    </Text>,
+    <Text key="earned-coupons">
+      {truncateText(`Earned this period: ${view.couponSummary.earnedThisPeriod}`, width)}
+    </Text>,
+    <Text key="next-expiration">
+      {truncateText(`Next expiration: ${view.couponSummary.nextExpiration}`, width)}
+    </Text>,
+    <Text key="time-left">{truncateText(`Time left: ${view.couponSummary.timeLeft}`, width)}</Text>,
+  ];
+  const rowCapacity = Math.max(Math.floor(terminalRows), 1);
+  const visibleFixedLines = fixedLines.slice(0, rowCapacity);
+  const couponLineCapacity = Math.max(rowCapacity - visibleFixedLines.length, 0);
+  const hasOverflow = view.couponRows.length > couponLineCapacity;
+  const visibleCouponCapacity = hasOverflow
+    ? Math.max(couponLineCapacity - 1, 0)
+    : couponLineCapacity;
+  const visibleRows = view.couponRows.slice(0, visibleCouponCapacity);
   const hiddenRows = view.couponRows.length - visibleRows.length;
 
   return (
     <Box flexDirection="column" width={width}>
-      <Text bold color={theme.title}>
-        {truncateText("CODEX LIMITS", width)}
-      </Text>
-      <Text color={theme.muted}>
-        {truncateText("Codex usage windows and reset credits", width)}
-      </Text>
-      {view.usageCards.length === 0 ? (
-        <Text>{truncateText(view.usageEmptyLabel, width)}</Text>
-      ) : (
-        view.usageCards.map((card) => (
-          <Text key={card.title}>
-            {truncateText(`${formatUsageTitle(card.title)}: ${formatUsageLine(card)}`, width)}
-          </Text>
-        ))
-      )}
-      <Text>
-        {truncateText(`Available coupons: ${view.couponSummary.availableCoupons}`, width)}
-      </Text>
-      <Text>
-        {truncateText(`Earned this period: ${view.couponSummary.earnedThisPeriod}`, width)}
-      </Text>
-      <Text>{truncateText(`Next expiration: ${view.couponSummary.nextExpiration}`, width)}</Text>
-      <Text>{truncateText(`Time left: ${view.couponSummary.timeLeft}`, width)}</Text>
-      {view.couponRows.length === 0 ? (
+      {visibleFixedLines}
+      {view.couponRows.length === 0 && couponLineCapacity > 0 ? (
         <Text>{truncateText(view.couponEmptyLabel, width)}</Text>
       ) : (
         visibleRows.map((row) => (
@@ -102,7 +111,9 @@ function renderTextSummary(
           </Text>
         ))
       )}
-      {hiddenRows > 0 ? <Text>{truncateText(`… ${hiddenRows} more coupons`, width)}</Text> : null}
+      {hiddenRows > 0 && couponLineCapacity > 0 ? (
+        <Text>{truncateText(`… ${hiddenRows} more coupons`, width)}</Text>
+      ) : null}
     </Box>
   );
 }

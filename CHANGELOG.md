@@ -8,6 +8,7 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added bundled third-party license notices to published package artifacts.
 - Added the `codex-limits agents` command group with named, interactive, and all-agent integration installation while keeping the existing `init` syntax supported.
 
 ### Changed
@@ -17,13 +18,18 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
-- Fixed weekly-only live usage responses to use their declared window duration, avoid stale local fallback, and omit unavailable 5-hour sections from terminal dashboards and the OpenCode integration.
+- Fixed authenticated request cancellation when a caller abort coincided with request startup.
+- Fixed CLI help to describe credential overrides for both live usage and reset-credit requests.
+- Fixed very small text dashboards to stay within the available terminal rows when coupon entries are truncated.
+- Fixed Windows checkouts to preserve LF line endings so local formatting checks remain stable.
+- Fixed weekly-only usage data to use declared window durations across live and local sources, avoid stale local fallback for recognized live windows, and omit unavailable 5-hour sections from terminal dashboards and the OpenCode integration.
 - Fixed clean production builds and kept terminal rendering compatible with Node.js 20.
 
 ### Removed
 
 ### Security
 
+- Refused symbolic-link files and path-replacement races when reading bounded local files, including agent configurations.
 - Disabled dependency lifecycle scripts during CI installs, pinned workflow actions to immutable commits, and explicitly requested npm provenance for published packages.
 - Shortened agent configuration paths under the user home to `~/...` and redacted paths outside it before printing installation results.
 - Sanitized and bounded command and agent errors, and rejected control characters in command metadata before terminal output.

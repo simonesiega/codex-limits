@@ -44,6 +44,7 @@ Both files are updated because compatible OpenCode versions discover TUI plugins
 - preserves existing configuration fields and plugin entries;
 - recognizes unversioned, tagged, pinned, and tuple forms of the package and does not add duplicates;
 - writes changed files through a sibling temporary file to avoid partial JSON;
+- refuses symbolic-link configuration files instead of following or replacing the link;
 - refuses to modify malformed, non-object, oversized, or invalid `plugin` configurations.
 
 Configuration files larger than 1 MB are not modified. If one file is already configured and the other is not, only the missing plugin registration is added. Installation results shorten paths under the user home to `~/...`; unexpected paths outside the home are displayed as `[path]`.

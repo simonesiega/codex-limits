@@ -9,7 +9,7 @@ description: Use when writing or reviewing tests - covers test philosophy, condi
 
 **"Write tests. Not too many. Mostly integration."** — Kent C. Dodds
 
-Tests verify real behavior, not implementation details. The goal is confidence that your code works. Coverage numbers are neccessary but not sufficient.
+Tests verify real behavior, not implementation details. The goal is confidence that your code works. Coverage numbers are necessary but not sufficient.
 
 **Core principles:**
 

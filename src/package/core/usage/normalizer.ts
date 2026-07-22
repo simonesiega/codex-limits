@@ -112,21 +112,18 @@ export function parseUsageWindowsFromRateLimits(
   rateLimits: Record<string, unknown>,
   now: Date = new Date()
 ): UsageWindows {
-  const candidates: RateLimitWindowCandidate[] = [];
-  const namedFiveHour = readRecord(rateLimits, FIVE_HOUR_KEYS);
-  const namedWeekly = readRecord(rateLimits, WEEKLY_KEYS);
+  return parseCandidateUsageWindows(
+    readRecord(rateLimits, FIVE_HOUR_KEYS),
+    readRecord(rateLimits, WEEKLY_KEYS),
+    now
+  );
+}
 
-  if (namedFiveHour) {
-    candidates.push({fallbackKind: "fiveHour", value: namedFiveHour});
-  }
-  if (namedWeekly) {
-    candidates.push({fallbackKind: "weekly", value: namedWeekly});
-  }
-
-  return {
-    fiveHour: parseUsageWindow(selectRateLimitWindow(candidates, "fiveHour"), FIVE_HOUR_LABEL, now),
-    weekly: parseUsageWindow(selectRateLimitWindow(candidates, "weekly"), WEEKLY_LABEL, now),
-  };
+/** Reports whether a rate-limit object contains a recognized named usage window. */
+export function hasNamedUsageWindow(rateLimits: Record<string, unknown>): boolean {
+  return (
+    readRecord(rateLimits, FIVE_HOUR_KEYS) !== null || readRecord(rateLimits, WEEKLY_KEYS) !== null
+  );
 }
 
 /** Identifies a five-hour or weekly usage window from its declared duration. */
@@ -204,15 +201,40 @@ function parseUsageFromUnknown(value: unknown, now: Date): Pick<LocalUsageResult
 
   const fiveHourSource = findRecord(value, FIVE_HOUR_KEYS);
   const weeklySource = findRecord(value, WEEKLY_KEYS);
-  const fiveHour = parseUsageWindow(
-    fiveHourSource ?? (weeklySource ? null : value),
-    FIVE_HOUR_LABEL,
+  if (fiveHourSource || weeklySource) {
+    return {windows: parseCandidateUsageWindows(fiveHourSource, weeklySource, now)};
+  }
+
+  const fallbackKind = classifyUsageWindowByDuration(value) ?? "fiveHour";
+  const fallbackWindow = parseUsageWindow(
+    value,
+    fallbackKind === "weekly" ? WEEKLY_LABEL : FIVE_HOUR_LABEL,
     now
   );
-  const weekly = parseUsageWindow(weeklySource, WEEKLY_LABEL, now);
+  return {
+    windows: {
+      fiveHour: fallbackKind === "fiveHour" ? fallbackWindow : null,
+      weekly: fallbackKind === "weekly" ? fallbackWindow : null,
+    },
+  };
+}
+
+function parseCandidateUsageWindows(
+  namedFiveHour: Record<string, unknown> | null,
+  namedWeekly: Record<string, unknown> | null,
+  now: Date
+): UsageWindows {
+  const candidates: RateLimitWindowCandidate[] = [];
+  if (namedFiveHour) {
+    candidates.push({fallbackKind: "fiveHour", value: namedFiveHour});
+  }
+  if (namedWeekly) {
+    candidates.push({fallbackKind: "weekly", value: namedWeekly});
+  }
 
   return {
-    windows: {fiveHour, weekly},
+    fiveHour: parseUsageWindow(selectRateLimitWindow(candidates, "fiveHour"), FIVE_HOUR_LABEL, now),
+    weekly: parseUsageWindow(selectRateLimitWindow(candidates, "weekly"), WEEKLY_LABEL, now),
   };
 }
 

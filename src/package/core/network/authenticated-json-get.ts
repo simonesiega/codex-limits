@@ -297,6 +297,10 @@ function createRequestSignal(
   }, safeTimeoutMs);
   const abortFromCaller = (): void => controller.abort();
   callerSignal?.addEventListener("abort", abortFromCaller, {once: true});
+  // Cover an abort that happened between the caller's initial check and listener registration.
+  if (callerSignal?.aborted) {
+    abortFromCaller();
+  }
 
   return {
     signal: controller.signal,

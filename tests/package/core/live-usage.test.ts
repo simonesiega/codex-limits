@@ -142,6 +142,24 @@ test("getUsageLimits reports unsafe endpoint overrides without crashing", async 
   expect(JSON.stringify(result)).not.toContain("/private/usage.json");
 });
 
+test("mapLiveUsagePayload recognizes direct named usage windows", () => {
+  const result = mapLiveUsagePayload(
+    {
+      weekly: {
+        used_percent: 21,
+        limit_window_seconds: 604_800,
+        reset_at: 1_767_830_400,
+      },
+    },
+    "https://example.test/usage",
+    new Date("2026-01-01T00:00:00.000Z")
+  );
+
+  expect(result.status).toBe("available");
+  expect(result.windows.fiveHour).toBeNull();
+  expect(result.windows.weekly?.remainingPercent).toBe(79);
+});
+
 test("mapLiveUsagePayload bounds traversal of unusually wide payloads", () => {
   const payload = Object.fromEntries(
     Array.from({length: 1_100}, (_, index) => [

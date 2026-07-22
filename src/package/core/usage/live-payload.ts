@@ -2,6 +2,7 @@ import type {UsageResult} from "@/package/core/types";
 import {
   buildUsageResult,
   classifyUsageWindowByDuration,
+  hasNamedUsageWindow,
   parseUsageWindowsFromRateLimits,
 } from "@/package/core/usage/normalizer";
 import {isRecord} from "@/package/core/utils/unknown";
@@ -46,12 +47,7 @@ function findRateLimits(root: unknown): Record<string, unknown> | null {
       return direct;
     }
 
-    return isRecord(value.primary) ||
-      isRecord(value.secondary) ||
-      isRecord(value.primary_window) ||
-      isRecord(value.secondary_window)
-      ? value
-      : null;
+    return hasNamedUsageWindow(value) ? value : null;
   });
 }
 

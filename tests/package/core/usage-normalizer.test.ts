@@ -42,6 +42,37 @@ test("parseUsageWindowsFromRateLimits uses declared durations before legacy slot
   expect(windows.weekly?.resetsIn).toBe("7d");
 });
 
+test("parseUsageFromState honors declared durations in local data", () => {
+  const result = parseUsageFromState(
+    stateFromJson({
+      rate_limit: {
+        primary_window: {
+          used_percent: 21,
+          limit_window_seconds: 604_800,
+          reset_at: 1_767_830_400,
+        },
+        secondary_window: null,
+      },
+    }),
+    new Date("2026-01-01T00:00:00.000Z")
+  );
+
+  expect(result.windows.fiveHour).toBeNull();
+  expect(result.windows.weekly?.remainingPercent).toBe(79);
+  expect(result.windows.weekly?.resetsIn).toBe("7d");
+
+  const directWindow = parseUsageFromState(
+    stateFromJson({
+      used_percent: 22,
+      limit_window_seconds: 604_800,
+      reset_at: 1_767_830_400,
+    }),
+    new Date("2026-01-01T00:00:00.000Z")
+  );
+  expect(directWindow.windows.fiveHour).toBeNull();
+  expect(directWindow.windows.weekly?.remainingPercent).toBe(78);
+});
+
 test("parseUsageFromState returns partial for incomplete data", () => {
   const result = parseUsageFromState(stateFromJson({fiveHour: {remainingPercent: 80}}));
 

@@ -135,9 +135,14 @@ test("App remains readable in very small terminals and truncates extra coupons",
 
   expect(plainFrame).toContain("CODEX LIMITS");
   expect(plainFrame).toContain("more coupons");
+  expect(plainFrame.split("\n")).toHaveLength(9);
   for (const line of plainFrame.split("\n")) {
     expect(line.length).toBeLessThanOrEqual(18);
   }
+
+  const fourRowFrame = stripAnsi(renderFrame(result, 20, 4));
+  expect(fourRowFrame).toContain("CODEX LIMITS");
+  expect(fourRowFrame.split("\n")).toHaveLength(4);
 });
 
 test("layout boundaries are deterministic from startup dimensions", () => {

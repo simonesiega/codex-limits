@@ -66,6 +66,18 @@ for (const file of ["dist/cli.js", "dist/index.js"]) {
   }
 }
 
+const thirdPartyNotices = await readFile(join(root, "dist", "THIRD_PARTY_NOTICES.txt"), "utf8");
+for (const packageName of ["ink@", "react@", "signal-exit@", "yoga-layout@"]) {
+  assert(
+    thirdPartyNotices.includes(`Package: ${packageName}`),
+    `Third-party notices are missing ${packageName}.`
+  );
+}
+assert(
+  thirdPartyNotices.includes("Permission is hereby granted"),
+  "Third-party notices contain no license text."
+);
+
 const temporaryRoot = await mkdtemp(join(tmpdir(), "codex-limits-package-"));
 try {
   const packOutput = await run(
@@ -85,8 +97,15 @@ try {
   for (const required of [
     "dist/cli.js",
     "dist/index.js",
+    "dist/THIRD_PARTY_NOTICES.txt",
     "types/index.d.ts",
     "scripts/postinstall.cjs",
+    ".env.example",
+    "docs/photos/agents/opencode/opencode_result.png",
+    "docs/photos/logo/logo.png",
+    "docs/photos/logo/title-animation.svg",
+    "docs/photos/terminal/final_result_large.png",
+    "docs/photos/terminal/final_result_small.png",
     "README.md",
     "SECURITY.md",
     "CHANGELOG.md",
@@ -101,7 +120,8 @@ try {
         !path.startsWith("tests/") &&
         !path.startsWith(".github/") &&
         !path.startsWith("agents/") &&
-        !path.startsWith(".agents/"),
+        !path.startsWith(".agents/") &&
+        !(path.startsWith("scripts/") && path !== "scripts/postinstall.cjs"),
       `Packed artifact contains development-only file ${path}.`
     );
   }

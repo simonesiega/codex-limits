@@ -199,6 +199,8 @@ test("root and nested help are generated from registry metadata", () => {
   expect(rootHelp).toContain("agents   Manage optional coding-agent integrations");
   expect(rootHelp.indexOf("agents   Manage")).toBeLessThan(rootHelp.indexOf("init     Install"));
   expect(rootHelp).toContain("CODEX_LIMITS_HOME");
+  expect(rootHelp).toContain("Access token for live usage and reset coupons");
+  expect(rootHelp).toContain("Account ID for live usage and reset coupons");
   expect(agentsHelp).toContain("install  Install optional agent integrations");
   expect(installHelp).toContain("[<agent...>]");
 

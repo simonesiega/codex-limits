@@ -20,6 +20,12 @@
   <img src="https://img.shields.io/badge/Bun-toolchain-black?logo=bun" alt="Bun toolchain" />
 </p>
 
+<p align="center">
+  <a href="#local-development">
+    <img src="https://img.shields.io/badge/test_coverage-95.9%25_lines-brightgreen" alt="Test coverage: 95.9% lines" />
+  </a>
+</p>
+
 ## Preview 🚀
 
 <p align="center">

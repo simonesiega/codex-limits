@@ -140,6 +140,35 @@ test("authenticatedJsonGet classifies HTTP, malformed, oversized, timeout, and a
   }
 });
 
+test("authenticatedJsonGet propagates an abort during signal setup", async () => {
+  let abortedReads = 0;
+  let requestSignalWasAborted = false;
+  const callerSignal = {
+    get aborted() {
+      abortedReads += 1;
+      return abortedReads > 1;
+    },
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  } as unknown as AbortSignal;
+
+  const result = await authenticatedJsonGet(
+    request(
+      async (_url, init) => {
+        requestSignalWasAborted = init.signal.aborted;
+        if (init.signal.aborted) {
+          throw new Error("aborted");
+        }
+        return {ok: true, status: 200, text: async () => "{}"};
+      },
+      {signal: callerSignal, timeoutMs: 1_000}
+    )
+  );
+
+  expect(requestSignalWasAborted).toBe(true);
+  expect(result).toEqual({ok: false, code: "aborted", status: null});
+});
+
 test("authenticatedJsonGet honors caller aborts while fetch is in flight", async () => {
   const controller = new AbortController();
   const pending = authenticatedJsonGet(

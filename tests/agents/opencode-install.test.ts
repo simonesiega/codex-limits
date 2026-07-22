@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {readFile, writeFile} from "node:fs/promises";
+import {lstat, readFile, symlink, writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {installOpencodePlugin} from "@/agents/opencode/install";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
@@ -75,6 +75,23 @@ test("installOpencodePlugin reports safe malformed and oversized config errors",
     );
   });
 });
+
+if (process.platform !== "win32") {
+  test("installOpencodePlugin refuses to replace a symbolic-link config", async () => {
+    await withOpencodeConfigs(async ({directory, configPath, tuiConfigPath}) => {
+      const targetPath = join(directory, "private.json");
+      const targetConfig = JSON.stringify({plugin: ["another-plugin"]});
+      await writeFile(targetPath, targetConfig, "utf8");
+      await symlink(targetPath, configPath, "file");
+
+      await expect(installOpencodePlugin({configPath, tuiConfigPath})).rejects.toThrow(
+        "Could not safely read the OpenCode configuration."
+      );
+      expect(await readFile(targetPath, "utf8")).toBe(targetConfig);
+      expect((await lstat(configPath)).isSymbolicLink()).toBe(true);
+    });
+  });
+}
 
 test("installOpencodePlugin preserves a version-pinned tuple plugin", async () => {
   await withOpencodeConfigs(async ({configPath, tuiConfigPath}) => {

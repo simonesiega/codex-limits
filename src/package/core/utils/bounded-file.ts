@@ -1,4 +1,6 @@
-import {open} from "node:fs/promises";
+import {constants} from "node:fs";
+import type {Stats} from "node:fs";
+import {lstat, open} from "node:fs/promises";
 
 export type BoundedFileErrorCode = "not-file" | "not-found" | "read-error" | "too-large";
 
@@ -18,9 +20,23 @@ export async function readBoundedUtf8File(path: string, maxBytes: number): Promi
   let handle;
 
   try {
-    handle = await open(path, "r");
+    const pathDetails = await lstat(path);
+    if (!pathDetails.isFile()) {
+      throw new BoundedFileError("not-file");
+    }
+
+    const noFollow = constants.O_NOFOLLOW;
+    const openFlags =
+      typeof noFollow === "number" ? constants.O_RDONLY | noFollow : constants.O_RDONLY;
+    handle = await open(path, openFlags);
     const details = await handle.stat();
-    if (!details.isFile()) {
+    const currentPathDetails = await lstat(path);
+    if (
+      !details.isFile() ||
+      !currentPathDetails.isFile() ||
+      !isSameFile(pathDetails, details) ||
+      !isSameFile(details, currentPathDetails)
+    ) {
       throw new BoundedFileError("not-file");
     }
     if (details.size > maxBytes) {
@@ -49,10 +65,17 @@ export async function readBoundedUtf8File(path: string, maxBytes: number): Promi
     if (isNodeError(error) && error.code === "ENOENT") {
       throw new BoundedFileError("not-found");
     }
+    if (isNodeError(error) && error.code === "ELOOP") {
+      throw new BoundedFileError("not-file");
+    }
     throw new BoundedFileError("read-error");
   } finally {
     await handle?.close().catch(() => undefined);
   }
+}
+
+function isSameFile(left: Stats, right: Stats): boolean {
+  return left.dev === right.dev && left.ino === right.ino;
 }
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
