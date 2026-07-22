@@ -205,6 +205,17 @@ test("public command errors reject paths, controls, and oversized messages", () 
   expect(sanitizePublicErrorMessage("x".repeat(241), "Command failed.")).toBe("Command failed.");
 });
 
+test("status output omits usage windows that are not provided", () => {
+  const result = createFakeLimitsResult();
+  result.windows.fiveHour = null;
+
+  const output = formatStatus(result);
+
+  expect(output).toContain("Weekly usage limit");
+  expect(output).not.toContain("5-hour usage limit");
+  expect(output).not.toContain("Usage limit: Unknown");
+});
+
 test("command formatters do not expose secret-like values", () => {
   const statusOutput = formatStatus({...createFakeLimitsResult(), warnings: ["[redacted]"]});
   const couponsOutput = formatCoupons(unavailableCoupons("https://example.test", ["fake warning"]));

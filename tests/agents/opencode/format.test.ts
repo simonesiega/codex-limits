@@ -21,3 +21,23 @@ test("formatOpencodeLimits renders compact local-only UI", () => {
 
   expect(output).toBe(expected);
 });
+
+test("formatOpencodeLimits omits the 5-hour block when only weekly usage is provided", () => {
+  const result = createFakeLimitsResult();
+  result.windows.fiveHour = null;
+
+  const output = formatOpencodeLimits(result);
+  const expected = [
+    "Weekly  Critical",
+    "Remaining  11% remaining",
+    "[==                    ] 11%",
+    "Reset      in 2d 1h 40m",
+    "",
+    "Reset credits  2 credits available",
+    "Next expires   7d 4h 38m (Saturday 11 July 2026)",
+  ].join("\n");
+
+  expect(output).toBe(expected);
+  expect(output).not.toContain("5-hour");
+  expect(output).not.toContain("80% remaining");
+});

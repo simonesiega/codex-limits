@@ -40,6 +40,7 @@ export function App({result, terminalColumns, terminalRows, width, now}: AppProp
         <UsagePanel
           cards={view.usageCards}
           dense={layout.dense}
+          emptyLabel={view.usageEmptyLabel}
           stacked={stacked}
           width={view.width}
         />
@@ -63,7 +64,8 @@ function renderTextSummary(
   terminalRows: number
 ): ReactElement {
   const width = Math.max(Math.min(terminalWidth - 2, 96), 1);
-  const visibleRows = view.couponRows.slice(0, Math.max(terminalRows - 8, 0));
+  const usageLineCount = Math.max(view.usageCards.length, 1);
+  const visibleRows = view.couponRows.slice(0, Math.max(terminalRows - 6 - usageLineCount, 0));
   const hiddenRows = view.couponRows.length - visibleRows.length;
 
   return (
@@ -74,8 +76,15 @@ function renderTextSummary(
       <Text color={theme.muted}>
         {truncateText("Codex usage windows and reset credits", width)}
       </Text>
-      <Text>{truncateText(`5-hour: ${formatUsageLine(view.usageCards[0])}`, width)}</Text>
-      <Text>{truncateText(`Weekly: ${formatUsageLine(view.usageCards[1])}`, width)}</Text>
+      {view.usageCards.length === 0 ? (
+        <Text>{truncateText(view.usageEmptyLabel, width)}</Text>
+      ) : (
+        view.usageCards.map((card) => (
+          <Text key={card.title}>
+            {truncateText(`${formatUsageTitle(card.title)}: ${formatUsageLine(card)}`, width)}
+          </Text>
+        ))
+      )}
       <Text>
         {truncateText(`Available coupons: ${view.couponSummary.availableCoupons}`, width)}
       </Text>
@@ -98,8 +107,12 @@ function renderTextSummary(
   );
 }
 
-function formatUsageLine(card: TuiViewModel["usageCards"][number] | undefined): string {
-  return card ? `${card.remainingLabel}, ${card.resetLabel}` : "Unknown";
+function formatUsageLine(card: TuiViewModel["usageCards"][number]): string {
+  return `${card.remainingLabel}, ${card.resetLabel}`;
+}
+
+function formatUsageTitle(title: string): string {
+  return title.replace(/ usage limit$/i, "");
 }
 
 /** Renders the dashboard and waits until Ink exits. */

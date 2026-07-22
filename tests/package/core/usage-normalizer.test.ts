@@ -2,7 +2,11 @@ import {expect, test} from "bun:test";
 import {formatDuration} from "@/package/core/utils/date-time";
 import {redactSensitiveText} from "@/package/core/utils/redact";
 import type {CodexStateReadResult} from "@/package/core/types";
-import {parseUsageFromState, unavailableLocalUsage} from "@/package/core/usage/normalizer";
+import {
+  parseUsageFromState,
+  parseUsageWindowsFromRateLimits,
+  unavailableLocalUsage,
+} from "@/package/core/usage/normalizer";
 
 test("parseUsageFromState normalizes remaining and used percentages", () => {
   const result = parseUsageFromState(
@@ -18,6 +22,24 @@ test("parseUsageFromState normalizes remaining and used percentages", () => {
   expect(result.windows.fiveHour?.remainingPercent).toBe(58);
   expect(result.windows.fiveHour?.resetsIn).toBe("2h");
   expect(result.windows.weekly?.usedPercent).toBe(89);
+});
+
+test("parseUsageWindowsFromRateLimits uses declared durations before legacy slot names", () => {
+  const windows = parseUsageWindowsFromRateLimits(
+    {
+      primary_window: {
+        used_percent: 21,
+        limit_window_seconds: 604_800,
+        reset_at: 1_767_830_400,
+      },
+      secondary_window: null,
+    },
+    new Date("2026-01-01T00:00:00.000Z")
+  );
+
+  expect(windows.fiveHour).toBeNull();
+  expect(windows.weekly?.remainingPercent).toBe(79);
+  expect(windows.weekly?.resetsIn).toBe("7d");
 });
 
 test("parseUsageFromState returns partial for incomplete data", () => {

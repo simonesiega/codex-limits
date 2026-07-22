@@ -90,7 +90,7 @@ test("getLiveUsage retries with native request when fetch is rejected", async ()
   );
 });
 
-test("getUsageLimits preserves partial live windows when local data is unavailable", async () => {
+test("getUsageLimits accepts the weekly-only live API contract without local fallback", async () => {
   const missingHome = join(tmpdir(), `codex-limits-no-local-${crypto.randomUUID()}`);
   const result = await getUsageLimits({
     env: {
@@ -103,17 +103,26 @@ test("getUsageLimits preserves partial live windows when local data is unavailab
       ok: true,
       status: 200,
       transport: "fetch",
-      payload: {rate_limit: {primary_window: {used_percent: 20, reset_at: 1_767_229_200}}},
+      payload: {
+        rate_limit: {
+          primary_window: {
+            used_percent: 21,
+            limit_window_seconds: 604_800,
+            reset_after_seconds: 604_800,
+            reset_at: 1_767_830_400,
+          },
+          secondary_window: null,
+        },
+      },
     }),
     now: new Date("2026-01-01T00:00:00.000Z"),
   });
 
-  expect(result.status).toBe("partial");
+  expect(result.status).toBe("available");
   expect(result.source.kind).toBe("api");
-  expect(result.windows.fiveHour?.remainingPercent).toBe(80);
-  expect(result.windows.weekly).toBeNull();
-  expect(result.warnings).toContain("Live usage endpoint returned incomplete usage data.");
-  expect(result.warnings).toContain("No readable local Codex home directory was found.");
+  expect(result.windows.fiveHour).toBeNull();
+  expect(result.windows.weekly?.remainingPercent).toBe(79);
+  expect(result.warnings).toEqual([]);
 });
 
 test("getUsageLimits reports unsafe endpoint overrides without crashing", async () => {

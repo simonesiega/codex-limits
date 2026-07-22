@@ -36,10 +36,10 @@ export async function getCodexLimits(options: CodexLimitsOptions = {}): Promise<
   };
 }
 
-/** Prefers complete live usage and otherwise falls back to bounded local discovery. */
+/** Prefers any recognized live usage and falls back locally only when no live window exists. */
 export async function getUsageLimits(options: CodexLimitsOptions = {}): Promise<UsageResult> {
   const live = await getLiveUsage(options);
-  if (live.status === "available") {
+  if (live.status !== "unavailable") {
     return live;
   }
 
@@ -47,13 +47,13 @@ export async function getUsageLimits(options: CodexLimitsOptions = {}): Promise<
   return selectUsageResult(live, local);
 }
 
-/** Preserves partial live windows when no usable local fallback exists. */
+/** Selects recognized live usage before a local fallback. */
 export function selectUsageResult(live: UsageResult, local: UsageResult): UsageResult {
+  if (live.status !== "unavailable") {
+    return live;
+  }
   if (local.status !== "unavailable") {
     return local;
-  }
-  if (live.status === "partial") {
-    return {...live, warnings: [...live.warnings, ...local.warnings]};
   }
   return {...local, warnings: [...live.warnings, ...local.warnings]};
 }

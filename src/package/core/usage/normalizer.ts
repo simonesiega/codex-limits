@@ -67,6 +67,29 @@ const RESETS_AT_KEYS = [
   "windowEnd",
 ] as const;
 const RESETS_IN_KEYS = ["resetsIn", "resetIn", "resets_in", "reset_in", "timeUntilReset"] as const;
+const WINDOW_SECONDS_KEYS = [
+  "limit_window_seconds",
+  "limitWindowSeconds",
+  "window_seconds",
+  "windowSeconds",
+  "window_length_seconds",
+  "windowLengthSeconds",
+] as const;
+const WINDOW_MINUTES_KEYS = [
+  "window_minutes",
+  "windowMinutes",
+  "window_length_minutes",
+  "windowLengthMinutes",
+] as const;
+const FIVE_HOUR_SECONDS = 5 * 60 * 60;
+const WEEKLY_SECONDS = 7 * 24 * 60 * 60;
+
+type UsageWindowKind = "fiveHour" | "weekly";
+
+interface RateLimitWindowCandidate {
+  fallbackKind: UsageWindowKind;
+  value: Record<string, unknown>;
+}
 
 /** Normalizes the latest bounded local session snapshot. */
 export function parseUsageFromSessions(
@@ -84,15 +107,43 @@ export function parseUsageFromSessions(
   );
 }
 
-/** Maps recognized primary and secondary rate-limit windows. */
+/** Maps recognized rate-limit windows, preferring their declared duration over slot names. */
 export function parseUsageWindowsFromRateLimits(
   rateLimits: Record<string, unknown>,
   now: Date = new Date()
 ): UsageWindows {
+  const candidates: RateLimitWindowCandidate[] = [];
+  const namedFiveHour = readRecord(rateLimits, FIVE_HOUR_KEYS);
+  const namedWeekly = readRecord(rateLimits, WEEKLY_KEYS);
+
+  if (namedFiveHour) {
+    candidates.push({fallbackKind: "fiveHour", value: namedFiveHour});
+  }
+  if (namedWeekly) {
+    candidates.push({fallbackKind: "weekly", value: namedWeekly});
+  }
+
   return {
-    fiveHour: parseUsageWindow(readRecord(rateLimits, FIVE_HOUR_KEYS), FIVE_HOUR_LABEL, now),
-    weekly: parseUsageWindow(readRecord(rateLimits, WEEKLY_KEYS), WEEKLY_LABEL, now),
+    fiveHour: parseUsageWindow(selectRateLimitWindow(candidates, "fiveHour"), FIVE_HOUR_LABEL, now),
+    weekly: parseUsageWindow(selectRateLimitWindow(candidates, "weekly"), WEEKLY_LABEL, now),
   };
+}
+
+/** Identifies a five-hour or weekly usage window from its declared duration. */
+export function classifyUsageWindowByDuration(
+  value: Record<string, unknown>
+): UsageWindowKind | null {
+  const seconds = toFiniteNumber(findValue(value, WINDOW_SECONDS_KEYS, false));
+  const minutes = toFiniteNumber(findValue(value, WINDOW_MINUTES_KEYS, false));
+  const durationSeconds = seconds ?? (minutes === null ? null : minutes * 60);
+
+  if (durationSeconds === FIVE_HOUR_SECONDS) {
+    return "fiveHour";
+  }
+  if (durationSeconds === WEEKLY_SECONDS) {
+    return "weekly";
+  }
+  return null;
 }
 
 export function withUsageSource(result: LocalUsageResult, source: UsageSource): UsageResult {
@@ -201,16 +252,33 @@ function buildLocalUsageResult(windows: UsageWindows, warnings: string[]): Local
 }
 
 function statusForWindows(windows: UsageWindows): AvailabilityStatus {
-  const complete = isCompleteWindow(windows.fiveHour) && isCompleteWindow(windows.weekly);
-  if (complete) {
-    return "available";
+  const presentWindows = [windows.fiveHour, windows.weekly].filter(
+    (window): window is UsageWindow => hasWindowData(window)
+  );
+  if (presentWindows.length === 0) {
+    return "unavailable";
   }
 
-  if (hasWindowData(windows.fiveHour) || hasWindowData(windows.weekly)) {
-    return "partial";
+  return presentWindows.every(isCompleteWindow) ? "available" : "partial";
+}
+
+function selectRateLimitWindow(
+  candidates: RateLimitWindowCandidate[],
+  kind: UsageWindowKind
+): Record<string, unknown> | null {
+  const durationMatch = candidates.find(
+    (candidate) => classifyUsageWindowByDuration(candidate.value) === kind
+  );
+  if (durationMatch) {
+    return durationMatch.value;
   }
 
-  return "unavailable";
+  return (
+    candidates.find(
+      (candidate) =>
+        candidate.fallbackKind === kind && classifyUsageWindowByDuration(candidate.value) === null
+    )?.value ?? null
+  );
 }
 
 function mergeUsageWindows(primary: UsageWindows, fallback: UsageWindows): UsageWindows {
@@ -353,6 +421,17 @@ function toPercent(value: unknown): number | null {
 
 function clampPercent(value: number): number {
   return Math.round(Math.min(Math.max(value, 0), 100) * 10) / 10;
+}
+
+function toFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }
 
 function readStringValue(value: unknown): string | null {

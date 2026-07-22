@@ -54,7 +54,7 @@ The default home directory is resolved from `HOME`, then `USERPROFILE`, then the
 
 For normal use, Codex must have been installed, run, and authenticated at least once. The CLI can use:
 
-- live 5-hour and weekly usage from the ChatGPT Codex usage endpoint;
+- live weekly usage and, when supplied, 5-hour usage from the ChatGPT Codex usage endpoint;
 - bounded local `sessions/**/rollout-*.jsonl` data as a usage fallback;
 - recognized bounded JSON state files as an additional local fallback;
 - `auth.json` in the detected Codex home for live request credentials;
@@ -64,7 +64,7 @@ Both credential environment variables are required together. Supplying only one 
 
 Local Codex data is inspected read-only. File traversal, file counts, file sizes, JSONL line sizes, search depth, and response sizes are bounded. Nested symbolic links are skipped. Raw local files, tokens, account IDs, authorization headers, and private paths are excluded from public output.
 
-Local state layouts can vary between Codex versions. The parser recognizes common primary/five-hour and secondary/weekly window names and can return partial data when only some fields are understood.
+Local state layouts can vary between Codex versions. The parser recognizes common primary/five-hour and secondary/weekly window names and can return partial data when only some fields are understood. For live responses, declared window durations such as `limit_window_seconds` take precedence over legacy primary/secondary slot names, because the usage service can now return weekly usage in `primary_window` without a 5-hour window.
 
 ## Network compatibility
 
@@ -75,7 +75,7 @@ Live data uses these defaults:
 | Usage windows        | `https://chatgpt.com/backend-api/codex/usage`                   | Falls back to recognized local data |
 | Reset-credit coupons | `https://chatgpt.com/backend-api/wham/rate-limit-reset-credits` | Reported as unavailable             |
 
-These endpoints are implementation details rather than a public API contract and may change when Codex changes its service behavior.
+These endpoints are implementation details rather than a public API contract and may change when Codex changes its service behavior. A response containing only a recognized weekly window is treated as valid live usage; local discovery is used only when the live response contains no recognized usage window.
 
 Requests are authenticated from Codex credentials, reject redirects, time out after 10 seconds by default, and limit JSON responses to 1 MB. The transport uses the runtime's `fetch` implementation and can fall back to native Node HTTP/HTTPS transport for supported failures.
 

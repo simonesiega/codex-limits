@@ -16,6 +16,7 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
+- Fixed weekly-only live usage responses to use their declared window duration, avoid stale local fallback, and omit unavailable 5-hour sections from terminal dashboards and the OpenCode integration.
 - Fixed clean production builds and kept terminal rendering compatible with Node.js 20.
 
 ### Removed

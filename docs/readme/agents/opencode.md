@@ -66,8 +66,8 @@ Restart OpenCode after installation, then run:
 
 OpenCode opens a modal dialog, loads the shared core directly, and displays:
 
-- remaining capacity and status for the 5-hour window;
 - remaining capacity and status for the weekly window;
+- the 5-hour window when it is supplied by the usage service;
 - reset durations;
 - available reset credits and the next expiration;
 - safe warnings when some data is unavailable.

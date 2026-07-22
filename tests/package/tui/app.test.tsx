@@ -4,6 +4,7 @@ import type {CodexLimitsResult} from "@/package/core/types";
 import {App} from "@/package/tui/app";
 import {buildProgressBar} from "@/package/tui/components/primitives/progress-bar";
 import {createTuiLayout} from "@/package/tui/layout";
+import {createTuiViewModel} from "@/package/tui/view-model";
 import {createFakeLimitsResult} from "@tests/package/fixtures/fake-results";
 
 const NOW = new Date("2026-07-05T10:00:30.000Z");
@@ -46,6 +47,20 @@ test("App renders available data without footer actions", () => {
   expect(frame).not.toContain("40s");
 });
 
+test("App renders one merged weekly card when the API omits the 5-hour window", () => {
+  const result = createFakeLimitsResult();
+  result.windows.fiveHour = null;
+  const boxedFrame = renderFrame(result, 132, 40);
+  const summaryFrame = renderFrame(result, 50, 14);
+
+  expect(createTuiViewModel(result, 120, NOW).usageCards).toHaveLength(1);
+  expect(boxedFrame).toContain("Weekly usage limit");
+  expect(boxedFrame).toContain("11% remaining");
+  expect(boxedFrame).not.toContain("5-hour usage limit");
+  expect(summaryFrame).toContain("Weekly: 11% remaining");
+  expect(summaryFrame).not.toContain("5-hour:");
+});
+
 test("App renders missing data fallbacks without secrets", () => {
   const frame = renderFrame(
     {
@@ -58,7 +73,8 @@ test("App renders missing data fallbacks without secrets", () => {
     40
   );
 
-  expect(frame).toContain("Unknown remaining");
+  expect(frame).toContain("Usage data unavailable.");
+  expect(frame).not.toContain("5-hour usage limit");
   expect(frame).toContain("Summary");
   expect(frame).toContain("Coupons");
   expect(frame).toContain("Coupon data unavailable.");

@@ -1,5 +1,9 @@
 import type {UsageResult} from "@/package/core/types";
-import {buildUsageResult, parseUsageWindowsFromRateLimits} from "@/package/core/usage/normalizer";
+import {
+  buildUsageResult,
+  classifyUsageWindowByDuration,
+  parseUsageWindowsFromRateLimits,
+} from "@/package/core/usage/normalizer";
 import {isRecord} from "@/package/core/utils/unknown";
 
 const MAX_PAYLOAD_DEPTH = 5;
@@ -57,9 +61,9 @@ function buildRateLimitsFromWindowArray(root: unknown): Record<string, unknown> 
       return null;
     }
 
-    const primary = value.find((item) => isUsageWindowRecord(item, "primary"));
-    const secondary = value.find((item) => isUsageWindowRecord(item, "secondary"));
-    return primary || secondary ? {primary, secondary} : null;
+    const fiveHour = value.find((item) => isUsageWindowRecord(item, "fiveHour"));
+    const weekly = value.find((item) => isUsageWindowRecord(item, "weekly"));
+    return fiveHour || weekly ? {fiveHour, weekly} : null;
   });
 }
 
@@ -107,32 +111,21 @@ function searchPayload(
 
 function isUsageWindowRecord(
   value: unknown,
-  kind: "primary" | "secondary"
+  kind: "fiveHour" | "weekly"
 ): value is Record<string, unknown> {
   if (!isRecord(value)) {
     return false;
   }
 
+  const durationKind = classifyUsageWindowByDuration(value);
+  if (durationKind) {
+    return durationKind === kind;
+  }
+
   const label = String(
     value.type ?? value.kind ?? value.name ?? value.label ?? value.window ?? ""
   ).toLowerCase();
-  if (
-    kind === "primary" &&
-    (label.includes("primary") || label.includes("5-hour") || label.includes("five"))
-  ) {
-    return true;
-  }
-  if (
-    kind === "secondary" &&
-    (label.includes("secondary") || label.includes("weekly") || label.includes("week"))
-  ) {
-    return true;
-  }
-
-  const minutes =
-    value.window_minutes ??
-    value.windowMinutes ??
-    value.window_length_minutes ??
-    value.windowLengthMinutes;
-  return kind === "primary" ? minutes === 300 : minutes === 10_080;
+  return kind === "fiveHour"
+    ? label.includes("primary") || label.includes("5-hour") || label.includes("five")
+    : label.includes("secondary") || label.includes("weekly") || label.includes("week");
 }

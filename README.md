@@ -27,7 +27,7 @@
   <img src="docs/photos/terminal/final_result_small.png" alt="Final codex-limits smaller terminal dashboard" width="400" />
 </p>
 
-The screenshots show the **`codex-limits`** terminal dashboards: clean, read-only TUIs that summarize Codex usage limits and reset-credit coupons in one place. The top section displays the current 5-hour and weekly usage windows with remaining percentages, visual progress bars, and reset times, while the lower section shows available reset coupons, their expiration dates, and the next coupon deadline.
+The screenshots show the **`codex-limits`** terminal dashboards: clean, read-only TUIs that summarize Codex usage limits and reset-credit coupons in one place. The top section displays the usage windows currently supplied by Codex—weekly usage and, when available, the 5-hour window—with remaining percentages, visual progress bars, and reset times, while the lower section shows available reset coupons, their expiration dates, and the next coupon deadline.
 
 ## Contents
 
@@ -98,7 +98,7 @@ The existing `codex-limits init --<agent-name>` syntax remains supported as a co
 
 When you are working with Codex or agent-based coding tools, usage limits can interrupt your flow if you do not know what is left or when the next reset happens.
 
-**`codex-limits`** gives you that information in one clean terminal view. It shows your current 5-hour and weekly usage windows, remaining percentages, progress bars, reset times, and reset-credit coupons when available, so you can quickly check your status and continue coding without leaving the terminal.
+**`codex-limits`** gives you that information in one clean terminal view. It shows the usage windows currently supplied by Codex, including weekly usage and the 5-hour window when available, together with remaining percentages, progress bars, reset times, and reset-credit coupons, so you can quickly check your status and continue coding without leaving the terminal.
 
 It also includes plain-text commands for quick checks, JSON output for scripts and automation, optional agent integrations through `codex-limits agents`, and safe output that never prints tokens, account IDs, auth headers, cookies, or raw local files.
 
@@ -120,7 +120,7 @@ Agent integrations are not enabled automatically during package installation. Th
 
 #### OpenCode
 
-The OpenCode integration adds a `/codex-limits` command that opens a compact modal inside the agent interface. It gives a quick read-only summary of the current 5-hour limit, weekly limit, and reset-credit coupons, then lets you close the view and return immediately to the conversation.
+The OpenCode integration adds a `/codex-limits` command that opens a compact modal inside the agent interface. It gives a quick read-only summary of the available usage windows and reset-credit coupons, then lets you close the view and return immediately to the conversation.
 
 <p align="center">
   <img src="docs/photos/agents/opencode/opencode_result.png" alt="OpenCode codex-limits integration screenshot" width="740" />

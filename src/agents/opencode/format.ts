@@ -4,29 +4,34 @@ const BAR_WIDTH = 22;
 
 /** Formats normalized Codex limits for OpenCode's alert dialog. */
 export function formatOpencodeLimits(result: CodexLimitsResult): string {
-  const warnings =
-    result.warnings.length > 0
-      ? ["", "Warnings", ...result.warnings.map((warning) => `- ${warning}`)]
-      : [];
+  const sections: string[][] = [];
 
-  return [
-    ...formatWindow("5-hour", result.windows.fiveHour),
-    "",
-    ...formatWindow("Weekly", result.windows.weekly),
-    "",
-    ...formatCredits(result),
-    ...warnings,
-  ].join("\n");
+  if (result.windows.fiveHour) {
+    sections.push(formatWindow("5-hour", result.windows.fiveHour));
+  }
+  if (result.windows.weekly) {
+    sections.push(formatWindow("Weekly", result.windows.weekly));
+  }
+  if (sections.length === 0) {
+    sections.push(["Usage limits  Unavailable"]);
+  }
+
+  sections.push(formatCredits(result));
+  if (result.warnings.length > 0) {
+    sections.push(["Warnings", ...result.warnings.map((warning) => `- ${warning}`)]);
+  }
+
+  return sections.map((section) => section.join("\n")).join("\n\n");
 }
 
-function formatWindow(title: string, window: UsageWindow | null): string[] {
-  const percent = window?.remainingPercent ?? null;
+function formatWindow(title: string, window: UsageWindow): string[] {
+  const percent = window.remainingPercent;
 
   return [
     `${title}  ${statusLabel(percent)}`,
     `Remaining  ${percent === null ? "Unknown" : `${Math.round(percent)}% remaining`}`,
     progressBar(percent),
-    `Reset      ${window?.resetsIn ? `in ${window.resetsIn}` : "unknown"}`,
+    `Reset      ${window.resetsIn ? `in ${window.resetsIn}` : "unknown"}`,
   ];
 }
 

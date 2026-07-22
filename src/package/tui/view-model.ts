@@ -35,6 +35,7 @@ export interface TuiViewModel {
   stacked: boolean;
   couponsStacked: boolean;
   usageCards: TuiUsageCard[];
+  usageEmptyLabel: string;
   couponSummary: TuiCouponSummaryCard;
   couponRows: TuiCouponRow[];
   couponEmptyLabel: string;
@@ -46,14 +47,17 @@ export function createTuiViewModel(
   width: number,
   now: Date = new Date()
 ): TuiViewModel {
+  const usageCards = [
+    result.windows.fiveHour ? createUsageCard(result.windows.fiveHour, now) : null,
+    result.windows.weekly ? createUsageCard(result.windows.weekly, now) : null,
+  ].filter((card): card is TuiUsageCard => card !== null);
+
   return {
     width,
     stacked: width < 86,
     couponsStacked: width < 94,
-    usageCards: [
-      createUsageCard(result.windows.fiveHour, "5-hour usage limit", now),
-      createUsageCard(result.windows.weekly, "Weekly usage limit", now),
-    ],
+    usageCards,
+    usageEmptyLabel: "Usage data unavailable.",
     couponSummary: createCouponSummary(result.coupons),
     couponRows: createCouponRows(result.coupons),
     couponEmptyLabel:
@@ -63,15 +67,11 @@ export function createTuiViewModel(
   };
 }
 
-function createUsageCard(
-  window: UsageWindow | null,
-  fallbackTitle: string,
-  now: Date
-): TuiUsageCard {
-  const percent = window?.remainingPercent ?? null;
+function createUsageCard(window: UsageWindow, now: Date): TuiUsageCard {
+  const percent = window.remainingPercent;
 
   return {
-    title: window?.label ?? fallbackTitle,
+    title: window.label,
     percent,
     remainingLabel: percent === null ? "Unknown remaining" : `${Math.round(percent)}% remaining`,
     resetLabel: formatResetLabel(window, now),
@@ -148,11 +148,7 @@ function formatTuiDuration(value: string | null): string {
   return parts.length > 0 ? parts.join(" ") : "0m";
 }
 
-function formatResetLabel(window: UsageWindow | null, now: Date): string {
-  if (!window) {
-    return "Reset time unknown";
-  }
-
+function formatResetLabel(window: UsageWindow, now: Date): string {
   const resetDate = parseDateValue(window.resetsAt);
   if (resetDate) {
     return isSameLocalDate(resetDate, now)

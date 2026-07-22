@@ -3,11 +3,15 @@ import type {CodexLimitsResult, UsageWindow} from "@/package/core/types";
 
 /** Formats normalized usage limits as stable plain text. */
 export function formatStatus(result: CodexLimitsResult): string {
+  const windows = [result.windows.fiveHour, result.windows.weekly].filter(
+    (window): window is UsageWindow => window !== null
+  );
+  const usageLines =
+    windows.length > 0 ? windows.flatMap(formatUsageWindow) : ["Usage limits: Unavailable"];
   const lines = [
     "Usage Limits",
     "",
-    ...formatUsageWindow(result.windows.fiveHour),
-    ...formatUsageWindow(result.windows.weekly),
+    ...usageLines,
     "",
     `Reset coupons: ${formatUnknown(result.coupons?.available ?? null)} available`,
   ];
@@ -19,10 +23,8 @@ export function formatStatus(result: CodexLimitsResult): string {
   return `${lines.join("\n")}\n`;
 }
 
-function formatUsageWindow(window: UsageWindow | null): string[] {
-  return window
-    ? [
-        `${window.label}: ${formatPercent(window.remainingPercent)} remaining, resets in ${formatUnknown(window.resetsIn)}`,
-      ]
-    : ["Usage limit: Unknown"];
+function formatUsageWindow(window: UsageWindow): string[] {
+  return [
+    `${window.label}: ${formatPercent(window.remainingPercent)} remaining, resets in ${formatUnknown(window.resetsIn)}`,
+  ];
 }
