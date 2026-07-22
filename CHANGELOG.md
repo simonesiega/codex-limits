@@ -8,6 +8,20 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [0.1.5] - 2026-07-22
+
+### Breaking Changes
+
+### Added
+
 - Added bundled third-party license notices to published package artifacts.
 - Added the `codex-limits agents` command group with named, interactive, and all-agent integration installation while keeping the existing `init` syntax supported.
 

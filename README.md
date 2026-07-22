@@ -54,8 +54,8 @@ The screenshots show the **`codex-limits`** terminal dashboards: clean, read-onl
 - [License](#license)
 - [Contributors](#contributors)
 
-> Last verified against: `@simonesiega/codex-limits` v0.1.4
-> Verification date: 2026-07-14
+> Last verified against: `@simonesiega/codex-limits` v0.1.5
+> Verification date: 2026-07-22
 
 ## Quick start
 
