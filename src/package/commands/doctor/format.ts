@@ -2,30 +2,32 @@ import type {AgentIntegration, AgentIntegrationStatus} from "@/agents";
 import type {DoctorDto} from "@/package/commands/public-dto";
 import type {LiveEndpointStatus} from "@/package/core/types";
 
-const LABEL_WIDTH = 23;
-
 /** Formats safe doctor checks as aligned plain text. */
 export function formatDoctor(
   result: DoctorDto,
   integrations: readonly Pick<AgentIntegration, "id" | "displayName">[]
 ): string {
-  const integrationLines = integrations.map((integration) =>
-    formatLine(
-      `${integration.displayName} integration:`,
-      formatIntegration(result.agentIntegrations[integration.id] ?? "unknown")
-    )
-  );
+  const diagnostics: Array<readonly [label: string, value: string]> = [
+    ["Package version:", result.packageVersion],
+    ["Node.js version:", result.nodeVersion],
+    ["Operating system:", result.operatingSystem],
+    ["Codex home detected:", formatBoolean(result.codexHomeDetected)],
+    ["Authentication found:", formatBoolean(result.authenticationFound)],
+    ["Local usage found:", formatBoolean(result.localUsageFound)],
+    ["Live endpoint:", formatLiveEndpoint(result.liveEndpoint)],
+    ...integrations.map(
+      (integration) =>
+        [
+          `${integration.displayName} integration:`,
+          formatIntegration(result.agentIntegrations[integration.id] ?? "unknown"),
+        ] as const
+    ),
+  ];
+  const labelWidth = Math.max(...diagnostics.map(([label]) => label.length)) + 1;
   const lines = [
     "Codex Limits diagnostics",
     "",
-    formatLine("Package version:", result.packageVersion),
-    formatLine("Node.js version:", result.nodeVersion),
-    formatLine("Operating system:", result.operatingSystem),
-    formatLine("Codex home detected:", formatBoolean(result.codexHomeDetected)),
-    formatLine("Authentication found:", formatBoolean(result.authenticationFound)),
-    formatLine("Local usage found:", formatBoolean(result.localUsageFound)),
-    formatLine("Live endpoint:", formatLiveEndpoint(result.liveEndpoint)),
-    ...integrationLines,
+    ...diagnostics.map(([label, value]) => formatLine(label, value, labelWidth)),
     "",
     "No sensitive values were displayed.",
   ];
@@ -33,9 +35,8 @@ export function formatDoctor(
   return `${lines.join("\n")}\n`;
 }
 
-function formatLine(label: string, value: string): string {
-  const separator = label.length >= LABEL_WIDTH ? " " : "";
-  return `${label.padEnd(LABEL_WIDTH)}${separator}${value}`;
+function formatLine(label: string, value: string, labelWidth: number): string {
+  return `${label.padEnd(labelWidth)}${value}`;
 }
 
 function formatBoolean(value: boolean): string {

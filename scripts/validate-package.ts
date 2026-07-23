@@ -1,5 +1,5 @@
 import {spawn} from "node:child_process";
-import {mkdtemp, mkdir, readFile, rm, stat} from "node:fs/promises";
+import {copyFile, mkdtemp, mkdir, readFile, rm, stat, writeFile} from "node:fs/promises";
 import {builtinModules} from "node:module";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -34,7 +34,10 @@ const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"
 
 assert(packageJson.name === "@simonesiega/codex-limits", "Unexpected npm package name.");
 assert(packageJson.bin?.["codex-limits"] === "dist/cli.js", "Unexpected binary target.");
-assert(packageJson.exports?.["."]?.import === "./dist/index.js", "Unexpected root import target.");
+assert(
+  packageJson.exports?.["."]?.import === "./dist/opencode.js",
+  "Unexpected root import target."
+);
 assert(packageJson.exports?.["."]?.types === "./types/index.d.ts", "Unexpected type target.");
 assert(
   Object.keys(packageJson.dependencies ?? {}).length === 0,
@@ -52,7 +55,7 @@ if (process.platform !== "win32") {
   assert(((await stat(cliPath)).mode & 0o111) !== 0, "CLI bundle is not executable.");
 }
 
-for (const file of ["dist/cli.js", "dist/index.js", "dist/pi.js"]) {
+for (const file of ["dist/cli.js", "dist/opencode.js", "dist/pi.js", "dist/copilot.mjs"]) {
   const content = await readFile(join(root, file), "utf8");
   assert(!content.includes("src/package/"), `${file} contains a source-only path.`);
   assert(!/\bfrom\s*["'][^"']+\.(?:ts|tsx)["']/.test(content), `${file} imports TypeScript.`);
@@ -65,14 +68,29 @@ for (const file of ["dist/cli.js", "dist/index.js", "dist/pi.js"]) {
     if (!specifier || specifier.startsWith(".") || specifier.startsWith("node:")) {
       continue;
     }
-    const allowedPeers =
-      file === "dist/pi.js" ? Object.keys(packageJson.peerDependencies ?? {}) : [];
+    const allowedHostImports =
+      file === "dist/pi.js"
+        ? Object.keys(packageJson.peerDependencies ?? {})
+        : file === "dist/copilot.mjs"
+          ? ["@github/copilot-sdk/extension"]
+          : [];
     assert(
-      builtinModules.includes(specifier) || allowedPeers.includes(specifier),
+      builtinModules.includes(specifier) || allowedHostImports.includes(specifier),
       `${file} has undeclared runtime import ${specifier}.`
     );
   }
 }
+
+const copilotExtension = await readFile(join(root, "dist", "copilot.mjs"), "utf8");
+assert(
+  copilotExtension.includes("@github/copilot-sdk/extension"),
+  "Copilot extension does not import the CLI-provided SDK."
+);
+assert(
+  copilotExtension.includes("codex-limits-copilot-extension-v1"),
+  "Copilot extension is missing its installer marker."
+);
+await smokeCopilotExtensionBundle();
 
 if (await hasLocalPiHostDependencies()) {
   await smokePiExtensionBundle();
@@ -101,6 +119,7 @@ try {
   assert(packed, "npm pack returned no artifact.");
 
   const paths = new Set(packed.files.map((file) => file.path));
+  assert(!paths.has("dist/index.js"), "Packed artifact contains the legacy OpenCode bundle.");
   const packedCli = packed.files.find((file) => file.path === "dist/cli.js");
   if (process.platform !== "win32") {
     assert(Boolean(packedCli && (packedCli.mode & 0o111) !== 0), "Packed CLI is not executable.");
@@ -108,12 +127,14 @@ try {
 
   for (const required of [
     "dist/cli.js",
-    "dist/index.js",
+    "dist/opencode.js",
     "dist/pi.js",
+    "dist/copilot.mjs",
     "dist/THIRD_PARTY_NOTICES.txt",
     "types/index.d.ts",
     "scripts/postinstall.cjs",
     ".env.example",
+    "docs/photos/agents/copilot/copilot_result.png",
     "docs/photos/agents/opencode/opencode_result.png",
     "docs/photos/agents/pi/pi_result.png",
     "docs/photos/logo/logo.png",
@@ -147,7 +168,7 @@ try {
   const packedRoot = join(extractDirectory, "package");
   await smokeCli(packedRoot, packageJson.version);
 
-  const rootModuleUrl = pathToFileURL(join(packedRoot, "dist", "index.js")).href;
+  const rootModuleUrl = pathToFileURL(join(packedRoot, "dist", "opencode.js")).href;
   const rootModule = (await import(rootModuleUrl)) as {
     default?: {id?: string; tui?: unknown};
     tui?: unknown;
@@ -182,6 +203,95 @@ try {
   assert(nodeImport.stderr === "", "Packed root import unexpectedly wrote to stderr.");
 } finally {
   await rm(temporaryRoot, {recursive: true, force: true});
+}
+
+async function smokeCopilotExtensionBundle(): Promise<void> {
+  const temporaryRoot = await mkdtemp(join(tmpdir(), "codex-limits-copilot-smoke-"));
+  try {
+    const extensionDirectory = join(temporaryRoot, "extension");
+    const sdkDirectory = join(temporaryRoot, "node_modules", "@github", "copilot-sdk");
+    const resultPath = join(temporaryRoot, "result.json");
+    await Promise.all([
+      mkdir(extensionDirectory, {recursive: true}),
+      mkdir(sdkDirectory, {recursive: true}),
+    ]);
+    await Promise.all([
+      copyFile(join(root, "dist", "copilot.mjs"), join(extensionDirectory, "extension.mjs")),
+      writeFile(
+        join(sdkDirectory, "package.json"),
+        JSON.stringify({
+          name: "@github/copilot-sdk",
+          type: "module",
+          exports: {"./extension": "./extension.js"},
+        }),
+        "utf8"
+      ),
+      writeFile(
+        join(sdkDirectory, "extension.js"),
+        [
+          'import {writeFile} from "node:fs/promises";',
+          "export async function joinSession(config) {",
+          '  const command = config.commands?.find((item) => item.name === "codex-limits");',
+          '  if (!command) throw new Error("Expected command was not registered.");',
+          "  const messages = [];",
+          "  const hold = setInterval(() => undefined, 100);",
+          "  const timeout = setTimeout(() => { clearInterval(hold); process.exitCode = 1; }, 5000);",
+          "  setTimeout(async () => {",
+          "    try {",
+          "      await command.handler();",
+          "      await writeFile(process.env.COPILOT_SMOKE_RESULT, JSON.stringify({messages}));",
+          "    } finally {",
+          "      clearTimeout(timeout);",
+          "      clearInterval(hold);",
+          "    }",
+          "  }, 0);",
+          "  return {",
+          "    log: async (message, options) => messages.push({message, options}),",
+          "  };",
+          "}",
+          "",
+        ].join("\n"),
+        "utf8"
+      ),
+    ]);
+
+    const env = {...process.env};
+    for (const key of Object.keys(env)) {
+      if (key.startsWith("CODEX_LIMITS_") || key === "CODEX_HOME") {
+        delete env[key];
+      }
+    }
+    Object.assign(env, {
+      HOME: join(temporaryRoot, "missing-home"),
+      USERPROFILE: join(temporaryRoot, "missing-home"),
+      APPDATA: join(temporaryRoot, "missing-app-data"),
+      LOCALAPPDATA: join(temporaryRoot, "missing-local-app-data"),
+      COPILOT_SMOKE_RESULT: resultPath,
+    });
+
+    const result = await runResult(
+      "node",
+      [join(extensionDirectory, "extension.mjs")],
+      temporaryRoot,
+      env
+    );
+    assert(result.exitCode === 0, "Copilot extension bundle did not start successfully.");
+    assert(result.stdout === "", "Copilot extension wrote to reserved standard output.");
+    assert(result.stderr === "", "Copilot extension unexpectedly wrote to standard error.");
+
+    const smokeResult = JSON.parse(await readFile(resultPath, "utf8")) as {
+      messages?: Array<{message?: unknown; options?: unknown}>;
+    };
+    assert(smokeResult.messages?.length === 1, "Copilot extension logged unexpected output.");
+    const [message] = smokeResult.messages;
+    assert(
+      typeof message?.message === "string" && message.message.includes("Usage limits  Unavailable"),
+      "Copilot extension did not render the shared limits view."
+    );
+    assert(message.options === undefined, "Copilot extension used an unexpected log mode.");
+  } finally {
+    await rm(temporaryRoot, {recursive: true, force: true});
+  }
 }
 
 async function hasLocalPiHostDependencies(): Promise<boolean> {
@@ -248,6 +358,7 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
     LOCALAPPDATA: join(home, "AppData", "Local"),
     CODEX_LIMITS_HOME: join(home, "missing-codex-home"),
     PI_CODING_AGENT_DIR: join(home, ".pi", "agent"),
+    COPILOT_HOME: join(home, ".copilot"),
   });
 
   const commands: Array<{args: string[]; json?: boolean; includes?: string}> = [
@@ -260,10 +371,16 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
     {args: ["agents", "--help"], includes: "Manage optional coding-agent integrations"},
     {args: ["agents", "install", "--help"], includes: "Install optional agent integrations"},
     {args: ["agents", "install", "pi"], includes: "pi: installed"},
+    {args: ["agents", "install", "copilot"], includes: "copilot: installed"},
     {
       args: ["doctor", "--json"],
       json: true,
       includes: '"pi": "installed"',
+    },
+    {
+      args: ["doctor", "--json"],
+      json: true,
+      includes: '"copilot": "installed"',
     },
     {args: ["init", "--help"], includes: "compatibility command"},
     {args: ["--json"], json: true},
@@ -296,6 +413,16 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
   assert(
     piSettings.packages?.includes(packedRoot) === true,
     "Packed CLI registered an unexpected pi package path."
+  );
+
+  const installedCopilotExtension = await readFile(
+    join(home, ".copilot", "extensions", "codex-limits", "extension.mjs"),
+    "utf8"
+  );
+  const packedCopilotExtension = await readFile(join(packedRoot, "dist", "copilot.mjs"), "utf8");
+  assert(
+    installedCopilotExtension === packedCopilotExtension,
+    "Packed CLI installed an unexpected Copilot extension."
   );
 }
 

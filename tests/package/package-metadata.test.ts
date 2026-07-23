@@ -33,12 +33,13 @@ test("package metadata preserves the npm, binary, and root plugin contracts", as
   expect(packageJson.version).toBe(PACKAGE_VERSION);
   expect(packageJson.bin).toEqual({"codex-limits": "dist/cli.js"});
   expect(packageJson.exports).toEqual({
-    ".": {types: "./types/index.d.ts", import: "./dist/index.js"},
+    ".": {types: "./types/index.d.ts", import: "./dist/opencode.js"},
   });
   expect(packageJson.types).toBe("./types/index.d.ts");
   expect(packageJson.engines.node).toBe(">=20");
   expect(packageJson.pi).toEqual({extensions: ["./dist/pi.js"]});
   expect(packageJson.keywords).toContain("pi-package");
+  expect(packageJson.keywords).toContain("github-copilot-cli");
 });
 
 test("generated declarations expose exactly the default plugin and named tui contract", async () => {
@@ -75,6 +76,7 @@ test("agent host dependencies preserve the published runtime contracts", async (
   expect(packageJson.devDependencies["react-devtools-core"]).toBe("^7.0.1");
   expect(packageJson.devDependencies["@earendil-works/pi-coding-agent"]).toBe("^0.81.1");
   expect(packageJson.devDependencies["@earendil-works/pi-tui"]).toBe("^0.81.1");
+  expect(packageJson.devDependencies["@github/copilot-sdk"]).toBe("^1.0.8");
 });
 
 test("validation and prepack scripts do not recurse", async () => {

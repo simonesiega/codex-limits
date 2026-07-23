@@ -126,6 +126,7 @@ test("runCli prints safe doctor text and JSON diagnostics", async () => {
     integrations: [
       createDiagnosticIntegration("opencode", "OpenCode", async () => "installed"),
       createDiagnosticIntegration("pi", "pi", async () => "installed"),
+      createDiagnosticIntegration("copilot", "GitHub Copilot CLI", async () => "installed"),
     ],
   };
 
@@ -148,15 +149,16 @@ test("runCli prints safe doctor text and JSON diagnostics", async () => {
     [
       "Codex Limits diagnostics",
       "",
-      "Package version:       0.1.3",
-      "Node.js version:       22.0.0",
-      "Operating system:      Windows",
-      "Codex home detected:   Yes",
-      "Authentication found:  Yes",
-      "Local usage found:     Yes",
-      "Live endpoint:         Reachable",
-      "OpenCode integration:  Installed",
-      "pi integration:        Installed",
+      "Package version:                0.1.3",
+      "Node.js version:                22.0.0",
+      "Operating system:               Windows",
+      "Codex home detected:            Yes",
+      "Authentication found:           Yes",
+      "Local usage found:              Yes",
+      "Live endpoint:                  Reachable",
+      "OpenCode integration:           Installed",
+      "pi integration:                 Installed",
+      "GitHub Copilot CLI integration: Installed",
       "",
       "No sensitive values were displayed.",
       "",
@@ -173,6 +175,7 @@ test("runCli prints safe doctor text and JSON diagnostics", async () => {
     agentIntegrations: {
       opencode: "installed",
       pi: "installed",
+      copilot: "installed",
     },
   });
 });
@@ -302,6 +305,7 @@ test("runCli generates nested and compatibility command help", async () => {
   expect(installOutput.join("")).toContain("[<agent...>]");
   expect(initOutput.join("")).toContain("codex-limits init --opencode");
   expect(initOutput.join("")).toContain("codex-limits init --pi");
+  expect(initOutput.join("")).toContain("codex-limits init --copilot");
 });
 
 test("runCli returns non-zero with relevant help for invalid input", async () => {

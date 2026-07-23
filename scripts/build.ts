@@ -14,10 +14,10 @@ await Promise.all(
 );
 await mkdir(distDirectory, {recursive: true});
 
-const bundle = await Bun.build({
-  entrypoints: [join(root, "src", "package", "cli.ts"), join(root, "src", "package", "index.ts")],
+const cliBundle = await Bun.build({
+  entrypoints: [join(root, "src", "package", "cli.ts")],
   outdir: distDirectory,
-  naming: {entry: "[name].js"},
+  naming: {entry: "cli.js"},
   target: "node",
   format: "esm",
   minify: true,
@@ -25,11 +25,29 @@ const bundle = await Bun.build({
   sourcemap: "none",
   metafile: true,
 });
-if (!bundle.success) {
-  for (const log of bundle.logs) {
+if (!cliBundle.success) {
+  for (const log of cliBundle.logs) {
     console.error(log);
   }
-  throw new Error("Production bundle failed.");
+  throw new Error("CLI bundle failed.");
+}
+
+const opencodeBundle = await Bun.build({
+  entrypoints: [join(root, "src", "package", "index.ts")],
+  outdir: distDirectory,
+  naming: {entry: "opencode.js"},
+  target: "node",
+  format: "esm",
+  minify: true,
+  define: {"process.env.NODE_ENV": JSON.stringify("production")},
+  sourcemap: "none",
+  metafile: true,
+});
+if (!opencodeBundle.success) {
+  for (const log of opencodeBundle.logs) {
+    console.error(log);
+  }
+  throw new Error("OpenCode extension bundle failed.");
 }
 
 const piBundle = await Bun.build({
@@ -51,9 +69,33 @@ if (!piBundle.success) {
   throw new Error("Pi extension bundle failed.");
 }
 
+const copilotBundle = await Bun.build({
+  entrypoints: [join(root, "src", "agents", "copilot", "plugin.ts")],
+  outdir: distDirectory,
+  naming: {entry: "copilot.mjs"},
+  target: "node",
+  format: "esm",
+  minify: true,
+  external: ["@github/copilot-sdk/extension"],
+  define: {
+    "process.env.NODE_ENV": JSON.stringify("production"),
+    __CODEX_LIMITS_COPILOT_EXTENSION__: "true",
+  },
+  sourcemap: "none",
+  metafile: true,
+});
+if (!copilotBundle.success) {
+  for (const log of copilotBundle.logs) {
+    console.error(log);
+  }
+  throw new Error("GitHub Copilot CLI extension bundle failed.");
+}
+
 await writeThirdPartyNotices([
-  ...Object.keys(bundle.metafile.inputs),
+  ...Object.keys(cliBundle.metafile.inputs),
+  ...Object.keys(opencodeBundle.metafile.inputs),
   ...Object.keys(piBundle.metafile.inputs),
+  ...Object.keys(copilotBundle.metafile.inputs),
 ]);
 
 try {

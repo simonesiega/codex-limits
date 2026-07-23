@@ -222,6 +222,7 @@ test("root and nested help are generated from registry metadata", () => {
   expect(rootHelp).toContain("Access token for live usage and reset coupons");
   expect(rootHelp).toContain("Account ID for live usage and reset coupons");
   expect(rootHelp).toContain("PI_CODING_AGENT_DIR");
+  expect(rootHelp).toContain("COPILOT_HOME");
   expect(agentsHelp).toContain("install  Install optional agent integrations");
   expect(installHelp).toContain("[<agent...>]");
 

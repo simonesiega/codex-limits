@@ -14,7 +14,7 @@
   "exports": {
     ".": {
       "types": "./types/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/opencode.js"
     }
   },
   "types": "./types/index.d.ts",
@@ -55,7 +55,8 @@
     "developer-tools",
     "rate-limits",
     "usage-tracker",
-    "pi-package"
+    "pi-package",
+    "github-copilot-cli"
   ],
   "author": "Simone Siega",
   "license": "MIT",
@@ -89,6 +90,7 @@
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^0.81.1",
     "@earendil-works/pi-tui": "^0.81.1",
+    "@github/copilot-sdk": "^1.0.8",
     "@opencode-ai/plugin": "^1.18.4",
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.17",

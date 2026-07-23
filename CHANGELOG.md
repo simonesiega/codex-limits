@@ -9,8 +9,12 @@ All notable changes to codex-limits are documented in this file.
 ### Added
 
 - Added `codex-limits reset` for consuming a numbered or soonest-expiring reset coupon after an interactive recap and explicit `y` confirmation.
+- Added the GitHub Copilot CLI integration with `codex-limits agents install copilot` and a read-only `/codex-limits` extension command that does not send limit data to the LLM.
 
 ### Changed
+
+- Changed the packaged OpenCode runtime entry point to the agent-specific `dist/opencode.js` bundle while preserving the package root plugin exports.
+- Changed `codex-limits doctor` text output to align every diagnostic value with the longest integration label.
 
 ### Fixed
 

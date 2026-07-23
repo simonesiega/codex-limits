@@ -9,6 +9,7 @@ test("registered agents expose the shared adapter contract and layout", async ()
   const ids = AGENT_INTEGRATIONS.map((integration) => integration.id);
   expect(ids).toContain("opencode");
   expect(ids).toContain("pi");
+  expect(ids).toContain("copilot");
   expect(new Set(ids).size).toBe(ids.length);
 
   for (const integration of AGENT_INTEGRATIONS) {

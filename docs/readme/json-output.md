@@ -173,7 +173,8 @@ Example:
   "liveEndpoint": "reachable",
   "agentIntegrations": {
     "opencode": "installed",
-    "pi": "installed"
+    "pi": "installed",
+    "copilot": "installed"
   }
 }
 ```

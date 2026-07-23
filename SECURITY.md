@@ -67,11 +67,11 @@ For live usage and coupon information, the project contacts the default ChatGPT 
 
 The reset command first refreshes the coupon list and matches either the requested display index or the available coupon with the earliest expiration. Redemption requires an exact internal service ID and the recognized `codex_rate_limits` reset type; `--soonest` refuses incomplete or inconsistent availability details rather than selecting a different coupon. It requires an interactive terminal, a displayed recap, and an explicit `y` or `yes` answer. The consume request includes the selected coupon's internal service ID and a fresh UUID idempotency key; transport fallback reuses the same request body. Coupon IDs and reset types remain internal and are not added to text or JSON coupon output. Known no-op service outcomes are reported without claiming that a coupon was used, and malformed or ambiguous responses are reported as unconfirmed.
 
-Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send private Codex data to the agent, and not expose sensitive values inside the agent UI. The pi extension runs only its local command handler and does not inject a user or custom message into the model context.
+Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send private Codex data to the agent, and not expose sensitive values inside the agent UI. The pi extension runs only its local command handler and does not inject a user or custom message into the model context. The GitHub Copilot CLI extension registers only a local session command, writes its safe result to the host timeline, and does not call the SDK's model-message methods.
 
-Agent installers use bounded JSON reads and owner-only atomic replacements. The pi installer registers the already installed local package root and does not download a package or execute dependency lifecycle scripts.
+Agent installers use bounded reads and owner-only atomic replacements. The pi installer registers the already installed local package root and does not download a package or execute dependency lifecycle scripts. The Copilot installer copies the bounded extension bundle already present in the package, refuses to overwrite an unrecognized entry point, and does not install the SDK or another package.
 
-The `codex-limits doctor` command exposes only package/runtime labels and bounded availability statuses. Its Codex, OpenCode, and pi checks never return credential values, private paths, endpoint URLs, configuration contents, or raw local files. The optional live reachability check uses the same authenticated, bounded, redirect-free usage transport as the dashboard.
+The `codex-limits doctor` command exposes only package/runtime labels and bounded availability statuses. Its Codex, OpenCode, pi, and GitHub Copilot CLI checks never return credential values, private paths, endpoint URLs, configuration contents, or raw local files. The optional live reachability check uses the same authenticated, bounded, redirect-free usage transport as the dashboard.
 
 ### Command safety boundaries
 
@@ -94,7 +94,7 @@ Relevant examples include:
 - a reset coupon consumed without a positive interactive answer;
 - duplicate coupon consumption after one confirmed action;
 - unexpected network behavior related to usage, coupon discovery, or coupon redemption;
-- unsafe handling of `CODEX_LIMITS_HOME`, `CODEX_LIMITS_ACCESS_TOKEN`, `CODEX_LIMITS_ACCOUNT_ID`, `CODEX_LIMITS_USAGE_ENDPOINT`, or `PI_CODING_AGENT_DIR`.
+- unsafe handling of `CODEX_LIMITS_HOME`, `CODEX_LIMITS_ACCESS_TOKEN`, `CODEX_LIMITS_ACCOUNT_ID`, `CODEX_LIMITS_USAGE_ENDPOINT`, `PI_CODING_AGENT_DIR`, or `COPILOT_HOME`.
 
 ## Safety expectations
 

@@ -1,3 +1,4 @@
+import {copilotIntegration} from "@/agents/copilot/integration";
 import {opencodeIntegration} from "@/agents/opencode/integration";
 import {piIntegration} from "@/agents/pi/integration";
 import type {AgentIntegration} from "@/agents/types";
@@ -11,4 +12,8 @@ export type {
 } from "@/agents/types";
 
 /** Optional integrations available through every agent-aware command. */
-export const AGENT_INTEGRATIONS: readonly AgentIntegration[] = [opencodeIntegration, piIntegration];
+export const AGENT_INTEGRATIONS: readonly AgentIntegration[] = [
+  opencodeIntegration,
+  piIntegration,
+  copilotIntegration,
+];

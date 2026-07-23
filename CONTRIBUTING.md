@@ -138,7 +138,7 @@ Command handlers should let the router replace unexpected exceptions with their 
 
 ## Adding a new agent
 
-New agents should use the same small adapter shape as [`src/agents/opencode`](src/agents/opencode) and [`src/agents/pi`](src/agents/pi): `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. Put reusable presentation and safe configuration behavior in `src/agents/shared`.
+New agents should use the same small adapter shape as [`src/agents/opencode`](src/agents/opencode), [`src/agents/pi`](src/agents/pi), and [`src/agents/copilot`](src/agents/copilot): `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. Put reusable presentation and safe configuration behavior in `src/agents/shared`.
 
 | Step | Action                                                                                                                          |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------- |

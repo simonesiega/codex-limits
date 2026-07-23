@@ -39,10 +39,11 @@ After a successful installation, restart the target agent terminal so it reloads
 
 Each agent name links to its dedicated installation, usage, compatibility, and troubleshooting guide.
 
-| Agent                          | Official page                       | Status    | Command         | Installer                              |
-| ------------------------------ | ----------------------------------- | --------- | --------------- | -------------------------------------- |
-| [OpenCode](agents/opencode.md) | [opencode.ai](https://opencode.ai/) | Supported | `/codex-limits` | `codex-limits agents install opencode` |
-| [pi](agents/pi.md)             | [pi.dev](https://pi.dev/)           | Supported | `/codex-limits` | `codex-limits agents install pi`       |
+| Agent                                   | Official page                                               | Status    | Command         | Installer                              |
+| --------------------------------------- | ----------------------------------------------------------- | --------- | --------------- | -------------------------------------- |
+| [OpenCode](agents/opencode.md)          | [opencode.ai](https://opencode.ai/)                         | Supported | `/codex-limits` | `codex-limits agents install opencode` |
+| [pi](agents/pi.md)                      | [pi.dev](https://pi.dev/)                                   | Supported | `/codex-limits` | `codex-limits agents install pi`       |
+| [GitHub Copilot CLI](agents/copilot.md) | [github/copilot-cli](https://github.com/github/copilot-cli) | Supported | `/codex-limits` | `codex-limits agents install copilot`  |
 
 ## Data and privacy
 

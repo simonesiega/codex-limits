@@ -14,7 +14,7 @@ This page describes the runtime, operating-system, Codex data, network, terminal
 
 Bun is used for dependency management, tests, development commands, and production builds. It is not required to run the published CLI. Runtime dependencies are bundled into `dist`, so the published package does not declare separate production dependencies.
 
-The root package module is intended for the OpenCode plugin loader. Its public module contract consists of a default plugin export and the named `tui` export; the internal core modules are not public package exports. Pi loads the separate `dist/pi.js` extension declared in the package's `pi.extensions` manifest.
+The root package module resolves to the agent-specific `dist/opencode.js` bundle for the OpenCode plugin loader. Its public module contract consists of a default plugin export and the named `tui` export; the internal core modules are not public package exports. Pi loads the separate `dist/pi.js` extension declared in the package's `pi.extensions` manifest. The GitHub Copilot CLI installer copies the separate `dist/copilot.mjs` bundle to a recognized user extension entry point.
 
 ## Tested environments
 
@@ -27,6 +27,7 @@ The following environments are covered by the repository's automated checks or c
 | Terminal rendering     | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix |
 | OpenCode agent adapter | Mocked current keymap and legacy command API shapes; no exact OpenCode host release is tested end-to-end           |
 | pi agent adapter       | Mocked command/UI APIs with real TUI components; package discovery validated in pi 0.81.1 print mode               |
+| Copilot CLI adapter    | Mocked SDK command/timeline APIs and packed installation; typed against `@github/copilot-sdk` 1.0.8                |
 
 The supported runtime and operating-system ranges are broader than this test matrix. In particular, macOS compatibility follows the cross-platform implementation but is not currently covered by the repository's automated workflow.
 
@@ -116,6 +117,16 @@ Install the pi integration with `codex-limits agents install pi` (or the compati
 The extension uses pi's command registration and custom overlay APIs. It is developed against `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 0.81.x, which require Node.js 22.19 or newer. These packages are optional peers and are supplied by the pi host rather than bundled into the extension. This does not change the standalone CLI's Node.js 20 requirement. Local validation confirmed that pi 0.81.1 discovers the installed package and handles `/codex-limits` without invoking the model in print mode; the interactive overlay is covered with host mocks and real TUI components rather than a terminal-level end-to-end test.
 
 The `/codex-limits` command loads the shared core locally, opens a themed read-only overlay, and never sends a prompt or limit data to the LLM. Outside pi's interactive TUI it skips loading and sends no message to the model. See the dedicated [pi integration guide](agents/pi.md) for installation, removal, and troubleshooting.
+
+## GitHub Copilot CLI compatibility
+
+Install the GitHub Copilot CLI integration with `codex-limits agents install copilot` (or the compatible `codex-limits init --copilot` form). The installer copies the bundled ESM extension to `~/.copilot/extensions/codex-limits/extension.mjs`, or beneath the directory selected by `COPILOT_HOME`.
+
+The integration uses Copilot CLI's experimental extension mechanism. Copilot starts the extension in a separate Node.js process, supplies `@github/copilot-sdk/extension` through its module resolver, and communicates over JSON-RPC on standard input and output. The bundle calls `joinSession()`, registers `/codex-limits` through session commands, and uses `session.log()` for the compact timeline output. It does not call `session.send()` or add the request or result to the model conversation.
+
+The adapter is type-checked against `@github/copilot-sdk` 1.0.8. Automated tests use host mocks for registration, timeline output, static safe failures, and installer behavior. Package validation confirms that `dist/copilot.mjs` retains only the CLI-provided SDK as an external host import and is copied to the expected user extension path. No exact Copilot CLI release is currently tested end-to-end, and the experimental API may change. The current npm installation of Copilot CLI requires Node.js 22 or newer; other official installation methods package the host separately.
+
+See the dedicated [GitHub Copilot CLI integration guide](agents/copilot.md) for installation, removal, host details, and troubleshooting.
 
 ## Support policy
 

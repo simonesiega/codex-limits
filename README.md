@@ -83,11 +83,12 @@ Install an optional agent integration by name:
 codex-limits agents install <agent-name>
 ```
 
-For example, install the OpenCode or pi integration:
+For example, install the OpenCode, pi, or GitHub Copilot CLI integration:
 
 ```bash
 codex-limits agents install opencode
 codex-limits agents install pi
+codex-limits agents install copilot
 ```
 
 The existing `codex-limits init --<agent-name>` syntax remains supported as a compatibility command.
@@ -101,7 +102,7 @@ The existing `codex-limits init --<agent-name>` syntax remains supported as a co
 | Operating systems   | Windows, macOS, and Linux are supported through their standard Codex data locations. Use `CODEX_LIMITS_HOME` or `CODEX_HOME` if your data is stored elsewhere.                                                    |
 | Internet connection | Local usage fallback can work offline. An internet connection is required for current live usage and reset-credit coupon information; unavailable network data is reported safely without breaking the dashboard. |
 
-The standalone CLI supports Node.js 20 and newer. The optional pi integration runs inside the pi host; pi 0.81.x requires Node.js 22.19 or newer.
+The standalone CLI supports Node.js 20 and newer. The optional pi integration runs inside the pi host; pi 0.81.x requires Node.js 22.19 or newer. The GitHub Copilot CLI integration uses Copilot's experimental extension host and its CLI-provided SDK.
 
 ## Overview
 
@@ -119,10 +120,11 @@ For installation details, adapter behavior, architecture, and contribution guida
 
 ### Supported agents
 
-| Agent    | Status    | Agent command   | Guide                                                    | Description                                                                                                     |
-| -------- | --------- | --------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| OpenCode | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/opencode.md) | Opens a fast, read-only Codex limits dashboard directly inside OpenCode without sending the request to the LLM. |
-| pi       | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/pi.md)       | Opens a themed, read-only Codex limits overlay directly inside pi without sending the request to the LLM.       |
+| Agent              | Status    | Agent command   | Guide                                                    | Description                                                                                                         |
+| ------------------ | --------- | --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| OpenCode           | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/opencode.md) | Opens a fast, read-only Codex limits dashboard directly inside OpenCode without sending the request to the LLM.     |
+| pi                 | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/pi.md)       | Opens a themed, read-only Codex limits overlay directly inside pi without sending the request to the LLM.           |
+| GitHub Copilot CLI | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/copilot.md)  | Logs a compact, read-only Codex limits summary through a local Copilot CLI extension without sending it to the LLM. |
 
 Agent integrations are not enabled automatically during package installation. They must be installed with `codex-limits agents install` (or the compatible `codex-limits init` syntax) and are only available in the agent terminal after a restart. See [Adding new agents](#adding-new-agents) if you want to add support for another agent.
 
@@ -142,6 +144,14 @@ The pi integration adds a `/codex-limits` command that opens a themed overlay in
 
 <p align="center">
   <img src="docs/photos/agents/pi/pi_result.png" alt="pi codex-limits integration screenshot" width="740" />
+</p>
+
+#### GitHub Copilot CLI
+
+The GitHub Copilot CLI integration adds a `/codex-limits` command that displays a compact, read-only limits summary in the session timeline. It loads the shared core locally without sending the request or limit data to the LLM.
+
+<p align="center">
+  <img src="docs/photos/agents/copilot/copilot_result.png" alt="GitHub Copilot CLI codex-limits integration screenshot" width="740" />
 </p>
 
 ### Adding new agents
@@ -180,6 +190,7 @@ Environment variables are only used as a fallback when automatic discovery is no
 | `CODEX_LIMITS_USAGE_ENDPOINT` | Overrides the live usage endpoint with HTTPS or loopback HTTP for advanced setups/tests. |
 | `CODEX_LIMITS_SKIP_INIT`      | Suppresses optional global-install setup guidance from the non-interactive postinstall.  |
 | `PI_CODING_AGENT_DIR`         | Overrides pi's global agent configuration directory for integration setup and checks.    |
+| `COPILOT_HOME`                | Overrides GitHub Copilot CLI's user configuration and extension directory.               |
 
 ### Data access and safety
 
@@ -227,20 +238,21 @@ codex-limits doctor
 ```text
 Codex Limits diagnostics
 
-Package version:       0.1.6
-Node.js version:       22.0.0
-Operating system:      Windows
-Codex home detected:   Yes
-Authentication found:  Yes
-Local usage found:     Yes
-Live endpoint:         Reachable
-OpenCode integration:  Installed
-pi integration:        Installed
+Package version:                0.1.6
+Node.js version:                22.0.0
+Operating system:               Windows
+Codex home detected:            Yes
+Authentication found:           Yes
+Local usage found:              Yes
+Live endpoint:                  Reachable
+OpenCode integration:           Installed
+pi integration:                 Installed
+GitHub Copilot CLI integration: Installed
 
 No sensitive values were displayed.
 ```
 
-The doctor checks only whether recognized resources are available, including the OpenCode and pi integrations. It never prints credential values, private paths, endpoint URLs, configuration contents, or raw Codex data. The live check makes the same bounded authenticated read-only usage request as the dashboard; it is reported as `Not checked` when complete authentication is unavailable. Use `codex-limits doctor --json` for the stable machine-readable form documented in [JSON output](docs/readme/json-output.md#doctor-document).
+The doctor checks only whether recognized resources are available, including the OpenCode, pi, and GitHub Copilot CLI integrations. It never prints credential values, private paths, endpoint URLs, configuration contents, or raw Codex data. The live check makes the same bounded authenticated read-only usage request as the dashboard; it is reported as `Not checked` when complete authentication is unavailable. Use `codex-limits doctor --json` for the stable machine-readable form documented in [JSON output](docs/readme/json-output.md#doctor-document).
 
 ### Agent management
 
@@ -273,7 +285,7 @@ Confirm that your user can read the selected Codex directory and its session fil
 
 ### Agent command not appearing after installation
 
-Run the named installer again, for example `codex-limits agents install opencode` or `codex-limits agents install pi`, and confirm that it reports the integration as installed or already installed. Restart the target agent terminal so it reloads its configuration. If the command is still missing, verify that the displayed configuration paths belong to the agent installation you are using.
+Run the named installer again, for example `codex-limits agents install opencode`, `codex-limits agents install pi`, or `codex-limits agents install copilot`, and confirm that it reports the integration as installed or already installed. Restart the target agent terminal so it reloads its configuration. If the command is still missing, verify that the displayed configuration paths belong to the agent installation you are using.
 
 ## Documentation
 
@@ -281,6 +293,7 @@ The README provides an overview of the main features, commands, and configuratio
 
 - [JSON output](docs/readme/json-output.md) — Learn about the machine-readable output format, available fields, warnings, examples, and scripting behavior.
 - [Agent integrations](docs/readme/agent-integrations.md) — Learn how agent integrations work, how they are installed, and how to develop and contribute new agent adapters.
+- [GitHub Copilot CLI integration](docs/readme/agents/copilot.md) — Install and use the experimental Copilot CLI extension command.
 - [Compatibility](docs/readme/compatibility.md) — View the supported operating systems, Node.js versions, terminals, Codex environments, and agent versions.
 
 ## Local development
