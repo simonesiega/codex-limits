@@ -103,6 +103,40 @@ test("getResetCoupons validates untrusted coupon fields before public output", a
   expect(JSON.stringify(result)).not.toContain("fake-secret-token");
 });
 
+test("getResetCoupons rejects malformed timestamps and extra untrusted text", async () => {
+  const secret = "sk-fake-response-secret-value";
+  const result = await getResetCoupons({
+    env: {
+      CODEX_LIMITS_ACCESS_TOKEN: "fake-access-token",
+      CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
+    },
+    transport: async () => ({
+      ok: true,
+      status: 200,
+      transport: "fetch",
+      payload: {
+        credits: [
+          {
+            status: "available",
+            granted_at: `Mon, 01 Jan 2024 00:00:00 GMT (${secret})`,
+            expires_at: `Tue, 01 Jan 2030 00:00:00 GMT (${secret})`,
+          },
+          {
+            status: "available",
+            granted_at: "2026-02-30T00:00:00Z",
+            expires_at: "2026-03-30T00:00:00Z",
+          },
+        ],
+      },
+    }),
+  });
+
+  expect(result.status).toBe("partial");
+  expect(result.items).toEqual([]);
+  expect(result.warnings).toEqual(["Live reset coupon endpoint ignored malformed coupon entries."]);
+  expect(JSON.stringify(result)).not.toContain(secret);
+});
+
 test("getResetCoupons rejects fractional coupon counts", async () => {
   const result = await getResetCoupons({
     env: {

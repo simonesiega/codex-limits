@@ -11,6 +11,9 @@ const EARNED_KEYS = [
   "earnedThisPeriod",
   "totalEarnedCount",
 ] as const;
+const MAX_TIMESTAMP_LENGTH = 64;
+const RFC_3339_TIMESTAMP =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(?:Z|[+-](\d{2}):(\d{2}))$/i;
 
 /** Validates and normalizes an untrusted reset-credit endpoint payload. */
 export function mapResetCouponsPayload(
@@ -100,16 +103,23 @@ function parseCouponItem(value: unknown, index: number, now: Date): CouponItem |
     typeof rawResetType === "string" && /^[a-z][a-z0-9_-]{0,63}$/i.test(rawResetType)
       ? rawResetType
       : null;
+  const hasExpiresAt = "expires_at" in value || "expiresAt" in value;
+  const hasGrantedAt = "granted_at" in value || "grantedAt" in value;
   const rawExpiresAt = readString(value, "expires_at") ?? readString(value, "expiresAt");
   const rawGrantedAt = readString(value, "granted_at") ?? readString(value, "grantedAt");
-  const expiresAtDate = parseDateValue(rawExpiresAt);
-  const grantedAtDate = parseDateValue(rawGrantedAt);
+  const expiresAtDate = parseCouponTimestamp(rawExpiresAt);
+  const grantedAtDate = parseCouponTimestamp(rawGrantedAt);
   const rawStatus = readString(value, "status");
   const status = rawStatus && /^[a-z][a-z0-9_-]{0,63}$/i.test(rawStatus) ? rawStatus : null;
   const grantedAt = grantedAtDate ? rawGrantedAt : null;
   const expiresAt = expiresAtDate ? rawExpiresAt : null;
 
-  if (("id" in value && !id) || (!status && !grantedAt && !expiresAt)) {
+  if (
+    ("id" in value && !id) ||
+    (hasGrantedAt && !grantedAtDate) ||
+    (hasExpiresAt && !expiresAtDate) ||
+    (!status && !grantedAt && !expiresAt)
+  ) {
     return null;
   }
 
@@ -123,6 +133,49 @@ function parseCouponItem(value: unknown, index: number, now: Date): CouponItem |
     expirationDate: expiresAtDate ? formatLongDate(expiresAtDate) : null,
     expiresIn: expiresAtDate ? formatDuration(expiresAtDate.getTime() - now.getTime()) : null,
   };
+}
+
+function parseCouponTimestamp(value: string | null): Date | null {
+  if (!value || value.length > MAX_TIMESTAMP_LENGTH) {
+    return null;
+  }
+
+  const match = RFC_3339_TIMESTAMP.exec(value);
+  if (!match) {
+    return null;
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  const offsetHour = match[8] === undefined ? 0 : Number(match[8]);
+  const offsetMinute = match[9] === undefined ? 0 : Number(match[9]);
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > daysInMonth(year, month) ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59 ||
+    offsetHour > 23 ||
+    offsetMinute > 59
+  ) {
+    return null;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function daysInMonth(year: number, month: number): number {
+  if (month === 2) {
+    const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    return leapYear ? 29 : 28;
+  }
+  return month === 4 || month === 6 || month === 9 || month === 11 ? 30 : 31;
 }
 
 function compareCouponsByExpiry(left: CouponItem, right: CouponItem): number {

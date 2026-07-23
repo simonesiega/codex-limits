@@ -80,6 +80,17 @@ test("agent host dependencies preserve the published runtime contracts", async (
   expect(packageJson.devDependencies["@github/copilot-sdk"]).toBe("^1.0.8");
 });
 
+test("manual publishing requires the matching version tag", async () => {
+  const workflow = await readFile(
+    resolve(import.meta.dir, "../../.github/workflows/publish.yml"),
+    "utf8"
+  );
+
+  expect(workflow).toContain('if [ "$REF_TYPE" != "tag" ]; then');
+  expect(workflow).toContain('PUBLISH_TAG="$REF_NAME"');
+  expect(workflow).toContain('if [ "$PUBLISH_TAG" != "v$PACKAGE_VERSION" ]; then');
+});
+
 test("validation and prepack scripts do not recurse", async () => {
   const packageJson = await readPackageMetadata();
 

@@ -8,6 +8,7 @@ import type {
   CodexSessionReadResult,
   CodexSessionSnapshot,
 } from "@/package/core/types";
+import {parseDateValue} from "@/package/core/utils/date-time";
 import {isPathWithin, toSafeRelativePath} from "@/package/core/utils/safe-path";
 import {isRecord, readString} from "@/package/core/utils/unknown";
 
@@ -49,14 +50,16 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
     return {homePath, sessionsRoot, files: [], latestSnapshot: null, warnings};
   }
 
-  const candidates = await findSessionFiles(homePath, sessionsRoot, warnings);
+  const candidates = await findSessionFiles(sessionsRoot, warnings);
   const files: CodexSessionFile[] = [];
   let latestSnapshot: CodexSessionSnapshot | null = null;
 
   for (const candidate of candidates.slice(0, MAX_SESSION_FILES_TO_PARSE)) {
     const relativePath = toSafeRelativePath(homePath, candidate.path);
     if (candidate.size > MAX_SESSION_FILE_BYTES) {
-      warnings.push(`Skipped ${relativePath} because it is too large to inspect safely.`);
+      warnings.push(
+        "Skipped a local Codex session file because it is too large to inspect safely."
+      );
       files.push(
         toSessionFile(candidate.path, relativePath, candidate.modifiedAtMs, false, "too-large")
       );
@@ -74,17 +77,20 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
         )
       );
       if (extraction.skippedOversizedLine) {
-        warnings.push(`Skipped an oversized JSONL line in ${relativePath}.`);
+        warnings.push("Skipped an oversized JSONL line in a local Codex session file.");
       }
-      if (extraction.snapshot && !latestSnapshot) {
+      if (
+        extraction.snapshot &&
+        (!latestSnapshot || isNewerSnapshot(extraction.snapshot, latestSnapshot))
+      ) {
         latestSnapshot = extraction.snapshot;
       }
     } catch (error) {
       const tooLarge = error instanceof SessionTooLargeError;
       warnings.push(
         tooLarge
-          ? `Skipped ${relativePath} because it grew too large to inspect safely.`
-          : `Could not inspect ${relativePath}.`
+          ? "Skipped a local Codex session file because it grew too large to inspect safely."
+          : "Could not inspect a local Codex session file safely."
       );
       files.push(
         toSessionFile(
@@ -95,10 +101,6 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
           tooLarge ? "too-large" : "read-error"
         )
       );
-    }
-
-    if (latestSnapshot) {
-      break;
     }
   }
 
@@ -115,7 +117,6 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
 }
 
 async function findSessionFiles(
-  homePath: string,
   sessionsRoot: string,
   warnings: string[]
 ): Promise<SessionCandidate[]> {
@@ -125,7 +126,7 @@ async function findSessionFiles(
     hitLimit: false,
     skippedSymlink: false,
   };
-  await walkSessions(sessionsRoot, 0, state, warnings, homePath);
+  await walkSessions(sessionsRoot, 0, state, warnings);
 
   if (state.hitLimit) {
     warnings.push("Stopped session discovery after reaching a safe inspection limit.");
@@ -143,7 +144,7 @@ async function findSessionFiles(
 
   const candidates: SessionCandidate[] = [];
   for (const path of state.files) {
-    const candidate = await statSessionFile(homePath, realSessionsRoot, path, warnings);
+    const candidate = await statSessionFile(realSessionsRoot, path, warnings);
     if (candidate) {
       candidates.push(candidate);
     }
@@ -155,7 +156,6 @@ async function findSessionFiles(
 }
 
 async function statSessionFile(
-  homePath: string,
   realSessionsRoot: string,
   path: string,
   warnings: string[]
@@ -163,7 +163,7 @@ async function statSessionFile(
   try {
     const [details, realFilePath] = await Promise.all([lstat(path), realpath(path)]);
     if (!details.isFile() || !isPathWithin(realSessionsRoot, realFilePath)) {
-      warnings.push(`Could not inspect ${toSafeRelativePath(homePath, path)}.`);
+      warnings.push("Could not inspect a local Codex session file safely.");
       return null;
     }
     return {
@@ -174,7 +174,7 @@ async function statSessionFile(
       ino: details.ino,
     };
   } catch {
-    warnings.push(`Could not inspect ${toSafeRelativePath(homePath, path)}.`);
+    warnings.push("Could not inspect a local Codex session file safely.");
     return null;
   }
 }
@@ -183,8 +183,7 @@ async function walkSessions(
   currentPath: string,
   depth: number,
   state: SessionWalkState,
-  warnings: string[],
-  homePath: string
+  warnings: string[]
 ): Promise<void> {
   if (depth > MAX_SESSION_DEPTH || state.files.length >= MAX_DISCOVERED_SESSION_FILES) {
     state.hitLimit ||= state.files.length >= MAX_DISCOVERED_SESSION_FILES;
@@ -201,7 +200,7 @@ async function walkSessions(
     entries = await readBoundedDirectory(currentPath, state);
   } catch {
     if (depth > 0) {
-      warnings.push(`Could not inspect ${toSafeRelativePath(homePath, currentPath)}.`);
+      warnings.push("Could not inspect part of the local Codex sessions directory safely.");
     }
     return;
   }
@@ -218,7 +217,7 @@ async function walkSessions(
       continue;
     }
     if (entry.isDirectory()) {
-      await walkSessions(entryPath, depth + 1, state, warnings, homePath);
+      await walkSessions(entryPath, depth + 1, state, warnings);
       continue;
     }
     if (entry.isFile() && ROLLOUT_FILE_PATTERN.test(entry.name)) {
@@ -377,6 +376,17 @@ async function openVerifiedSessionStream(candidate: SessionCandidate): Promise<R
 
 function isSameFile(left: Pick<Stats, "dev" | "ino">, right: Pick<Stats, "dev" | "ino">): boolean {
   return left.dev === right.dev && left.ino === right.ino;
+}
+
+// Valid event timestamps are authoritative; mtime ordering remains the fallback when none exist.
+function isNewerSnapshot(candidate: CodexSessionSnapshot, current: CodexSessionSnapshot): boolean {
+  const candidateTimestamp = parseDateValue(candidate.eventTimestamp)?.getTime() ?? null;
+  const currentTimestamp = parseDateValue(current.eventTimestamp)?.getTime() ?? null;
+
+  if (candidateTimestamp === null) {
+    return false;
+  }
+  return currentTimestamp === null || candidateTimestamp > currentTimestamp;
 }
 
 function parseSnapshotLine(rawLine: string): {

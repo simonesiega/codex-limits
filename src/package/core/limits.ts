@@ -22,8 +22,9 @@ const LOCAL_USAGE_SOURCE = {kind: "local", label: "Local"} as const;
 
 /** Returns normalized, redacted data shared by every product surface. */
 export async function getCodexLimits(options: CodexLimitsOptions = {}): Promise<CodexLimitsResult> {
-  const usage = await getUsageLimits(options);
-  const couponResult = options.includeCoupons === false ? null : await getResetCoupons(options);
+  const couponRequest =
+    options.includeCoupons === false ? Promise.resolve(null) : getResetCoupons(options);
+  const [usage, couponResult] = await Promise.all([getUsageLimits(options), couponRequest]);
   const coupons = couponResult
     ? {...couponResult, warnings: redactWarnings(couponResult.warnings)}
     : null;

@@ -66,7 +66,7 @@ For normal use, Codex must have been installed, run, and authenticated at least 
 
 Both credential environment variables are required together. Supplying only one produces an incomplete-authentication warning and does not initiate an authenticated request.
 
-Local Codex data is inspected read-only. File traversal, file counts, file sizes, JSONL line sizes, search depth, and response sizes are bounded. Nested symbolic links are skipped. Raw local files, tokens, account IDs, authorization headers, and private paths are excluded from public output.
+Local Codex data is inspected read-only. File traversal, file counts, file sizes, JSONL line sizes, search depth, and response sizes are bounded. Nested symbolic links are skipped. Filesystem warnings do not include relative or absolute Codex paths, and fallback reset-duration strings must use compact duration units before they are normalized. Raw local files, tokens, account IDs, authorization headers, and private paths are excluded from public output.
 
 Local state layouts can vary between Codex versions. The parser recognizes common primary/five-hour and secondary/weekly window names and can return partial data when only some fields are understood. For live responses, declared window durations such as `limit_window_seconds` take precedence over legacy primary/secondary slot names, because the usage service can now return weekly usage in `primary_window` without a 5-hour window.
 
@@ -82,7 +82,7 @@ Live data uses these defaults:
 
 These endpoints are implementation details rather than a public API contract and may change when Codex changes its service behavior. A response containing only a recognized weekly window is treated as valid live usage; local discovery is used only when the live response contains no recognized usage window.
 
-Requests are authenticated from Codex credentials, reject redirects, time out after 10 seconds by default, and limit JSON responses to 1 MB. The transport uses the runtime's `fetch` implementation and can fall back to native Node HTTP/HTTPS transport for supported failures. Coupon redemption accepts only an exact coupon ID with the recognized `codex_rate_limits` type. `--soonest` refuses partial or count-inconsistent coupon data and any available coupon whose expiration cannot be verified. Its bounded JSON `POST` uses a fresh idempotency key for each confirmed redemption and reuses that key for any transport fallback.
+Requests are authenticated from Codex credentials, reject redirects, time out after 10 seconds by default, and limit JSON responses to 1 MB. Independent usage and coupon lookups start concurrently. The transport uses the runtime's `fetch` implementation and can fall back to native Node HTTP/HTTPS transport for supported failures. Coupon timestamps must be bounded RFC 3339 values. Coupon redemption accepts only an exact coupon ID with the recognized `codex_rate_limits` type. `--soonest` refuses partial or count-inconsistent coupon data and any available coupon whose expiration cannot be verified. Its bounded JSON `POST` uses a fresh idempotency key for each confirmed redemption and reuses that key for any transport fallback.
 
 `CODEX_LIMITS_USAGE_ENDPOINT` can override only the live usage endpoint. Overrides must use HTTPS. Plain HTTP is accepted only for loopback testing on `localhost`, `127.0.0.1`, or `::1`. URLs containing embedded usernames or passwords and all other protocols are rejected.
 

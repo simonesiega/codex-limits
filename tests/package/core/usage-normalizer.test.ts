@@ -81,6 +81,20 @@ test("parseUsageFromState returns partial for incomplete data", () => {
   expect(result.windows.weekly).toBeNull();
 });
 
+test("parseUsageFromState only accepts normalized compact reset durations", () => {
+  const privateText = "Confidential project Apollo launch";
+  const unsafe = parseUsageFromState(
+    stateFromJson({fiveHour: {remainingPercent: 80, resetsIn: privateText}})
+  );
+  const compact = parseUsageFromState(
+    stateFromJson({fiveHour: {remainingPercent: 80, resetsIn: "1d 2h 3m 45s"}})
+  );
+
+  expect(unsafe.windows.fiveHour?.resetsIn).toBeNull();
+  expect(JSON.stringify(unsafe)).not.toContain(privateText);
+  expect(compact.windows.fiveHour?.resetsIn).toBe("1d 2h 3m");
+});
+
 test("unavailableLocalUsage preserves safe warnings", () => {
   const result = unavailableLocalUsage(["No readable local Codex home directory was found."]);
 

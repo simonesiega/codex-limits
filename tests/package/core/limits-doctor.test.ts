@@ -81,6 +81,62 @@ test("getCodexDiagnostics treats an HTTP response as reachable", async () => {
   expect(result.liveEndpoint).toBe("reachable");
 });
 
+test("getCodexLimits starts independent live requests concurrently", async () => {
+  const started = new Set<"coupons" | "usage">();
+  let releaseRequests: () => void = () => undefined;
+  const requestGate = new Promise<void>((resolve) => {
+    releaseRequests = resolve;
+  });
+  let markBothStarted: () => void = () => undefined;
+  const bothStarted = new Promise<void>((resolve) => {
+    markBothStarted = resolve;
+  });
+
+  const pending = getCodexLimits({
+    env: {
+      CODEX_LIMITS_ACCESS_TOKEN: "fake-token",
+      CODEX_LIMITS_ACCOUNT_ID: "fake-account",
+    },
+    transport: async (request) => {
+      const kind = request.endpoint.includes("/codex/usage") ? "usage" : "coupons";
+      started.add(kind);
+      if (started.size === 2) {
+        markBothStarted();
+      }
+      await requestGate;
+      return kind === "usage"
+        ? {
+            ok: true,
+            status: 200,
+            transport: "fetch",
+            payload: {rate_limit: {primary_window: {used_percent: 12}}},
+          }
+        : {
+            ok: true,
+            status: 200,
+            transport: "fetch",
+            payload: {available_count: 0, credits: []},
+          };
+    },
+  });
+
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const startResult = await Promise.race([
+    bothStarted.then(() => "started" as const),
+    new Promise<"timeout">((resolve) => {
+      timeout = setTimeout(() => resolve("timeout"), 250);
+    }),
+  ]);
+  if (timeout) {
+    clearTimeout(timeout);
+  }
+  releaseRequests();
+  await pending;
+
+  expect(startResult).toBe("started");
+  expect(started).toEqual(new Set(["usage", "coupons"]));
+});
+
 test("getCodexLimits combines local usage and live coupons", async () => {
   await withTempDirectory("codex-limits-combined-", async (home) => {
     await createUsageHome(home);

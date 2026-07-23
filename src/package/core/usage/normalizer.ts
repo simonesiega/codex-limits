@@ -1,5 +1,4 @@
 import {formatDuration, parseDateValue} from "@/package/core/utils/date-time";
-import {redactSensitiveText} from "@/package/core/utils/redact";
 import {isRecord} from "@/package/core/utils/unknown";
 import type {
   AvailabilityStatus,
@@ -83,6 +82,7 @@ const WINDOW_MINUTES_KEYS = [
 ] as const;
 const FIVE_HOUR_SECONDS = 5 * 60 * 60;
 const WEEKLY_SECONDS = 7 * 24 * 60 * 60;
+const COMPACT_DURATION_PATTERN = /^(?:(\d+)d)?(?:\s*(\d+)h)?(?:\s*(\d+)m)?(?:\s*(\d+)s)?$/i;
 
 type UsageWindowKind = "fiveHour" | "weekly";
 
@@ -254,12 +254,9 @@ function parseUsageWindow(
   const resetValue = findValue(value, RESETS_AT_KEYS, true);
   const resetDate = parseDateValue(resetValue);
   const resetsAt = resetDate ? resetDate.toISOString() : null;
-  const rawResetsIn = readStringValue(findValue(value, RESETS_IN_KEYS, true));
   const resetsIn = resetDate
     ? formatDuration(resetDate.getTime() - now.getTime())
-    : rawResetsIn && rawResetsIn.length <= 100
-      ? redactSensitiveText(rawResetsIn)
-      : null;
+    : normalizeCompactDuration(findValue(value, RESETS_IN_KEYS, true));
   const window = {label, remainingPercent, usedPercent, resetsAt, resetsIn};
 
   return hasWindowData(window) ? window : null;
@@ -454,6 +451,40 @@ function toFiniteNumber(value: unknown): number | null {
     return Number.isFinite(parsed) ? parsed : null;
   }
   return null;
+}
+
+function normalizeCompactDuration(value: unknown): string | null {
+  const text = readStringValue(value);
+  if (!text || text.length > 100) {
+    return null;
+  }
+
+  const match = COMPACT_DURATION_PATTERN.exec(text);
+  const parts = match?.slice(1);
+  if (!parts || parts.every((part) => part === undefined)) {
+    return null;
+  }
+
+  const unitSeconds = [86_400, 3_600, 60, 1] as const;
+  let totalSeconds = 0;
+  for (const [index, part] of parts.entries()) {
+    if (part === undefined) {
+      continue;
+    }
+    const amount = Number(part);
+    const seconds = amount * unitSeconds[index]!;
+    if (!Number.isSafeInteger(amount) || !Number.isSafeInteger(seconds)) {
+      return null;
+    }
+    totalSeconds += seconds;
+    if (!Number.isSafeInteger(totalSeconds)) {
+      return null;
+    }
+  }
+
+  return totalSeconds <= Math.floor(Number.MAX_SAFE_INTEGER / 1_000)
+    ? formatDuration(totalSeconds * 1_000)
+    : null;
 }
 
 function readStringValue(value: unknown): string | null {

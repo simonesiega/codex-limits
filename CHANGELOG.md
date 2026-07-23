@@ -20,11 +20,16 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
+- Fixed local session fallback to select the newest bounded event timestamp when file modification times are misleading.
+- Fixed combined dashboard loading to start independent usage and reset-coupon requests concurrently.
+
 ### Removed
 
 ### Security
 
 - Hardened bounded session and native HTTP reads against path-replacement races and unbounded error-body draining, and made `reset --soonest` fail closed when coupon expirations cannot be verified.
+- Prevented private Codex paths, free-form local reset text, and malformed coupon timestamp content from reaching public output.
+- Required manual npm publishing runs to use the version tag matching the package metadata.
 
 ## [0.1.6] - 2026-07-22
 

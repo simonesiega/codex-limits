@@ -30,9 +30,9 @@ test("readCodexState bounds malformed and oversized JSON files", async () => {
     const state = await readCodexState(home);
     expect(state.files).toHaveLength(1);
     expect(state.files[0]).toMatchObject({relativePath: "broken.json", error: "invalid-json"});
-    expect(state.warnings).toContain("Could not parse JSON in broken.json.");
+    expect(state.warnings).toContain("Could not parse JSON in a local Codex state file.");
     expect(state.warnings).toContain(
-      "Skipped huge.json because it is too large to inspect safely."
+      "Skipped a local Codex state file because it is too large to inspect safely."
     );
     expect(state.warnings.join("\n")).not.toContain(home);
   });
@@ -80,6 +80,20 @@ if (process.platform !== "win32") {
   });
 }
 
+test("local state warnings do not expose relative file paths", async () => {
+  await withTempDirectory("codex-limits-private-state-path-", async (home) => {
+    const privateDirectory = join(home, "confidential-client");
+    await mkdir(privateDirectory, {recursive: true});
+    await writeFile(join(privateDirectory, "roadmap.json"), "{not json", "utf8");
+
+    const state = await readCodexState(home);
+    const warnings = state.warnings.join("\n");
+    expect(warnings).toContain("Could not parse JSON in a local Codex state file.");
+    expect(warnings).not.toContain("confidential-client");
+    expect(warnings).not.toContain("roadmap.json");
+  });
+});
+
 test("readCodexSessions extracts latest token-count rate-limit snapshot", async () => {
   await withTempDirectory("codex-limits-sessions-", async (home) => {
     const sessionDir = join(home, "sessions", "2026", "07", "05");
@@ -114,6 +128,47 @@ test("readCodexSessions extracts latest token-count rate-limit snapshot", async 
   });
 });
 
+test("readCodexSessions prefers event timestamps over file modification times", async () => {
+  await withTempDirectory("codex-limits-session-timestamps-", async (home) => {
+    const sessionDir = join(home, "sessions", "2026", "07", "05");
+    await mkdir(sessionDir, {recursive: true});
+    const stalePath = join(sessionDir, "rollout-stale.jsonl");
+    const currentPath = join(sessionDir, "rollout-current.jsonl");
+    await Promise.all([
+      writeFile(
+        stalePath,
+        JSON.stringify({
+          type: "event_msg",
+          timestamp: "2026-01-01T00:00:00.000Z",
+          payload: {type: "token_count", rate_limits: {primary: {used_percent: 90}}},
+        }),
+        "utf8"
+      ),
+      writeFile(
+        currentPath,
+        JSON.stringify({
+          type: "event_msg",
+          timestamp: "2026-07-01T00:00:00.000Z",
+          payload: {type: "token_count", rate_limits: {primary: {used_percent: 10}}},
+        }),
+        "utf8"
+      ),
+    ]);
+    await Promise.all([
+      utimes(stalePath, new Date("2026-07-02T00:00:00.000Z"), new Date("2026-07-02T00:00:00.000Z")),
+      utimes(
+        currentPath,
+        new Date("2026-07-01T01:00:00.000Z"),
+        new Date("2026-07-01T01:00:00.000Z")
+      ),
+    ]);
+
+    const sessions = await readCodexSessions(home);
+    expect(sessions.latestSnapshot?.sessionFile).toBe(currentPath);
+    expect(sessions.latestSnapshot?.eventTimestamp).toBe("2026-07-01T00:00:00.000Z");
+  });
+});
+
 test("readCodexSessions skips an oversized JSONL line without losing later snapshots", async () => {
   await withTempDirectory("codex-limits-session-lines-", async (home) => {
     const sessionDir = join(home, "sessions", "2026", "07", "05");
@@ -140,6 +195,7 @@ test("readCodexSessions skips an oversized JSONL line without losing later snaps
       resets_at: 1_767_229_200,
     });
     expect(sessions.warnings.join("\n")).toContain("Skipped an oversized JSONL line");
+    expect(sessions.warnings.join("\n")).not.toContain("rollout-lines.jsonl");
     expect(sessions.warnings.join("\n")).not.toContain("x".repeat(100));
   });
 });

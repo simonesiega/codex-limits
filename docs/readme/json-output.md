@@ -195,7 +195,7 @@ Example:
 | `resetsAt`         | Reset timestamp normalized to an ISO 8601 UTC string, or `null`.               |
 | `resetsIn`         | Compact non-negative duration such as `2d 1h 40m`, without seconds, or `null`. |
 
-A whole window is `null` when no recognized data exists for it. When a window is partially available, unknown fields remain present with `null` values. Percentages are clamped to `0`–`100` and rounded to at most one decimal place.
+A whole window is `null` when no recognized data exists for it. When a window is partially available, unknown fields remain present with `null` values. Percentages are clamped to `0`–`100` and rounded to at most one decimal place. When no reset timestamp is available, fallback `resetsIn` text is accepted only in compact `d`, `h`, `m`, and `s` form and is normalized without seconds; unrecognized free-form text is discarded.
 
 For comparisons and stored data, prefer canonical fields such as `resetsAt` and `expiresAt`. Human-readable fields such as `resetsIn`, `expirationDate`, and `expiresIn` are calculated when the command runs and may depend on the machine's local timezone.
 
@@ -210,7 +210,7 @@ For comparisons and stored data, prefer canonical fields such as `resetsAt` and 
 | `items`              | Valid coupon entries sorted by expiration time.                                      |
 | `warnings`           | Safe coupon-specific availability or payload warnings.                               |
 
-Coupon `index` values are one-based and assigned after sorting. `grantedAt` and `expiresAt` preserve valid timestamp strings from the service. `expirationDate` is rendered in the machine's local timezone as `Weekday D Month YYYY`; `expiresIn` is calculated at command execution time. Malformed coupon entries are omitted and produce a warning.
+Coupon `index` values are one-based and assigned after sorting. `grantedAt` and `expiresAt` preserve bounded RFC 3339 timestamp strings from the service. `expirationDate` is rendered in the machine's local timezone as `Weekday D Month YYYY`; `expiresIn` is calculated at command execution time. Coupon entries with malformed or extra timestamp text are omitted and produce a warning.
 
 The complete limits contract permits `coupons: null` when a core caller intentionally omits coupon loading. The standard `codex-limits --json` command requests coupons and normally returns a coupon summary object, including an unavailable summary when credentials or network data are missing.
 

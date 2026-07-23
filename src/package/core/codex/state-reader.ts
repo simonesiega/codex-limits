@@ -37,7 +37,7 @@ export async function readCodexState(homePath: string): Promise<CodexStateReadRe
     skippedSymlink: false,
     warnings: [],
   };
-  await walk(homePath, homePath, 0, state);
+  await walk(homePath, 0, state);
 
   if (state.hitDirectoryLimit || state.hitEntryLimit || state.hitFileLimit) {
     state.warnings.push("Stopped local state discovery after reaching a safe inspection limit.");
@@ -55,13 +55,13 @@ export async function readCodexState(homePath: string): Promise<CodexStateReadRe
     const relativePath = toSafeRelativePath(homePath, filePath);
     try {
       const content = await readBoundedUtf8File(filePath, MAX_FILE_BYTES);
-      const json = parseJson(content, relativePath, state.warnings);
+      const json = parseJson(content, state.warnings);
       files.push({path: filePath, relativePath, json: json.value, error: json.error});
     } catch (error) {
       state.warnings.push(
         error instanceof BoundedFileError && error.code === "too-large"
-          ? `Skipped ${relativePath} because it is too large to inspect safely.`
-          : `Could not read ${relativePath}.`
+          ? "Skipped a local Codex state file because it is too large to inspect safely."
+          : "Could not read a local Codex state file safely."
       );
     }
   }
@@ -74,12 +74,7 @@ export async function readCodexState(homePath: string): Promise<CodexStateReadRe
   return {homePath, files, warnings: state.warnings};
 }
 
-async function walk(
-  rootPath: string,
-  currentPath: string,
-  depth: number,
-  state: WalkState
-): Promise<void> {
+async function walk(currentPath: string, depth: number, state: WalkState): Promise<void> {
   if (depth > MAX_DEPTH || state.files.length >= MAX_DISCOVERED_FILES) {
     state.hitFileLimit ||= state.files.length >= MAX_DISCOVERED_FILES;
     return;
@@ -90,7 +85,7 @@ async function walk(
   }
   state.directories += 1;
 
-  const entries = await readBoundedDirectory(rootPath, currentPath, state);
+  const entries = await readBoundedDirectory(currentPath, state);
   for (const entry of entries) {
     if (state.files.length >= MAX_DISCOVERED_FILES) {
       state.hitFileLimit = true;
@@ -105,18 +100,14 @@ async function walk(
     if (entry.isSymbolicLink()) {
       state.skippedSymlink = true;
     } else if (entry.isDirectory()) {
-      await walk(rootPath, entryPath, depth + 1, state);
+      await walk(entryPath, depth + 1, state);
     } else if (entry.isFile() && extname(entry.name).toLowerCase() === ".json") {
       state.files.push(entryPath);
     }
   }
 }
 
-async function readBoundedDirectory(
-  rootPath: string,
-  currentPath: string,
-  state: WalkState
-): Promise<Dirent[]> {
+async function readBoundedDirectory(currentPath: string, state: WalkState): Promise<Dirent[]> {
   try {
     const directory = await opendir(currentPath);
     const entries: Dirent[] = [];
@@ -129,20 +120,19 @@ async function readBoundedDirectory(
     }
     return entries.sort((left, right) => left.name.localeCompare(right.name));
   } catch {
-    state.warnings.push(`Could not inspect ${toSafeRelativePath(rootPath, currentPath)}.`);
+    state.warnings.push("Could not inspect part of the local Codex state directory safely.");
     return [];
   }
 }
 
 function parseJson(
   content: string,
-  relativePath: string,
   warnings: string[]
 ): {value: unknown | null; error: string | null} {
   try {
     return {value: JSON.parse(content) as unknown, error: null};
   } catch {
-    warnings.push(`Could not parse JSON in ${relativePath}.`);
+    warnings.push("Could not parse JSON in a local Codex state file.");
     return {value: null, error: "invalid-json"};
   }
 }

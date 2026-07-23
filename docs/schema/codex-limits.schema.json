@@ -60,20 +60,23 @@
           "$ref": "#/$defs/nullablePercent"
         },
         "resetsAt": {
-          "anyOf": [
-            {
-              "type": "string",
-              "format": "date-time"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/nullableDateTime"
         },
         "resetsIn": {
           "$ref": "#/$defs/nullableString"
         }
       }
+    },
+    "nullableDateTime": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "nullablePercent": {
       "anyOf": [
@@ -143,10 +146,10 @@
           ]
         },
         "grantedAt": {
-          "$ref": "#/$defs/nullableString"
+          "$ref": "#/$defs/nullableDateTime"
         },
         "expiresAt": {
-          "$ref": "#/$defs/nullableString"
+          "$ref": "#/$defs/nullableDateTime"
         },
         "expirationDate": {
           "$ref": "#/$defs/nullableString"
