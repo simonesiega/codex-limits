@@ -1,13 +1,14 @@
 import {expect, test} from "bun:test";
 import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
+import {AGENT_INTEGRATIONS} from "@/agents";
 import {PACKAGE_VERSION} from "@/package/version";
 
 interface PackageMetadata {
   name: string;
   version: string;
   bin: Record<string, string>;
-  exports: {".": {import: string; types: string}};
+  exports: Record<"." | "./opencode" | "./pi" | "./copilot", {import: string; types: string}>;
   files: string[];
   types: string;
   engines: {node: string};
@@ -26,30 +27,57 @@ async function readPackageMetadata(): Promise<PackageMetadata> {
   ) as PackageMetadata;
 }
 
-test("package metadata preserves the npm, binary, and root plugin contracts", async () => {
+test("package metadata preserves the CLI and agent-host module contracts", async () => {
   const packageJson = await readPackageMetadata();
 
   expect(packageJson.name).toBe("@simonesiega/codex-limits");
   expect(packageJson.version).toBe(PACKAGE_VERSION);
   expect(packageJson.bin).toEqual({"codex-limits": "dist/cli.js"});
   expect(packageJson.exports).toEqual({
-    ".": {types: "./types/index.d.ts", import: "./dist/opencode.js"},
+    ".": {types: "./types/opencode.d.ts", import: "./dist/opencode.js"},
+    "./opencode": {types: "./types/opencode.d.ts", import: "./dist/opencode.js"},
+    "./pi": {types: "./types/pi.d.ts", import: "./dist/pi.js"},
+    "./copilot": {types: "./types/copilot.d.ts", import: "./dist/copilot.mjs"},
   });
-  expect(packageJson.types).toBe("./types/index.d.ts");
+  expect(
+    Object.keys(packageJson.exports)
+      .filter((subpath) => subpath !== ".")
+      .sort()
+  ).toEqual(AGENT_INTEGRATIONS.map((integration) => `./${integration.id}`).sort());
+  expect(packageJson.types).toBe("./types/opencode.d.ts");
   expect(packageJson.engines.node).toBe(">=20");
   expect(packageJson.pi).toEqual({extensions: ["./dist/pi.js"]});
   expect(packageJson.keywords).toContain("pi-package");
   expect(packageJson.keywords).toContain("github-copilot-cli");
 });
 
-test("generated declarations expose exactly the default plugin and named tui contract", async () => {
-  const declaration = await readFile(resolve(import.meta.dir, "../../types/index.d.ts"), "utf8");
+test("generated declarations expose only the agent-host contracts", async () => {
+  const [opencodeDeclaration, piDeclaration, copilotDeclaration] = await Promise.all([
+    readFile(resolve(import.meta.dir, "../../types/opencode.d.ts"), "utf8"),
+    readFile(resolve(import.meta.dir, "../../types/pi.d.ts"), "utf8"),
+    readFile(resolve(import.meta.dir, "../../types/copilot.d.ts"), "utf8"),
+  ]);
 
-  expect(declaration).toContain('id: "codex-limits";');
-  expect(declaration).toContain("export default plugin;");
-  expect(declaration).toContain("export declare const tui:");
-  expect(declaration).not.toContain("src/");
-  expect(declaration).not.toContain("@opencode-ai/plugin");
+  expect(opencodeDeclaration).toContain("export interface CodexLimitsTuiPluginModule");
+  expect(opencodeDeclaration).toContain(
+    "export type CodexLimitsOpencodeExtension = CodexLimitsTuiPluginModule"
+  );
+  expect(opencodeDeclaration).toContain('id: "codex-limits";');
+  expect(opencodeDeclaration).toContain("export default plugin;");
+  expect(opencodeDeclaration).toContain("export declare const tui:");
+  expect(opencodeDeclaration).not.toContain("src/");
+  expect(opencodeDeclaration).not.toContain("@opencode-ai/plugin");
+
+  expect(piDeclaration).toContain("export type CodexLimitsPiExtension");
+  expect(piDeclaration).toContain("export default plugin;");
+  expect(piDeclaration).not.toContain("src/");
+  expect(piDeclaration).not.toContain("@earendil-works/pi-coding-agent");
+
+  expect(copilotDeclaration).toContain("export type CodexLimitsCopilotExtension");
+  expect(copilotDeclaration).toContain("export declare const startCopilotExtension:");
+  expect(copilotDeclaration).toContain("export default plugin;");
+  expect(copilotDeclaration).not.toContain("src/");
+  expect(copilotDeclaration).not.toContain("@github/copilot-sdk");
 });
 
 test("package metadata includes runtime documentation and excludes bundled runtime dependencies", async () => {

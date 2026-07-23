@@ -166,7 +166,7 @@ New agents should use the same small adapter shape as [`src/agents/opencode`](sr
 | 5    | Add installer, formatter, and host-behavior tests. When end-to-end automation is impractical, document the manual validation.   |
 | 6    | Add `docs/readme/agents/<agent-name>.md`.                                                                                       |
 | 7    | Add the integration to [Agent Integrations](docs/readme/agent-integrations.md).                                                 |
-| 8    | Update the README supported-agent summary and any target-specific package/build metadata.                                       |
+| 8    | Add `src/package/<agent-name>.ts`, its host-only `./<agent-name>` subpath, and the shared package-build metadata.               |
 | 9    | Add or update screenshots when the visual output changes.                                                                       |
 | 10   | Run the documentation link and schema checks.                                                                                   |
 

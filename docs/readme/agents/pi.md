@@ -44,7 +44,7 @@ When `PI_CODING_AGENT_DIR` is set, the installer uses `settings.json` under that
 }
 ```
 
-Registering the local package root avoids another download and keeps the extension synchronized with the globally installed `codex-limits` package. The installer also recognizes existing unversioned, tagged, or pinned `npm:@simonesiega/codex-limits` pi package registrations. If a matching object registration filters out the bundled extension, the named installer force-enables only `dist/pi.js` while preserving unrelated resource filters.
+Registering the local package root avoids another download and keeps the extension synchronized with the globally installed `codex-limits` package. The same host module is exposed explicitly as `@simonesiega/codex-limits/pi`, but pi installation continues to use the package manifest rather than that subpath directly. The installer also recognizes existing unversioned, tagged, or pinned `npm:@simonesiega/codex-limits` pi package registrations. If a matching object registration filters out the bundled extension, the named installer force-enables only `dist/pi.js` while preserving unrelated resource filters.
 
 The installer:
 

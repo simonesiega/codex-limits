@@ -8,6 +8,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added explicit OpenCode, pi, and GitHub Copilot CLI package subpath exports while keeping the package root dedicated to OpenCode loading and the internal core private.
+
 ### Changed
 
 ### Fixed

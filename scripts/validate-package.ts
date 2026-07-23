@@ -35,10 +35,31 @@ const packageJson = JSON.parse(await readFile(join(root, "package.json"), "utf8"
 assert(packageJson.name === "@simonesiega/codex-limits", "Unexpected npm package name.");
 assert(packageJson.bin?.["codex-limits"] === "dist/cli.js", "Unexpected binary target.");
 assert(
-  packageJson.exports?.["."]?.import === "./dist/opencode.js",
-  "Unexpected root import target."
+  Object.keys(packageJson.exports ?? {})
+    .sort()
+    .join(",") === ".,./copilot,./opencode,./pi",
+  "Unexpected package export surface."
 );
-assert(packageJson.exports?.["."]?.types === "./types/index.d.ts", "Unexpected type target.");
+assert(
+  packageJson.exports?.["."]?.import === "./dist/opencode.js" &&
+    packageJson.exports["."]?.types === "./types/opencode.d.ts",
+  "Unexpected root OpenCode export."
+);
+assert(
+  packageJson.exports?.["./opencode"]?.import === "./dist/opencode.js" &&
+    packageJson.exports["./opencode"]?.types === "./types/opencode.d.ts",
+  "Unexpected explicit OpenCode export."
+);
+assert(
+  packageJson.exports?.["./pi"]?.import === "./dist/pi.js" &&
+    packageJson.exports["./pi"]?.types === "./types/pi.d.ts",
+  "Unexpected pi export."
+);
+assert(
+  packageJson.exports?.["./copilot"]?.import === "./dist/copilot.mjs" &&
+    packageJson.exports["./copilot"]?.types === "./types/copilot.d.ts",
+  "Unexpected Copilot export."
+);
 assert(
   Object.keys(packageJson.dependencies ?? {}).length === 0,
   "Runtime dependencies must be bundled."
@@ -120,6 +141,7 @@ try {
 
   const paths = new Set(packed.files.map((file) => file.path));
   assert(!paths.has("dist/index.js"), "Packed artifact contains the legacy OpenCode bundle.");
+  assert(!paths.has("types/index.d.ts"), "Packed artifact contains the legacy root declaration.");
   const packedCli = packed.files.find((file) => file.path === "dist/cli.js");
   if (process.platform !== "win32") {
     assert(Boolean(packedCli && (packedCli.mode & 0o111) !== 0), "Packed CLI is not executable.");
@@ -131,7 +153,9 @@ try {
     "dist/pi.js",
     "dist/copilot.mjs",
     "dist/THIRD_PARTY_NOTICES.txt",
-    "types/index.d.ts",
+    "types/opencode.d.ts",
+    "types/pi.d.ts",
+    "types/copilot.d.ts",
     "scripts/postinstall.cjs",
     ".env.example",
     "docs/README.md",
@@ -211,6 +235,19 @@ try {
   );
   assert(nodeImport.exitCode === 0, "Node could not import the packed root module.");
   assert(nodeImport.stderr === "", "Packed root import unexpectedly wrote to stderr.");
+
+  const subpathImport = await runResult(
+    "node",
+    [
+      "--input-type=module",
+      "--eval",
+      'const root=await import("@simonesiega/codex-limits"); const opencode=await import("@simonesiega/codex-limits/opencode"); const piUrl=import.meta.resolve("@simonesiega/codex-limits/pi"); const copilotUrl=import.meta.resolve("@simonesiega/codex-limits/copilot"); if (root.default !== opencode.default || root.tui !== opencode.tui || !piUrl.endsWith("/dist/pi.js") || !copilotUrl.endsWith("/dist/copilot.mjs")) process.exit(1);',
+    ],
+    packedRoot,
+    process.env
+  );
+  assert(subpathImport.exitCode === 0, "Node could not resolve the packed agent subpaths.");
+  assert(subpathImport.stderr === "", "Packed subpath import unexpectedly wrote to stderr.");
 } finally {
   await rm(temporaryRoot, {recursive: true, force: true});
 }
@@ -326,6 +363,10 @@ async function smokePiExtensionBundle(): Promise<void> {
   const moduleUrl = `${pathToFileURL(join(root, "dist", "pi.js")).href}?validate=${Date.now()}`;
   const piModule = (await import(moduleUrl)) as {default?: (api: object) => void};
 
+  assert(
+    Object.keys(piModule).length === 1 && Object.keys(piModule)[0] === "default",
+    "Pi bundle has an unexpected export surface."
+  );
   assert(typeof piModule.default === "function", "Pi bundle has no default extension export.");
   piModule.default({
     registerCommand: (

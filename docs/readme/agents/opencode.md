@@ -40,6 +40,8 @@ It adds the following package to each file's `plugin` array:
 "@simonesiega/codex-limits"
 ```
 
+The package root and the explicit `@simonesiega/codex-limits/opencode` host subpath resolve to the same bundled plugin. The installer uses the root package name for OpenCode plugin-loader compatibility; the subpath is not a separate installation method.
+
 Both files are updated because compatible OpenCode versions discover TUI plugins through different global configuration files. The installer:
 
 - creates a missing configuration as a JSON object with the appropriate OpenCode schema;

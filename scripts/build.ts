@@ -32,101 +32,103 @@ if (!cliBundle.success) {
   throw new Error("CLI bundle failed.");
 }
 
-const opencodeBundle = await Bun.build({
-  entrypoints: [join(root, "src", "package", "index.ts")],
-  outdir: distDirectory,
-  naming: {entry: "opencode.js"},
-  target: "node",
-  format: "esm",
-  minify: true,
-  define: {"process.env.NODE_ENV": JSON.stringify("production")},
-  sourcemap: "none",
-  metafile: true,
-});
-if (!opencodeBundle.success) {
-  for (const log of opencodeBundle.logs) {
-    console.error(log);
-  }
-  throw new Error("OpenCode extension bundle failed.");
+interface AgentBundleDefinition {
+  id: "opencode" | "pi" | "copilot";
+  displayName: string;
+  output: string;
+  external?: string[];
+  define?: Record<string, string>;
 }
 
-const piBundle = await Bun.build({
-  entrypoints: [join(root, "src", "agents", "pi", "plugin.ts")],
-  outdir: distDirectory,
-  naming: {entry: "pi.js"},
-  target: "node",
-  format: "esm",
-  minify: true,
-  external: ["@earendil-works/pi-coding-agent", "@earendil-works/pi-tui"],
-  define: {"process.env.NODE_ENV": JSON.stringify("production")},
-  sourcemap: "none",
-  metafile: true,
-});
-if (!piBundle.success) {
-  for (const log of piBundle.logs) {
-    console.error(log);
-  }
-  throw new Error("Pi extension bundle failed.");
-}
-
-const copilotBundle = await Bun.build({
-  entrypoints: [join(root, "src", "agents", "copilot", "plugin.ts")],
-  outdir: distDirectory,
-  naming: {entry: "copilot.mjs"},
-  target: "node",
-  format: "esm",
-  minify: true,
-  external: ["@github/copilot-sdk/extension"],
-  define: {
-    "process.env.NODE_ENV": JSON.stringify("production"),
-    __CODEX_LIMITS_COPILOT_EXTENSION__: "true",
+const agentBundleDefinitions: readonly AgentBundleDefinition[] = [
+  {id: "opencode", displayName: "OpenCode", output: "opencode.js"},
+  {
+    id: "pi",
+    displayName: "pi",
+    output: "pi.js",
+    external: ["@earendil-works/pi-coding-agent", "@earendil-works/pi-tui"],
   },
-  sourcemap: "none",
-  metafile: true,
-});
-if (!copilotBundle.success) {
-  for (const log of copilotBundle.logs) {
-    console.error(log);
-  }
-  throw new Error("GitHub Copilot CLI extension bundle failed.");
-}
+  {
+    id: "copilot",
+    displayName: "GitHub Copilot CLI",
+    output: "copilot.mjs",
+    external: ["@github/copilot-sdk/extension"],
+    define: {__CODEX_LIMITS_COPILOT_EXTENSION__: "true"},
+  },
+];
+
+const agentBundles = await Promise.all(
+  agentBundleDefinitions.map(async (definition) => {
+    const bundle = await Bun.build({
+      entrypoints: [join(root, "src", "package", `${definition.id}.ts`)],
+      outdir: distDirectory,
+      naming: {entry: definition.output},
+      target: "node",
+      format: "esm",
+      minify: true,
+      external: definition.external ?? [],
+      define: {
+        "process.env.NODE_ENV": JSON.stringify("production"),
+        ...definition.define,
+      },
+      sourcemap: "none",
+      metafile: true,
+    });
+    if (!bundle.success) {
+      for (const log of bundle.logs) {
+        console.error(log);
+      }
+      throw new Error(`${definition.displayName} extension bundle failed.`);
+    }
+    return bundle;
+  })
+);
 
 await writeThirdPartyNotices([
   ...Object.keys(cliBundle.metafile.inputs),
-  ...Object.keys(opencodeBundle.metafile.inputs),
-  ...Object.keys(piBundle.metafile.inputs),
-  ...Object.keys(copilotBundle.metafile.inputs),
+  ...agentBundles.flatMap((bundle) => Object.keys(bundle.metafile.inputs)),
 ]);
 
 try {
-  const declarations = Bun.spawn(
+  const declarationBuild = Bun.spawn(
     ["bun", "x", "tsc", "--project", join(root, "tsconfig.types.json")],
     {cwd: root, stdout: "inherit", stderr: "inherit"}
   );
-  const exitCode = await declarations.exited;
+  const exitCode = await declarationBuild.exited;
   if (exitCode !== 0) {
     throw new Error(`Type declaration build exited with code ${exitCode}.`);
   }
 
-  const declarationPath = join(typesBuildDirectory, "package", "index.d.ts");
-  const declaration = await readFile(declarationPath, "utf8");
-  if (
-    /\bfrom\s+["']/.test(declaration) ||
-    /\bimport\s*\(/.test(declaration) ||
-    /src\//.test(declaration)
-  ) {
-    throw new Error("Generated root declaration references a private source module.");
-  }
-
-  const prettierConfig = (await resolveConfig(join(typesDirectory, "index.d.ts"))) ?? {};
-  const formattedDeclaration = await format(declaration, {
-    ...prettierConfig,
-    filepath: "types/index.d.ts",
-    parser: "typescript",
-  });
+  const declarations = agentBundleDefinitions.map(({id, displayName}) => ({
+    source: `${id}.d.ts`,
+    target: `${id}.d.ts`,
+    label: displayName,
+  }));
+  const prettierConfig = (await resolveConfig(join(typesDirectory, "opencode.d.ts"))) ?? {};
 
   await mkdir(typesDirectory, {recursive: true});
-  await writeFile(join(typesDirectory, "index.d.ts"), formattedDeclaration, "utf8");
+  for (const declarationTarget of declarations) {
+    const declaration = await readFile(
+      join(typesBuildDirectory, "package", declarationTarget.source),
+      "utf8"
+    );
+    if (
+      /\bfrom\s+["']/.test(declaration) ||
+      /\bimport\s*\(/.test(declaration) ||
+      /src\//.test(declaration)
+    ) {
+      throw new Error(
+        `Generated ${declarationTarget.label} declaration references a private source module.`
+      );
+    }
+
+    const formattedDeclaration = await format(declaration, {
+      ...prettierConfig,
+      filepath: `types/${declarationTarget.target}`,
+      parser: "typescript",
+    });
+    await writeFile(join(typesDirectory, declarationTarget.target), formattedDeclaration, "utf8");
+  }
   await chmod(join(distDirectory, "cli.js"), 0o755);
 } finally {
   await rm(typesBuildDirectory, {recursive: true, force: true});

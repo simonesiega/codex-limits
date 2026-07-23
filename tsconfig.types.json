@@ -8,6 +8,6 @@
     "rootDir": "src",
     "stripInternal": true
   },
-  "include": ["src/package/index.ts"],
+  "include": ["src/package/opencode.ts", "src/package/pi.ts", "src/package/copilot.ts"],
   "exclude": ["tests"]
 }

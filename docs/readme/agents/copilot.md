@@ -39,7 +39,7 @@ The installer writes one user-scoped extension entry point:
 
 When `COPILOT_HOME` is set, the installer uses `extensions/codex-limits/extension.mjs` under that directory instead. The `codex-limits` subdirectory gives the extension its host-visible name.
 
-The published package contains the bundled source at `dist/copilot.mjs`. The installer copies that bundle to the ESM `extension.mjs` entry point. GitHub Copilot CLI starts it as a separate Node.js process and supplies `@github/copilot-sdk/extension` through its extension module resolver; users do not install the SDK separately.
+The published package contains the bundled source at `dist/copilot.mjs` and exposes that host module as `@simonesiega/codex-limits/copilot`. The installer copies the same bundle to the ESM `extension.mjs` entry point. GitHub Copilot CLI starts it as a separate Node.js process and supplies `@github/copilot-sdk/extension` through its extension module resolver; users do not install the SDK separately. The package subpath is a host entry point, not an alternative installation command or a general-purpose JavaScript API.
 
 The installer:
 

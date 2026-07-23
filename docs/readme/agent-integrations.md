@@ -65,7 +65,7 @@ src/agents/<agent-name>/
 └── plugin.ts       # Host API adapter that loads the shared core
 ```
 
-Register the exported descriptor once in `src/agents/index.ts`. Shared installation commands, generated compatibility help, and doctor diagnostics consume that registry automatically. Put behavior used by multiple agents in `src/agents/shared` rather than duplicating it.
+Register the exported descriptor once in `src/agents/index.ts`. Shared installation commands, generated compatibility help, and doctor diagnostics consume that registry automatically. Every registered agent must also use a matching `src/package/<agent-name>.ts` wrapper and expose `@simonesiega/codex-limits/<agent-name>` through the shared package-entry build and declaration flow. Put behavior used by multiple agents in `src/agents/shared` rather than duplicating it.
 
 New adapters should remain thin, reuse `src/package/core`, avoid sending limit data to an LLM, and include installer, formatter, and host-behavior tests. Each supported integration should also have a dedicated guide under `docs/readme/agents/<agent-name>.md` and an entry in the [Agents](#agents) table.
 

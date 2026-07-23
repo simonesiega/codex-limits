@@ -16,7 +16,9 @@ This page describes the runtime, operating-system, Codex data, network, terminal
 
 Bun is used for dependency management, tests, development commands, and production builds. It is not required to run the published CLI. Runtime dependencies are bundled into `dist`, so the published package does not declare separate production dependencies.
 
-The root package module resolves to the agent-specific `dist/opencode.js` bundle for the OpenCode plugin loader. Its public module contract consists of a default plugin export and the named `tui` export; the internal core modules are not public package exports. Pi loads the separate `dist/pi.js` extension declared in the package's `pi.extensions` manifest. The GitHub Copilot CLI installer copies the separate `dist/copilot.mjs` bundle to a recognized user extension entry point.
+The root package module resolves to the agent-specific `dist/opencode.js` bundle for OpenCode plugin-loader compatibility. The explicit `@simonesiega/codex-limits/opencode` subpath resolves to the same module; both expose a default plugin and the named `tui` export. The host-only `@simonesiega/codex-limits/pi` subpath resolves to the separate `dist/pi.js` extension also declared in the package's `pi.extensions` manifest. The host-only `@simonesiega/codex-limits/copilot` subpath resolves to the executable `dist/copilot.mjs` extension, which the GitHub Copilot CLI installer also copies to its recognized user extension entry point.
+
+These agent-host exports are not a general-purpose JavaScript API and do not install an integration by themselves. The supported general interfaces are the CLI and its documented [JSON output](json-output.md). There is intentionally no `@simonesiega/codex-limits/core` export; internal core modules may change without a public API compatibility guarantee.
 
 ## Tested environments
 

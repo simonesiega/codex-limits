@@ -154,7 +154,7 @@ The GitHub Copilot CLI integration adds a `/codex-limits` command that displays 
 
 ### Adding new agents
 
-New agents use the same four-file adapter layout under `src/agents/<agent-name>`: `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. The integration descriptor owns its metadata, environment help, installer, and read-only diagnostic check; registering that descriptor in `src/agents/index.ts` automatically connects shared installation, compatibility help, and doctor diagnostics. Each integration should show Codex limit information quickly and safely without exposing tokens, account IDs, cookies, auth headers, or raw local files.
+New agents use the same four-file adapter layout under `src/agents/<agent-name>`: `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. The integration descriptor owns its metadata, environment help, installer, and read-only diagnostic check; registering that descriptor in `src/agents/index.ts` automatically connects shared installation, compatibility help, and doctor diagnostics. Every registered agent must also use a matching `src/package/<agent-name>.ts` host wrapper and expose `@simonesiega/codex-limits/<agent-name>` through the shared package-entry build. Each integration should show Codex limit information quickly and safely without exposing tokens, account IDs, cookies, auth headers, or raw local files.
 
 See the [Contributing](./CONTRIBUTING.md) guide if you want to add support for another agent.
 
@@ -162,16 +162,32 @@ See the [Contributing](./CONTRIBUTING.md) guide if you want to add support for a
 
 **`codex-limits`** is built around a shared core with different output surfaces on top of it.
 
-| Area               | Path                   | Purpose                                                                                                                                    |
-| ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| CLI entry          | `src/package/cli.ts`   | Starts the `codex-limits` command and delegates to the shared command registry.                                                            |
-| Core logic         | `src/package/core`     | Detects Codex data, normalizes live and local information, performs confirmed coupon redemption, and keeps sensitive values out of output. |
-| CLI commands       | `src/package/commands` | Defines command metadata, shared parsing and help, scoped runtime services, and focused command handlers.                                  |
-| Terminal UI        | `src/package/tui`      | Renders the clean Ink-based dashboard from normalized usage data.                                                                          |
-| Agent integrations | `src/agents`           | Contains optional coding-agent adapters used by the `codex-limits agents` command group.                                                   |
-| Tests              | `tests`                | Contains the test suite used to validate core behavior, CLI output, safety rules, and integration logic.                                   |
+| Area               | Path                          | Purpose                                                                                                                                    |
+| ------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| CLI entry          | `src/package/cli.ts`          | Starts the `codex-limits` command and delegates to the shared command registry.                                                            |
+| Agent host entries | `src/package/<agent-name>.ts` | Publish narrow, agent-specific host contracts through one shared package-entry build.                                                      |
+| Core logic         | `src/package/core`            | Detects Codex data, normalizes live and local information, performs confirmed coupon redemption, and keeps sensitive values out of output. |
+| CLI commands       | `src/package/commands`        | Defines command metadata, shared parsing and help, scoped runtime services, and focused command handlers.                                  |
+| Terminal UI        | `src/package/tui`             | Renders the clean Ink-based dashboard from normalized usage data.                                                                          |
+| Agent integrations | `src/agents`                  | Contains optional coding-agent adapters used by the `codex-limits agents` command group.                                                   |
+| Tests              | `tests`                       | Contains the test suite used to validate core behavior, CLI output, safety rules, and integration logic.                                   |
 
 This structure keeps the project easy to extend: the core owns data meaning and authenticated network operations, while commands control when capabilities are used and the TUI and agents remain rendering-only surfaces.
+
+### Supported package interfaces
+
+For general use and automation, the supported interfaces are the `codex-limits` CLI and its documented [JSON output](docs/readme/json-output.md). The package does not currently expose a general-purpose JavaScript API.
+
+The npm module exports are reserved for supported agent hosts:
+
+| Module specifier                     | Purpose                                                                                   |
+| ------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `@simonesiega/codex-limits`          | OpenCode plugin entry point retained at the package root for plugin-loader compatibility. |
+| `@simonesiega/codex-limits/opencode` | Explicit alias for the same OpenCode plugin module.                                       |
+| `@simonesiega/codex-limits/pi`       | Host-only entry point for the bundled pi extension.                                       |
+| `@simonesiega/codex-limits/copilot`  | Host-only entry point for the bundled GitHub Copilot CLI extension.                       |
+
+There is intentionally no `@simonesiega/codex-limits/core` export. Files under `src/package/core` are shared implementation details and are not covered by the package's public compatibility contract. The presence of an agent module export does not install or enable that integration; use `codex-limits agents install <agent-name>` for setup.
 
 ## Environment
 

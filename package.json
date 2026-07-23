@@ -13,11 +13,23 @@
   },
   "exports": {
     ".": {
-      "types": "./types/index.d.ts",
+      "types": "./types/opencode.d.ts",
       "import": "./dist/opencode.js"
+    },
+    "./opencode": {
+      "types": "./types/opencode.d.ts",
+      "import": "./dist/opencode.js"
+    },
+    "./pi": {
+      "types": "./types/pi.d.ts",
+      "import": "./dist/pi.js"
+    },
+    "./copilot": {
+      "types": "./types/copilot.d.ts",
+      "import": "./dist/copilot.mjs"
     }
   },
-  "types": "./types/index.d.ts",
+  "types": "./types/opencode.d.ts",
   "files": [
     "dist",
     "types",

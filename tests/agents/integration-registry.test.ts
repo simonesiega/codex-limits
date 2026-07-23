@@ -17,10 +17,11 @@ test("registered agents expose the shared adapter contract and layout", async ()
     expect(typeof integration.install).toBe("function");
     expect(typeof integration.inspect).toBe("function");
 
-    await Promise.all(
-      REQUIRED_ADAPTER_FILES.map((file) =>
+    await Promise.all([
+      ...REQUIRED_ADAPTER_FILES.map((file) =>
         access(resolve(import.meta.dir, "../../src/agents", integration.id, file))
-      )
-    );
+      ),
+      access(resolve(import.meta.dir, "../../src/package", `${integration.id}.ts`)),
+    ]);
   }
 });
