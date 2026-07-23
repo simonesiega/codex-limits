@@ -1,5 +1,7 @@
 # GitHub Copilot CLI integration
 
+[← Documentation hub](../../README.md) · [Agent integrations](../agent-integrations.md) · [Project README](../../../README.md)
+
 The GitHub Copilot CLI integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending a prompt or limit data to the LLM.
 
 ## Overview
@@ -136,7 +138,8 @@ Copilot CLI extensions execute as separate processes with the current user's sys
 - [GitHub Copilot CLI][copilot-cli] — Official CLI repository.
 - [Copilot CLI documentation][copilot-docs] — Official concepts and usage documentation.
 - [Copilot SDK extension documentation][copilot-extension-docs] — Current experimental extension lifecycle and API.
-- [Project README](../../../README.md#documentation) — Installation, commands, configuration, and the complete documentation index.
+- [Documentation hub](../../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
+- [Project README](../../../README.md) — Product overview, installation, commands, configuration, and troubleshooting.
 
 [copilot-cli]: https://github.com/github/copilot-cli
 [copilot-docs]: https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli

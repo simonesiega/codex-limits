@@ -1,5 +1,7 @@
 # Agent integrations
 
+[← Documentation hub](../README.md) · [Project README](../../README.md)
+
 This page is the central index for supported agent integrations. Each agent has a dedicated guide covering installation, usage, compatibility, removal, and troubleshooting.
 
 `codex-limits` can expose the shared, read-only limits dashboard inside supported coding agents. Integrations remain thin and load normalized data through the same core as the CLI.
@@ -75,4 +77,5 @@ See [Contributing](../../CONTRIBUTING.md#adding-a-new-agent) for the complete co
 - [JSON output](json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
 - [Contributing](../../CONTRIBUTING.md#adding-a-new-agent) — Complete checklist for developing and submitting another agent adapter.
 - [Security policy](../../SECURITY.md) — Local-data safeguards, network behavior, and vulnerability reporting.
-- [Project README](../../README.md#documentation) — Installation, commands, configuration, and the complete documentation index.
+- [Documentation hub](../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
+- [Project README](../../README.md) — Product overview, installation, commands, configuration, and troubleshooting.

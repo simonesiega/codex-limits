@@ -1,5 +1,7 @@
 # Compatibility
 
+[← Documentation hub](../README.md) · [Project README](../../README.md)
+
 This page describes the runtime, operating-system, Codex data, network, terminal, and agent compatibility implemented by the current codebase.
 
 ## Runtime and installation
@@ -23,7 +25,7 @@ The following environments are covered by the repository's automated checks or c
 | Area                   | Tested environments                                                                                                |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Automated packaged CLI | GitHub Actions on `ubuntu-latest` with Node.js 20, 22, and 24, plus `windows-latest` with Node.js 20               |
-| Current local checks   | Windows build `10.0.26200` with Node.js 22.20.0 and Bun 1.3.14                                                     |
+| Current local checks   | Windows build `10.0.26200.8875` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-07-23)                          |
 | Terminal rendering     | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix |
 | OpenCode agent adapter | Mocked current keymap and legacy command API shapes; no exact OpenCode host release is tested end-to-end           |
 | pi agent adapter       | Mocked command/UI APIs with real TUI components; package discovery validated in pi 0.81.1 print mode               |
@@ -80,7 +82,7 @@ Live data uses these defaults:
 
 These endpoints are implementation details rather than a public API contract and may change when Codex changes its service behavior. A response containing only a recognized weekly window is treated as valid live usage; local discovery is used only when the live response contains no recognized usage window.
 
-Requests are authenticated from Codex credentials, reject redirects, time out after 10 seconds by default, and limit JSON responses to 1 MB. The transport uses the runtime's `fetch` implementation and can fall back to native Node HTTP/HTTPS transport for supported failures. Coupon redemption accepts only an exact coupon ID with the recognized `codex_rate_limits` type. `--soonest` refuses partial or count-inconsistent coupon data, and its bounded JSON `POST` uses a per-attempt idempotency key that is reused by any transport fallback.
+Requests are authenticated from Codex credentials, reject redirects, time out after 10 seconds by default, and limit JSON responses to 1 MB. The transport uses the runtime's `fetch` implementation and can fall back to native Node HTTP/HTTPS transport for supported failures. Coupon redemption accepts only an exact coupon ID with the recognized `codex_rate_limits` type. `--soonest` refuses partial or count-inconsistent coupon data and any available coupon whose expiration cannot be verified. Its bounded JSON `POST` uses a fresh idempotency key for each confirmed redemption and reuses that key for any transport fallback.
 
 `CODEX_LIMITS_USAGE_ENDPOINT` can override only the live usage endpoint. Overrides must use HTTPS. Plain HTTP is accepted only for loopback testing on `localhost`, `127.0.0.1`, or `::1`. URLs containing embedded usernames or passwords and all other protocols are rejected.
 
@@ -137,4 +139,5 @@ The latest npm release is supported. The current `main` branch is supported for 
 - [JSON output](json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
 - [Agent integrations](agent-integrations.md) — Installation, architecture, compatibility, and troubleshooting for agent adapters.
 - [Security policy](../../SECURITY.md) — Data-access safeguards, network behavior, and vulnerability reporting.
-- [Project README](../../README.md#documentation) — Installation, commands, configuration, and the complete documentation index.
+- [Documentation hub](../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
+- [Project README](../../README.md) — Product overview, installation, commands, configuration, and troubleshooting.

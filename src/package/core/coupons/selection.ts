@@ -31,7 +31,7 @@ export function selectResetCoupon(
   if (
     result.status === "partial" ||
     availableCountMismatch ||
-    available.some((coupon) => !isRedeemable(coupon))
+    available.some((coupon) => !isRedeemable(coupon) || parseDateValue(coupon.expiresAt) === null)
   ) {
     return {kind: "details-unavailable"};
   }

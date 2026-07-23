@@ -59,6 +59,11 @@ if (process.platform !== "win32") {
         "utf8"
       );
       await symlink(join(outside, "limits.json"), join(home, "linked.json"), "file");
+      await symlink(
+        join(outside, "rollout-outside.jsonl"),
+        join(home, "sessions", "rollout-linked.jsonl"),
+        "file"
+      );
       await symlink(outside, join(home, "sessions", "linked"), "dir");
 
       const [state, sessions] = await Promise.all([readCodexState(home), readCodexSessions(home)]);

@@ -231,6 +231,51 @@ test("authenticatedJsonRequest preserves a POST body in the native fallback", as
   );
 });
 
+test("authenticatedJsonGet closes native HTTP error bodies without draining them", async () => {
+  const totalChunks = 200;
+  let chunksSent = 0;
+  let markResponseClosed: () => void = () => undefined;
+  const responseClosed = new Promise<void>((resolve) => {
+    markResponseClosed = resolve;
+  });
+
+  await withLoopbackServer(
+    (incoming, response) => {
+      response.writeHead(503, {
+        connection: "close",
+        "content-type": "application/octet-stream",
+      });
+      const interval = setInterval(() => {
+        chunksSent += 1;
+        if (chunksSent >= totalChunks) {
+          clearInterval(interval);
+          response.end("x".repeat(8_192));
+          return;
+        }
+        response.write("x".repeat(8_192));
+      }, 2);
+      incoming.socket.once("close", () => {
+        clearInterval(interval);
+        markResponseClosed();
+      });
+    },
+    async (origin) => {
+      const result = await authenticatedJsonGet(
+        request(
+          async () => {
+            throw new Error("fetch failed");
+          },
+          {endpoint: `${origin}/usage`}
+        )
+      );
+
+      expect(result).toEqual({ok: false, code: "http-error", status: 503});
+      await responseClosed;
+      expect(chunksSent).toBeLessThan(totalChunks);
+    }
+  );
+});
+
 test("authenticatedJsonGet falls back from fetch to the bounded native transport", async () => {
   await withLoopbackServer(
     (_request, response) => {

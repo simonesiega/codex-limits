@@ -1,5 +1,7 @@
 # JSON output
 
+[← Documentation hub](../README.md) · [Project README](../../README.md)
+
 `codex-limits` provides predictable, machine-readable JSON for scripts and automation.
 
 ## Commands
@@ -289,4 +291,5 @@ Consumers should tolerate `null` values and warning entries. Parse fields as JSO
 - [JSON Schema](../schema/codex-limits.schema.json) — Machine-readable schema for validating the complete JSON response.
 - [Compatibility](compatibility.md) — Runtime, operating system, local-data, terminal, and network requirements.
 - [Agent integrations](agent-integrations.md) — Installation, architecture, behavior, and development of supported agent integrations.
-- [Project README](../../README.md#documentation) — Installation, commands, configuration, troubleshooting, and the complete documentation index.
+- [Documentation hub](../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
+- [Project README](../../README.md) — Product overview, installation, commands, configuration, and troubleshooting.

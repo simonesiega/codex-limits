@@ -16,7 +16,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/npm/v/@simonesiega/codex-limits?label=npm" alt="npm version" />
-  <img src="https://img.shields.io/badge/test_coverage-96.3%25_lines-brightgreen" alt="Test coverage: 96.3% lines" />
+  <img src="https://img.shields.io/badge/test_coverage-96.2%25_lines-brightgreen" alt="Test coverage: 96.2% lines" />
 </p>
 
 <p align="center">
@@ -46,6 +46,7 @@ The screenshots show the **`codex-limits`** terminal dashboards: clean, read-onl
 - [Usage](#usage)
 - [Troubleshooting](#troubleshooting)
 - [Documentation](#documentation)
+  - [Documentation hub](docs/README.md)
   - [JSON output](docs/readme/json-output.md)
   - [Agent integrations](docs/readme/agent-integrations.md)
   - [Compatibility](docs/readme/compatibility.md)
@@ -53,9 +54,6 @@ The screenshots show the **`codex-limits`** terminal dashboards: clean, read-onl
 - [Security](#security)
 - [License](#license)
 - [Contributors](#contributors)
-
-> Last verified against: `@simonesiega/codex-limits` v0.1.6
-> Verification date: 2026-07-22
 
 ## Quick start
 
@@ -289,12 +287,15 @@ Run the named installer again, for example `codex-limits agents install opencode
 
 ## Documentation
 
-The README provides an overview of the main features, commands, and configuration options. For more detailed technical information, see the following guides:
+The [documentation hub](docs/README.md) routes CLI users, automation authors, agent users, and contributors to the appropriate canonical guide.
 
-- [JSON output](docs/readme/json-output.md) — Learn about the machine-readable output format, available fields, warnings, examples, and scripting behavior.
-- [Agent integrations](docs/readme/agent-integrations.md) — Learn how agent integrations work, how they are installed, and how to develop and contribute new agent adapters.
-- [GitHub Copilot CLI integration](docs/readme/agents/copilot.md) — Install and use the experimental Copilot CLI extension command.
-- [Compatibility](docs/readme/compatibility.md) — View the supported operating systems, Node.js versions, terminals, Codex environments, and agent versions.
+| Area                   | Canonical guide                                                                                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CLI setup and commands | [Quick start](#quick-start) · [Usage](#usage) · [Troubleshooting](#troubleshooting)                                                                                               |
+| Automation             | [JSON output](docs/readme/json-output.md) · [JSON Schema](docs/schema/codex-limits.schema.json) · [Example document](docs/examples/codex-limits-output.example.json)              |
+| Agent integrations     | [Overview](docs/readme/agent-integrations.md) · [OpenCode](docs/readme/agents/opencode.md) · [pi](docs/readme/agents/pi.md) · [GitHub Copilot CLI](docs/readme/agents/copilot.md) |
+| Runtime support        | [Compatibility](docs/readme/compatibility.md)                                                                                                                                     |
+| Development and safety | [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md)                                                                                             |
 
 ## Local development
 

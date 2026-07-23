@@ -10,6 +10,8 @@ All notable changes to codex-limits are documented in this file.
 
 - Added `codex-limits reset` for consuming a numbered or soonest-expiring reset coupon after an interactive recap and explicit `y` confirmation.
 - Added the GitHub Copilot CLI integration with `codex-limits agents install copilot` and a read-only `/codex-limits` extension command that does not send limit data to the LLM.
+- Added a task-oriented documentation hub and included the complete guides, JSON Schema, and sanitized example in published npm packages.
+- Added weekly Dependabot updates for the Bun dependency graph.
 
 ### Changed
 
@@ -21,6 +23,8 @@ All notable changes to codex-limits are documented in this file.
 ### Removed
 
 ### Security
+
+- Hardened bounded session and native HTTP reads against path-replacement races and unbounded error-body draining, and made `reset --soonest` fail closed when coupon expirations cannot be verified.
 
 ## [0.1.6] - 2026-07-22
 

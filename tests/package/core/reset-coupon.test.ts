@@ -144,6 +144,12 @@ test("selectResetCoupon matches display indexes and the earliest available expir
     kind: "details-unavailable",
   });
 
+  const undatedSoonest = createFakeCouponResult();
+  undatedSoonest.items[0]!.expiresAt = null;
+  expect(selectResetCoupon(undatedSoonest, {kind: "soonest"})).toEqual({
+    kind: "details-unavailable",
+  });
+
   const inconsistentCount = createFakeCouponResult();
   inconsistentCount.items[0]!.status = "redeemed";
   expect(selectResetCoupon(inconsistentCount, {kind: "soonest"})).toEqual({

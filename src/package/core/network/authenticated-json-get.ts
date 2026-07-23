@@ -249,15 +249,16 @@ function consumeNodeResponse(
 ): void {
   const status = normalizeStatus(response.statusCode);
   if (status === null || status < 200 || status >= 300) {
-    response.resume();
+    // Do not drain an untrusted error body after the safe status has been classified.
     finish(failure("http-error", status));
+    destroyNodeResponse(response);
     return;
   }
 
   const declaredLength = Number(response.headers["content-length"]);
   if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
-    response.destroy();
     finish(failure("response-too-large"));
+    destroyNodeResponse(response);
     return;
   }
 
@@ -268,8 +269,8 @@ function consumeNodeResponse(
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
     totalBytes += buffer.length;
     if (totalBytes > maxBytes) {
-      response.destroy();
       finish(failure("response-too-large"));
+      destroyNodeResponse(response);
       return;
     }
     chunks.push(buffer);
@@ -283,6 +284,12 @@ function consumeNodeResponse(
     }
   });
   response.on("error", () => finish(failure("network-error")));
+}
+
+function destroyNodeResponse(response: IncomingMessage): void {
+  response.destroy();
+  // Bun's Node compatibility layer may leave the socket open after IncomingMessage.destroy().
+  response.socket.destroy();
 }
 
 function createRequestSignal(

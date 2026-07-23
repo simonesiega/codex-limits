@@ -56,7 +56,8 @@ test("package metadata includes runtime documentation and excludes bundled runti
   const packageJson = await readPackageMetadata();
 
   expect(packageJson.files).toContain("types");
-  expect(packageJson.files).toContain("docs/photos");
+  expect(packageJson.files).toContain("docs");
+  expect(packageJson.files).toContain("CONTRIBUTING.md");
   expect(packageJson.files).toContain("SECURITY.md");
   expect(packageJson.dependencies ?? {}).toEqual({});
   expect(packageJson.peerDependencies).toEqual({

@@ -13,6 +13,19 @@
   <img src="https://img.shields.io/github/license/simonesiega/codex-limits" alt="License" />
 </p>
 
+[← Project README](README.md) · [Documentation hub](docs/README.md)
+
+## Contents
+
+- [Supported versions](#supported-versions)
+- [Reporting a vulnerability](#reporting-a-vulnerability)
+- [What to expect](#what-to-expect)
+- [Local data and network behavior](#local-data-and-network-behavior)
+- [What to report](#what-to-report)
+- [Safety expectations](#safety-expectations)
+- [Dependency and release security](#dependency-and-release-security)
+- [Related documentation](#related-documentation)
+
 ## Supported versions
 
 Security fixes are handled for the latest published version of `@simonesiega/codex-limits` and for the current `main` branch.
@@ -29,10 +42,10 @@ If you discover a vulnerability, a way to expose private Codex data, or a behavi
 
 Report it privately using one of the following methods:
 
-| Contact                             | Value                                                                                      |
-| ----------------------------------- | ------------------------------------------------------------------------------------------ |
-| GitHub private vulnerability report | [Submit a private report](https://github.com/simonesiega/codex-limits/security/advisories) |
-| Email                               | [simonesiega1@gmail.com](mailto:simonesiega1@gmail.com)                                    |
+| Contact                             | Value                                                                                          |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------- |
+| GitHub private vulnerability report | [Submit a private report](https://github.com/simonesiega/codex-limits/security/advisories/new) |
+| Email                               | [simonesiega1@gmail.com](mailto:simonesiega1@gmail.com)                                        |
 
 Do not include real access tokens, credentials, or unredacted private Codex files in the report. Use redacted examples whenever possible.
 
@@ -109,3 +122,21 @@ The project should:
 - keep agent integrations thin and reuse the shared core instead of reimplementing security-sensitive parsing;
 - use placeholders or redacted values in documentation, examples, and test fixtures;
 - convert network, payload, authentication, and filesystem failures into deterministic safe warnings rather than raw exception messages.
+
+## Dependency and release security
+
+- Keep `bun.lock` committed and use frozen, script-disabled dependency installation in CI and publishing workflows.
+- Keep third-party GitHub Actions pinned to immutable revisions and review automated updates before merging.
+- Run `bun run check` before publishing; it rebuilds every bundle, validates generated declarations and notices, packs the npm artifact, and smoke-tests supported runtime surfaces.
+- Publish only from a validated release tag whose version matches `package.json` and `src/package/version.ts`.
+- Use npm Trusted Publishing with provenance rather than a long-lived npm token.
+- Keep agent host SDKs external where the host owns them, and keep bundled third-party license notices synchronized with production artifacts.
+- Do not publish from a dirty tree or bypass package validation, release-version checks, lifecycle-script restrictions, or provenance.
+
+## Related documentation
+
+- [Documentation hub](docs/README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
+- [Compatibility](docs/readme/compatibility.md) — Supported runtimes, operating systems, Codex data, networks, terminals, and agent hosts.
+- [JSON output](docs/readme/json-output.md) — Public machine-readable fields and deliberately omitted sensitive data.
+- [Agent integrations](docs/readme/agent-integrations.md) — Shared adapter architecture, installation, and privacy guarantees.
+- [Contributing](CONTRIBUTING.md) — Development workflow, safety rules, and review expectations.

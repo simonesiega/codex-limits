@@ -1,6 +1,7 @@
-import type {Dirent} from "node:fs";
-import {createReadStream} from "node:fs";
-import {lstat, opendir, realpath, stat} from "node:fs/promises";
+import {constants} from "node:fs";
+import type {Dirent, ReadStream, Stats} from "node:fs";
+import type {FileHandle} from "node:fs/promises";
+import {lstat, open, opendir, realpath} from "node:fs/promises";
 import {join} from "node:path";
 import type {
   CodexSessionFile,
@@ -23,6 +24,8 @@ interface SessionCandidate {
   path: string;
   modifiedAtMs: number;
   size: number;
+  dev: number;
+  ino: number;
 }
 
 interface SessionWalkState {
@@ -60,7 +63,7 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
       continue;
     }
     try {
-      const extraction = await extractSnapshotFromSessionFile(homePath, candidate.path);
+      const extraction = await extractSnapshotFromSessionFile(homePath, candidate);
       files.push(
         toSessionFile(
           candidate.path,
@@ -158,12 +161,18 @@ async function statSessionFile(
   warnings: string[]
 ): Promise<SessionCandidate | null> {
   try {
-    const [details, realFilePath] = await Promise.all([stat(path), realpath(path)]);
+    const [details, realFilePath] = await Promise.all([lstat(path), realpath(path)]);
     if (!details.isFile() || !isPathWithin(realSessionsRoot, realFilePath)) {
       warnings.push(`Could not inspect ${toSafeRelativePath(homePath, path)}.`);
       return null;
     }
-    return {path, modifiedAtMs: details.mtimeMs, size: details.size};
+    return {
+      path,
+      modifiedAtMs: details.mtimeMs,
+      size: details.size,
+      dev: details.dev,
+      ino: details.ino,
+    };
   } catch {
     warnings.push(`Could not inspect ${toSafeRelativePath(homePath, path)}.`);
     return null;
@@ -243,10 +252,11 @@ async function readBoundedDirectory(
 
 async function extractSnapshotFromSessionFile(
   homePath: string,
-  sessionFile: string
+  candidate: SessionCandidate
 ): Promise<SnapshotExtraction> {
+  const sessionFile = candidate.path;
   const relativePath = toSafeRelativePath(homePath, sessionFile);
-  const stream = createReadStream(sessionFile, {encoding: "utf8", highWaterMark: 64 * 1024});
+  const stream = await openVerifiedSessionStream(candidate);
   let threadId: string | null = null;
   let latest: CodexSessionSnapshot | null = null;
   let pending = "";
@@ -328,6 +338,47 @@ async function extractSnapshotFromSessionFile(
   return {snapshot: latest, skippedOversizedLine};
 }
 
+async function openVerifiedSessionStream(candidate: SessionCandidate): Promise<ReadStream> {
+  let handle: FileHandle | undefined;
+
+  try {
+    const pathDetails = await lstat(candidate.path);
+    if (!pathDetails.isFile() || !isSameFile(pathDetails, candidate)) {
+      throw new SessionFileChangedError();
+    }
+
+    const noFollow = constants.O_NOFOLLOW;
+    const openFlags =
+      typeof noFollow === "number" ? constants.O_RDONLY | noFollow : constants.O_RDONLY;
+    handle = await open(candidate.path, openFlags);
+    const [openedDetails, currentPathDetails] = await Promise.all([
+      handle.stat(),
+      lstat(candidate.path),
+    ]);
+    if (
+      !openedDetails.isFile() ||
+      !currentPathDetails.isFile() ||
+      !isSameFile(openedDetails, candidate) ||
+      !isSameFile(openedDetails, currentPathDetails)
+    ) {
+      throw new SessionFileChangedError();
+    }
+    if (openedDetails.size > MAX_SESSION_FILE_BYTES) {
+      throw new SessionTooLargeError();
+    }
+
+    // The stream owns and closes the verified descriptor on completion or failure.
+    return handle.createReadStream({encoding: "utf8", highWaterMark: 64 * 1024});
+  } catch (error) {
+    await handle?.close().catch(() => undefined);
+    throw error;
+  }
+}
+
+function isSameFile(left: Pick<Stats, "dev" | "ino">, right: Pick<Stats, "dev" | "ino">): boolean {
+  return left.dev === right.dev && left.ino === right.ino;
+}
+
 function parseSnapshotLine(rawLine: string): {
   threadId: string | null;
   timestamp: string | null;
@@ -395,3 +446,5 @@ async function isSymbolicLink(path: string): Promise<boolean> {
 }
 
 class SessionTooLargeError extends Error {}
+
+class SessionFileChangedError extends Error {}

@@ -18,9 +18,26 @@
     <img src="https://img.shields.io/github/issues/simonesiega/codex-limits" alt="Open issues" />
 </p>
 
+Read [`README.md`](README.md) first, then use the [documentation hub](docs/README.md) to find the canonical guide for the area you plan to change.
+
+## Contents
+
+- [Quick start](#quick-start)
+- [Branch naming](#branch-naming)
+- [Issues](#issues)
+- [Local development](#local-development)
+- [Code guidelines](#code-guidelines)
+- [Safety rules](#safety-rules)
+- [Adding a new agent](#adding-a-new-agent)
+- [Documentation changes](#documentation-changes)
+- [Pull request checklist](#pull-request-checklist)
+- [Security policy](#security-policy)
+- [Community guidelines](#community-guidelines)
+- [Contact](#contact)
+
 ## Quick start
 
-If you are new to the project, read [`README.md`](README.md) first, then choose one focused issue or improvement.
+If you are new to the project, read [`README.md`](README.md) and the [documentation hub](docs/README.md), then choose one focused issue or improvement.
 
 | Step | Action                                          |
 | ---- | ----------------------------------------------- |
@@ -154,6 +171,28 @@ New agents should use the same small adapter shape as [`src/agents/opencode`](sr
 | 10   | Run the documentation link and schema checks.                                                                                   |
 
 The goal of every integration is the same: show Codex limit information quickly, safely, and without sending unnecessary work to the LLM.
+
+## Documentation changes
+
+Task-oriented guides live under [`docs/`](docs/README.md), and visual assets live under [`docs/photos/`](docs/photos/). Update the canonical guide whenever behavior, setup, compatibility, output, or safety guarantees change; avoid copying complete procedures into multiple files.
+
+Keep documentation changes consistent with these rules:
+
+- use relative links for files in this repository;
+- keep commands executable from their documented working directory;
+- keep heading anchors stable when another file links to them;
+- synchronize JSON examples with `docs/schema/codex-limits.schema.json`;
+- use descriptive image alt text and sanitized screenshots;
+- never include tokens, account IDs, cookies, authorization headers, private paths, environment contents, or raw Codex files.
+
+Run:
+
+```bash
+bun run docs:check
+git diff --check
+```
+
+Documentation-only changes do not require unrelated runtime changes, but the complete `bun run check` remains the final repository gate before release.
 
 ## Pull request checklist
 

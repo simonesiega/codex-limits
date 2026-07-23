@@ -1,5 +1,7 @@
 # pi integration
 
+[← Documentation hub](../../README.md) · [Agent integrations](../agent-integrations.md) · [Project README](../../../README.md)
+
 The pi integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending a prompt to an LLM.
 
 ## Overview
@@ -137,4 +139,5 @@ Pi extensions execute with the current user's system permissions. Install only p
 - [JSON output](../json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
 - [Security policy](../../../SECURITY.md) — Local-data safeguards, network behavior, and vulnerability reporting.
 - [pi](https://pi.dev/) — Official agent website.
-- [Project README](../../../README.md#documentation) — Installation, commands, configuration, and the complete documentation index.
+- [Documentation hub](../../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
+- [Project README](../../../README.md) — Product overview, installation, commands, configuration, and troubleshooting.

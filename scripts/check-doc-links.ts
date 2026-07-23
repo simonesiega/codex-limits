@@ -14,7 +14,12 @@ let externalLinkCount = 0;
 
 for (const file of markdownFiles) {
   const content = await readFile(file, "utf8");
-  for (const link of extractLinks(content)) {
+  const extracted = extractLinks(content);
+  for (const issue of extracted.issues) {
+    const location = `${relative(root, file).replaceAll("\\", "/")}:${lineAt(content, issue.index)}`;
+    errors.push(`${location} ${issue.message}`);
+  }
+  for (const link of extracted.links) {
     const location = `${relative(root, file).replaceAll("\\", "/")}:${lineAt(content, link.index)}`;
     const target = decodeHtmlEntities(link.target.trim());
 
@@ -52,6 +57,16 @@ interface DocumentationLink {
   target: string;
 }
 
+interface DocumentationLinkIssue {
+  index: number;
+  message: string;
+}
+
+interface ExtractedDocumentationLinks {
+  links: DocumentationLink[];
+  issues: DocumentationLinkIssue[];
+}
+
 async function findMarkdownFiles(directory: string): Promise<string[]> {
   const files: string[] = [];
 
@@ -67,12 +82,17 @@ async function findMarkdownFiles(directory: string): Promise<string[]> {
   return files;
 }
 
-function extractLinks(content: string): DocumentationLink[] {
+function extractLinks(content: string): ExtractedDocumentationLinks {
   const searchable = maskCode(content);
   const links: DocumentationLink[] = [];
+  const issues: DocumentationLinkIssue[] = [];
+  const references = new Map<string, DocumentationLink>();
   const markdownLink =
     /!?\[[^\]\n]*\]\(\s*(?:<([^>\n]+)>|([^\s)\n]+))(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
   const htmlLink = /\b(?:href|src)\s*=\s*(?:"([^"]+)"|'([^']+)')/gi;
+  const referenceDefinition =
+    /^ {0,3}\[([^\]\n]+)\]:\s*(?:<([^>\n]+)>|(\S+))(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*$/gm;
+  const referenceLink = /!?\[([^\]\n]+)\]\[([^\]\n]*)\]/g;
 
   for (const match of searchable.matchAll(markdownLink)) {
     const target = match[1] ?? match[2];
@@ -86,8 +106,43 @@ function extractLinks(content: string): DocumentationLink[] {
       links.push({index: match.index, target});
     }
   }
+  for (const match of searchable.matchAll(referenceDefinition)) {
+    const label = match[1];
+    const target = match[2] ?? match[3];
+    if (!label || target === undefined || match.index === undefined) {
+      continue;
+    }
 
-  return links.sort((left, right) => left.index - right.index);
+    const key = normalizeReferenceLabel(label);
+    if (references.has(key)) {
+      issues.push({index: match.index, message: `defines duplicate link reference [${label}].`});
+      continue;
+    }
+    const definition = {index: match.index, target};
+    references.set(key, definition);
+    links.push(definition);
+  }
+  for (const match of searchable.matchAll(referenceLink)) {
+    const text = match[1];
+    const explicitLabel = match[2];
+    if (!text || explicitLabel === undefined || match.index === undefined) {
+      continue;
+    }
+
+    const label = explicitLabel || text;
+    if (!references.has(normalizeReferenceLabel(label))) {
+      issues.push({index: match.index, message: `uses undefined link reference [${label}].`});
+    }
+  }
+
+  return {
+    links: links.sort((left, right) => left.index - right.index),
+    issues: issues.sort((left, right) => left.index - right.index),
+  };
+}
+
+function normalizeReferenceLabel(value: string): string {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 function maskCode(content: string): string {
