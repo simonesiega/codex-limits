@@ -8,6 +8,18 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [1.0.0] - 2026-07-23
+
+### Added
+
 - Added `codex-limits reset` for consuming a numbered or soonest-expiring reset coupon after an interactive recap and explicit `y` confirmation.
 - Added the GitHub Copilot CLI integration with `codex-limits agents install copilot` and a read-only `/codex-limits` extension command that does not send limit data to the LLM.
 - Added a task-oriented documentation hub and included the complete guides, JSON Schema, and sanitized example in published npm packages.
@@ -22,8 +34,6 @@ All notable changes to codex-limits are documented in this file.
 
 - Fixed local session fallback to select the newest bounded event timestamp when file modification times are misleading.
 - Fixed combined dashboard loading to start independent usage and reset-coupon requests concurrently.
-
-### Removed
 
 ### Security
 
