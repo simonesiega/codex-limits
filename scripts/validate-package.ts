@@ -1,5 +1,5 @@
 import {spawn} from "node:child_process";
-import {copyFile, mkdtemp, mkdir, readFile, rm, stat, writeFile} from "node:fs/promises";
+import {copyFile, mkdtemp, mkdir, readFile, realpath, rm, stat, writeFile} from "node:fs/promises";
 import {builtinModules} from "node:module";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
@@ -461,8 +461,17 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
   const piSettings = JSON.parse(
     await readFile(join(home, ".pi", "agent", "settings.json"), "utf8")
   ) as {packages?: unknown[]};
+  const registeredPiPackage = piSettings.packages?.[0];
   assert(
-    piSettings.packages?.includes(packedRoot) === true,
+    piSettings.packages?.length === 1 && typeof registeredPiPackage === "string",
+    "Packed CLI registered an unexpected pi package path."
+  );
+  const [registeredPiRoot, expectedPiRoot] = await Promise.all([
+    realpath(registeredPiPackage),
+    realpath(packedRoot),
+  ]);
+  assert(
+    registeredPiRoot === expectedPiRoot,
     "Packed CLI registered an unexpected pi package path."
   );
 

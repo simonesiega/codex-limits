@@ -17,6 +17,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
+- Fixed packed-package validation for canonical temporary-directory paths on macOS.
+
 ### Removed
 
 ### Security

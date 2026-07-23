@@ -20,6 +20,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/npm/v/@simonesiega/codex-limits?label=npm" alt="npm version" />
+  <a href="https://www.npmjs.com/package/@simonesiega/codex-limits">
+    <img src="https://img.shields.io/npm/dm/@simonesiega/codex-limits?label=monthly%20downloads" alt="npm downloads in the last month"/>
+  </a>
   <a href="https://github.com/simonesiega/codex-limits/actions/workflows/check.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/simonesiega/codex-limits/check.yml?branch=main&amp;label=tests" alt="Automated test status" /></a>
 </p>
 
