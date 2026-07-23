@@ -25,7 +25,7 @@ test("every command has generated usage, help-visible options, and a safety cate
   }
 });
 
-test("registry formally separates read-only and local-write commands", () => {
+test("registry formally separates read-only, local-write, and remote-mutation commands", () => {
   const safetyById = Object.fromEntries(
     registry.commands.map((command) => [command.id, command.safety])
   );
@@ -34,6 +34,7 @@ test("registry formally separates read-only and local-write commands", () => {
     dashboard: "read-only",
     status: "read-only",
     coupons: "read-only",
+    reset: "remote-mutation",
     doctor: "read-only",
     "agents.install": "local-write",
     init: "local-write",
@@ -71,7 +72,7 @@ test("registry validation rejects ambiguous paths and unsafe remote mutations", 
     safety: "remote-mutation",
     safetyNote: "Changes the remote account.",
     failureMessage: "Could not redeem coupon.",
-    confirmation: {optionKey: "confirm"},
+    confirmation: {kind: "option", optionKey: "confirm"},
     async execute() {
       return 0;
     },
@@ -178,7 +179,7 @@ test("remote mutations cannot execute without their declared confirmation", () =
     safety: "remote-mutation",
     safetyNote: "Changes the remote account.",
     failureMessage: "Could not redeem coupon.",
-    confirmation: {optionKey: "confirm"},
+    confirmation: {kind: "option", optionKey: "confirm"},
     async execute() {
       return 0;
     },
@@ -190,6 +191,19 @@ test("remote mutations cannot execute without their declared confirmation", () =
   expect(
     getCommandSafetyViolation(mutation, {options: {confirm: true}, positionals: []})
   ).toBeNull();
+
+  const interactiveMutation: CommandDefinition = {
+    ...mutation,
+    options: [],
+    usage: ["codex-limits redeem"],
+    confirmation: {kind: "interactive"},
+  };
+  expect(
+    getCommandSafetyViolation(interactiveMutation, {options: {}, positionals: []}, false)
+  ).toContain("requires an interactive terminal");
+  expect(
+    getCommandSafetyViolation(interactiveMutation, {options: {}, positionals: []}, true)
+  ).toBeNull();
 });
 
 test("root and nested help are generated from registry metadata", () => {
@@ -200,6 +214,7 @@ test("root and nested help are generated from registry metadata", () => {
   const installHelp = formatHelp(registry, install);
 
   expect(rootHelp).toContain("status   Print a non-interactive usage summary");
+  expect(rootHelp).toContain("reset    Consume one coupon to reset current Codex usage limits");
   expect(rootHelp).toContain("doctor   Run safe environment and connectivity diagnostics");
   expect(rootHelp).toContain("agents   Manage optional coding-agent integrations");
   expect(rootHelp.indexOf("agents   Manage")).toBeLessThan(rootHelp.indexOf("init     Install"));

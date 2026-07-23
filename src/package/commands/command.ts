@@ -59,9 +59,12 @@ export interface LocalWriteCommandDefinition extends CommandDefinitionBase {
 
 export interface RemoteMutationCommandDefinition extends CommandDefinitionBase {
   safety: "remote-mutation";
-  confirmation: {
-    optionKey: string;
-  };
+  confirmation:
+    | {kind: "interactive"}
+    | {
+        kind: "option";
+        optionKey: string;
+      };
 }
 
 export type CommandDefinition =

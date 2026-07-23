@@ -37,6 +37,8 @@ export function createFakeCouponResult(): CouponResult {
     nextExpirationIn: "7d 4h 38m",
     items: [
       {
+        id: "RateLimitResetCredit_test-1",
+        resetType: "codex_rate_limits",
         index: 1,
         status: "available",
         grantedAt: "2026-06-11T20:38:07Z",
@@ -45,6 +47,8 @@ export function createFakeCouponResult(): CouponResult {
         expiresIn: "7d 4h 38m",
       },
       {
+        id: "RateLimitResetCredit_test-2",
+        resetType: "codex_rate_limits",
         index: 2,
         status: "available",
         grantedAt: "2026-06-17T18:42:45Z",

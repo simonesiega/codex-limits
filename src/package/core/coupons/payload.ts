@@ -1,3 +1,4 @@
+import {isValidCouponId} from "@/package/core/coupons/coupon-id";
 import type {CouponItem, CouponResult} from "@/package/core/types";
 import {formatDuration, formatLongDate, parseDateValue} from "@/package/core/utils/date-time";
 import {isRecord, readString} from "@/package/core/utils/unknown";
@@ -92,6 +93,13 @@ function parseCouponItem(value: unknown, index: number, now: Date): CouponItem |
     return null;
   }
 
+  const rawId = value.id;
+  const id = typeof rawId === "string" && isValidCouponId(rawId) ? rawId : null;
+  const rawResetType = value.reset_type ?? value.resetType;
+  const resetType =
+    typeof rawResetType === "string" && /^[a-z][a-z0-9_-]{0,63}$/i.test(rawResetType)
+      ? rawResetType
+      : null;
   const rawExpiresAt = readString(value, "expires_at") ?? readString(value, "expiresAt");
   const rawGrantedAt = readString(value, "granted_at") ?? readString(value, "grantedAt");
   const expiresAtDate = parseDateValue(rawExpiresAt);
@@ -101,11 +109,13 @@ function parseCouponItem(value: unknown, index: number, now: Date): CouponItem |
   const grantedAt = grantedAtDate ? rawGrantedAt : null;
   const expiresAt = expiresAtDate ? rawExpiresAt : null;
 
-  if (!status && !grantedAt && !expiresAt) {
+  if (("id" in value && !id) || (!status && !grantedAt && !expiresAt)) {
     return null;
   }
 
   return {
+    id,
+    resetType,
     index,
     status,
     grantedAt,

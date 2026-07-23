@@ -16,6 +16,7 @@ test("parser accepts root, nested, compatibility, and order-independent options"
     kind: CliParseResult["kind"];
     commandId?: string;
     options?: Record<string, OptionValue>;
+    positionals?: string[];
   }> = [
     {args: [], kind: "command", commandId: "dashboard", options: {}},
     {args: ["status"], kind: "command", commandId: "status", options: {}},
@@ -32,6 +33,19 @@ test("parser accepts root, nested, compatibility, and order-independent options"
       kind: "command",
       commandId: "coupons",
       options: {"output.json": true},
+    },
+    {
+      args: ["reset", "2"],
+      kind: "command",
+      commandId: "reset",
+      options: {},
+      positionals: ["2"],
+    },
+    {
+      args: ["reset", "--soonest"],
+      kind: "command",
+      commandId: "reset",
+      options: {"reset.soonest": true},
     },
     {
       args: ["--json", "coupons"],
@@ -81,6 +95,9 @@ test("parser accepts root, nested, compatibility, and order-independent options"
     if (result.kind === "command") {
       expect(result.command.id).toBe(item.commandId ?? "");
       expect(result.values.options).toEqual(item.options ?? {});
+      if (item.positionals) {
+        expect(result.values.positionals).toEqual(item.positionals);
+      }
     }
   }
 });
@@ -91,6 +108,9 @@ test("parser rejects malformed combinations with structured sanitized errors", (
     {args: ["status", "--json"], code: "unknown-option"},
     {args: ["status", "extra"], code: "unexpected-positional"},
     {args: ["coupons", "--json=true"], code: "invalid-option-value"},
+    {args: ["reset"], code: "invalid-positional"},
+    {args: ["reset", "2", "--soonest"], code: "conflicting-options"},
+    {args: ["reset", "not-an-index"], code: "invalid-positional"},
     {args: ["init", "--all", "--opencode"], code: "conflicting-options"},
     {args: ["agents", "install", "unknown"], code: "invalid-positional"},
     {args: ["agents", "unknown"], code: "unknown-command"},

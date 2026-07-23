@@ -71,14 +71,15 @@ Local state layouts can vary between Codex versions. The parser recognizes commo
 
 Live data uses these defaults:
 
-| Data                 | Endpoint                                                        | Offline behavior                    |
-| -------------------- | --------------------------------------------------------------- | ----------------------------------- |
-| Usage windows        | `https://chatgpt.com/backend-api/codex/usage`                   | Falls back to recognized local data |
-| Reset-credit coupons | `https://chatgpt.com/backend-api/wham/rate-limit-reset-credits` | Reported as unavailable             |
+| Data                 | Endpoint                                                                | Offline behavior                    |
+| -------------------- | ----------------------------------------------------------------------- | ----------------------------------- |
+| Usage windows        | `https://chatgpt.com/backend-api/codex/usage`                           | Falls back to recognized local data |
+| Reset-credit coupons | `https://chatgpt.com/backend-api/wham/rate-limit-reset-credits`         | Reported as unavailable             |
+| Coupon redemption    | `https://chatgpt.com/backend-api/wham/rate-limit-reset-credits/consume` | Never attempted automatically       |
 
 These endpoints are implementation details rather than a public API contract and may change when Codex changes its service behavior. A response containing only a recognized weekly window is treated as valid live usage; local discovery is used only when the live response contains no recognized usage window.
 
-Requests are authenticated from Codex credentials, reject redirects, time out after 10 seconds by default, and limit JSON responses to 1 MB. The transport uses the runtime's `fetch` implementation and can fall back to native Node HTTP/HTTPS transport for supported failures.
+Requests are authenticated from Codex credentials, reject redirects, time out after 10 seconds by default, and limit JSON responses to 1 MB. The transport uses the runtime's `fetch` implementation and can fall back to native Node HTTP/HTTPS transport for supported failures. Coupon redemption accepts only an exact coupon ID with the recognized `codex_rate_limits` type. `--soonest` refuses partial or count-inconsistent coupon data, and its bounded JSON `POST` uses a per-attempt idempotency key that is reused by any transport fallback.
 
 `CODEX_LIMITS_USAGE_ENDPOINT` can override only the live usage endpoint. Overrides must use HTTPS. Plain HTTP is accepted only for loopback testing on `localhost`, `127.0.0.1`, or `::1`. URLs containing embedded usernames or passwords and all other protocols are rejected.
 
@@ -91,10 +92,11 @@ An internet connection is therefore recommended for current usage and required f
 | Interactive dashboard          | A terminal capable of running the Ink UI                   |
 | `status` and `coupons`         | Any environment that can capture standard output           |
 | JSON output                    | Any environment that can capture and parse standard output |
+| Reset coupon redemption        | Both standard input and standard output must be TTYs       |
 | Interactive agent installation | Both standard input and standard output must be TTYs       |
 | Explicit agent installation    | Works non-interactively with an agent name or `--all`      |
 
-Use [`codex-limits --json`](json-output.md) or `codex-limits coupons --json` in scripts. Errors use a non-zero exit code and are written to standard error; successful machine-readable output is written to standard output.
+Use [`codex-limits --json`](json-output.md) or `codex-limits coupons --json` in scripts. Errors use a non-zero exit code and are written to standard error; successful machine-readable output is written to standard output. `codex-limits reset` is intentionally interactive and has no JSON or unattended confirmation mode.
 
 ## OpenCode compatibility
 

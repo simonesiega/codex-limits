@@ -50,6 +50,12 @@ export interface CouponOptions extends CodexAuthOptions {
   now?: Date;
 }
 
+/** Options for consuming one reset coupon. */
+export interface ResetCouponOptions extends CouponOptions {
+  /** Idempotency key override used by deterministic tests and safe retries. */
+  redeemRequestId?: string;
+}
+
 /** Options for the main reusable Codex limits core API. */
 export interface CodexLimitsOptions extends CouponOptions {
   /** Whether to include the live coupon summary, defaults to true. */
@@ -214,6 +220,10 @@ export interface CodexDiagnosticsResult {
 
 /** One normalized reset-credit coupon. */
 export interface CouponItem {
+  /** Opaque service identifier kept internal for explicit redemption. */
+  id: string | null;
+  /** Server-provided reset category kept internal for safe redemption. */
+  resetType: string | null;
   /** 1-based display index after sorting by expiration. */
   index: number;
   /** Server-provided coupon status, such as available. */
@@ -262,6 +272,18 @@ export interface CouponResult extends CouponSummary {
   source: CouponSource;
 }
 
+/** Safe outcome of attempting to consume one reset coupon. */
+export type ResetCouponOutcome =
+  "reset" | "already-redeemed" | "nothing-to-reset" | "no-credit" | "unconfirmed";
+
+/** Result of consuming one reset coupon without exposing response or credential data. */
+export interface ResetCouponResult {
+  /** Normalized server outcome, or unconfirmed when no safe outcome was received. */
+  outcome: ResetCouponOutcome;
+  /** Number of usage windows reset when the service reports it. */
+  windowsReset: number | null;
+}
+
 /** Combined normalized result consumed by commands, the TUI, and future plugins. */
 export interface CodexLimitsResult {
   /** Normalized 5-hour and weekly windows. */
@@ -306,10 +328,11 @@ export interface FetchResponseLike {
 export type FetchLike = (
   url: string,
   init: {
-    method: "GET";
+    method: "GET" | "POST";
     headers: Record<string, string>;
     redirect: "error";
     signal: AbortSignal;
+    body?: string;
   }
 ) => Promise<FetchResponseLike>;
 
@@ -348,6 +371,10 @@ export interface AuthenticatedJsonRequest {
   headers: Record<string, string>;
   timeoutMs: number;
   maxResponseBytes: number;
+  /** HTTP method, defaulting to GET for existing read paths. */
+  method?: "GET" | "POST";
+  /** Pre-serialized bounded request body used by JSON mutations. */
+  body?: string;
   fetch?: FetchLike;
   signal?: AbortSignal;
   fallbackOnHttpError?: boolean;

@@ -221,12 +221,11 @@ function assertValidPositionals(command: CommandDefinition): void {
 }
 
 function assertRemoteMutationConfirmation(command: CommandDefinition): void {
-  if (command.safety !== "remote-mutation") {
+  if (command.safety !== "remote-mutation" || command.confirmation.kind === "interactive") {
     return;
   }
-  const confirmation = (command.options ?? []).find(
-    (option) => option.key === command.confirmation.optionKey
-  );
+  const optionKey = command.confirmation.optionKey;
+  const confirmation = (command.options ?? []).find((option) => option.key === optionKey);
   if (!confirmation) {
     throw new Error(`Remote mutation command ${command.id} must declare its confirmation option.`);
   }

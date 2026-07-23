@@ -26,8 +26,8 @@ export function sanitizeEndpoint(endpoint: string): string {
   }
 }
 
-/** Performs one bounded authenticated JSON GET with a native Node fallback. */
-export async function authenticatedJsonGet(
+/** Performs one bounded authenticated JSON request with a native Node fallback. */
+export async function authenticatedJsonRequest(
   request: AuthenticatedJsonRequest
 ): Promise<JsonGetResult> {
   const endpoint = validateEndpoint(request.endpoint);
@@ -66,6 +66,13 @@ export async function authenticatedJsonGet(
   return fetched;
 }
 
+/** Preserves the explicit read-only entry point used by existing callers. */
+export function authenticatedJsonGet(request: AuthenticatedJsonRequest): Promise<JsonGetResult> {
+  const getRequest = {...request, method: "GET" as const};
+  delete getRequest.body;
+  return authenticatedJsonRequest(getRequest);
+}
+
 function validateEndpoint(endpoint: string): {ok: true; url: URL} | JsonGetFailure {
   let url: URL;
   try {
@@ -98,10 +105,11 @@ async function requestWithFetch(
 
   try {
     const response = await fetchImplementation(url.href, {
-      method: "GET",
+      method: request.method ?? "GET",
       headers: request.headers,
       redirect: "error",
       signal: timeout.signal,
+      ...(request.body === undefined ? {} : {body: request.body}),
     });
 
     if (!response.ok) {
@@ -215,7 +223,7 @@ function requestWithNode(url: URL, request: AuthenticatedJsonRequest): Promise<J
       const requestFunction = url.protocol === "http:" ? httpRequest : httpsRequest;
       clientRequest = requestFunction(
         url,
-        {method: "GET", headers: request.headers, signal: timeout.signal},
+        {method: request.method ?? "GET", headers: request.headers, signal: timeout.signal},
         (response) => consumeNodeResponse(response, request.maxResponseBytes, finish)
       );
       clientRequest.on("error", () => {
@@ -227,7 +235,7 @@ function requestWithNode(url: URL, request: AuthenticatedJsonRequest): Promise<J
           finish(failure("network-error"));
         }
       });
-      clientRequest.end();
+      clientRequest.end(request.body);
     } catch {
       finish(failure("network-error"));
     }

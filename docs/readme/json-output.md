@@ -243,6 +243,7 @@ The public JSON contract does not expose internal availability statuses or sourc
 - internal availability statuses;
 - `usageSource`;
 - coupon `source` labels and endpoint URLs;
+- opaque reset-coupon IDs and reset types used internally for confirmed redemption;
 - access tokens and account IDs;
 - authorization headers, cookies, raw local files, and private paths.
 

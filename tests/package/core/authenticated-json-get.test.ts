@@ -1,5 +1,8 @@
 import {expect, test} from "bun:test";
-import {authenticatedJsonGet} from "@/package/core/network/authenticated-json-get";
+import {
+  authenticatedJsonGet,
+  authenticatedJsonRequest,
+} from "@/package/core/network/authenticated-json-get";
 import type {AuthenticatedJsonRequest, FetchLike, JsonGetFailureCode} from "@/package/core/types";
 import {withLoopbackServer} from "@tests/helpers/http-server";
 
@@ -184,6 +187,48 @@ test("authenticatedJsonGet honors caller aborts while fetch is in flight", async
   controller.abort();
 
   expect(await pending).toEqual({ok: false, code: "aborted", status: null});
+});
+
+test("authenticatedJsonRequest preserves a POST body in the native fallback", async () => {
+  const received: Array<{body: string; method: string | undefined}> = [];
+  await withLoopbackServer(
+    (incoming, response) => {
+      const chunks: Buffer[] = [];
+      incoming.on("data", (chunk: Buffer) => chunks.push(chunk));
+      incoming.on("end", () => {
+        received.push({
+          body: Buffer.concat(chunks).toString("utf8"),
+          method: incoming.method,
+        });
+        response.setHeader("content-type", "application/json");
+        response.end(JSON.stringify({code: "already_redeemed"}));
+      });
+    },
+    async (origin) => {
+      const result = await authenticatedJsonRequest(
+        request(
+          async () => {
+            throw new Error("fetch failed");
+          },
+          {
+            endpoint: `${origin}/consume`,
+            method: "POST",
+            body: JSON.stringify({redeem_request_id: "test-request"}),
+          }
+        )
+      );
+
+      expect(result).toEqual({
+        ok: true,
+        status: 200,
+        payload: {code: "already_redeemed"},
+        transport: "node",
+      });
+      expect(received).toEqual([
+        {method: "POST", body: JSON.stringify({redeem_request_id: "test-request"})},
+      ]);
+    }
+  );
 });
 
 test("authenticatedJsonGet falls back from fetch to the bounded native transport", async () => {

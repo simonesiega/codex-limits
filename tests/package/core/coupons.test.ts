@@ -23,11 +23,15 @@ test("getResetCoupons fetches live coupons with explicit env credentials", async
           total_earned_count: 3,
           credits: [
             {
+              id: "RateLimitResetCredit_test-1",
+              reset_type: "codex_rate_limits",
               status: "available",
               granted_at: "2026-06-11T20:38:07Z",
               expires_at: "2026-07-11T20:38:07Z",
             },
             {
+              id: "RateLimitResetCredit_test-2",
+              reset_type: "codex_rate_limits",
               status: "available",
               granted_at: "2026-06-17T18:42:45Z",
               expires_at: "2026-07-17T18:42:45Z",
@@ -49,6 +53,14 @@ test("getResetCoupons fetches live coupons with explicit env credentials", async
   expect(result.status).toBe("available");
   expect(result.available).toBe(2);
   expect(result.nextExpirationIn).toBe("1d");
+  expect(result.items.map((item) => item.id)).toEqual([
+    "RateLimitResetCredit_test-1",
+    "RateLimitResetCredit_test-2",
+  ]);
+  expect(result.items.map((item) => item.resetType)).toEqual([
+    "codex_rate_limits",
+    "codex_rate_limits",
+  ]);
   expect(calls[0]?.authorization).toBe("Bearer fake-access-token");
   expect(calls[0]?.accountId).toBe("fake-account-id");
   expect(JSON.stringify(result)).not.toContain("fake-access-token");
@@ -71,6 +83,12 @@ test("getResetCoupons validates untrusted coupon fields before public output", a
             status: "Bearer fake-response-secret",
             granted_at: "fake-private-account-id",
             expires_at: "fake-secret-token",
+          },
+          {
+            id: " RateLimitResetCredit_trimmed",
+            reset_type: "codex_rate_limits",
+            status: "available",
+            expires_at: "2026-07-11T20:38:07Z",
           },
         ],
       },

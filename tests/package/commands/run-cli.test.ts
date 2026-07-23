@@ -82,7 +82,14 @@ test("runCli preserves the complete limits and coupon JSON contracts", async () 
     earnedThisPeriod: 4,
     nextExpirationDate: "Saturday 11 July 2026",
     nextExpirationIn: "7d 4h 38m",
-    items: result.coupons!.items,
+    items: result.coupons!.items.map((item) => ({
+      index: item.index,
+      status: item.status,
+      grantedAt: item.grantedAt,
+      expiresAt: item.expiresAt,
+      expirationDate: item.expirationDate,
+      expiresIn: item.expiresIn,
+    })),
     warnings: [],
   };
   expect(JSON.parse(limitsOutput.join(""))).toEqual({
@@ -96,6 +103,10 @@ test("runCli preserves the complete limits and coupon JSON contracts", async () 
     "coupons",
     "warnings",
   ]);
+  expect(limitsOutput.join("")).not.toContain("RateLimitResetCredit_test");
+  expect(couponsOutput.join("")).not.toContain("RateLimitResetCredit_test");
+  expect(limitsOutput.join("")).not.toContain("codex_rate_limits");
+  expect(couponsOutput.join("")).not.toContain("codex_rate_limits");
 });
 
 test("runCli prints safe doctor text and JSON diagnostics", async () => {
@@ -362,7 +373,9 @@ test("status output omits usage windows that are not provided", () => {
 test("command formatters do not expose secret-like values", () => {
   const statusOutput = formatStatus({...createFakeLimitsResult(), warnings: ["[redacted]"]});
   const couponsOutput = formatCoupons(unavailableCoupons("https://example.test", ["fake warning"]));
+  const availableCouponsOutput = formatCoupons(createFakeCouponResult());
 
   expect(statusOutput).toContain("Warnings:");
   expect(couponsOutput).toContain("Warnings:");
+  expect(availableCouponsOutput).not.toContain("RateLimitResetCredit_test");
 });

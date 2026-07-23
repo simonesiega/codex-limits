@@ -31,7 +31,11 @@ export async function runCli(
       );
       return 1;
     case "command": {
-      const safetyViolation = getCommandSafetyViolation(parsed.command, parsed.values);
+      const safetyViolation = getCommandSafetyViolation(
+        parsed.command,
+        parsed.values,
+        runtime.io.interactive
+      );
       if (safetyViolation) {
         runtime.io.stderr(`${safetyViolation}\n\n${formatHelp(registry, parsed.command)}`);
         return 1;

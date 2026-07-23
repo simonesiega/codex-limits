@@ -10,6 +10,7 @@ import {createDashboardCommand} from "@/package/commands/dashboard/command";
 import {createDoctorCommand} from "@/package/commands/doctor/command";
 import {createInitCommand} from "@/package/commands/init";
 import {assertValidCommandRegistry} from "@/package/commands/registry-validation";
+import {createResetCommand} from "@/package/commands/reset/command";
 import type {CliRuntime} from "@/package/commands/runtime";
 import {createStatusCommand} from "@/package/commands/status/command";
 
@@ -68,6 +69,7 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
       ],
       safetyNotes: [
         "Dashboard, status, coupon, and doctor commands are read-only.",
+        "Reset requires an interactive recap and an explicit y or yes confirmation.",
         "Agent installation writes only to the explicitly selected agent configuration.",
         "Output never includes tokens, account IDs, auth headers, cookies, or raw local files.",
       ],
@@ -77,6 +79,7 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
       createDashboardCommand({io: runtime.io, usage: runtime.usage, ui: runtime.ui}),
       createStatusCommand({io: runtime.io, usage: runtime.usage}),
       createCouponsCommand({io: runtime.io, coupons: runtime.coupons}),
+      createResetCommand({io: runtime.io, reset: runtime.reset}),
       createDoctorCommand({
         io: runtime.io,
         agents: runtime.agents,

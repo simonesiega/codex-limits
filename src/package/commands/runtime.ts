@@ -2,10 +2,15 @@ import {platform} from "node:os";
 import {stdin as processStdin, stdout as processStdout} from "node:process";
 import {createInterface} from "node:readline/promises";
 import {AGENT_INTEGRATIONS, type AgentIntegration} from "@/agents";
-import {getResetCoupons} from "@/package/core/coupons/reset-coupons";
+import {consumeResetCoupon, getResetCoupons} from "@/package/core/coupons/reset-coupons";
 import {getCodexDiagnostics} from "@/package/core/doctor";
 import {getCodexLimits} from "@/package/core/limits";
-import type {CodexDiagnosticsResult, CodexLimitsResult, CouponResult} from "@/package/core/types";
+import type {
+  CodexDiagnosticsResult,
+  CodexLimitsResult,
+  CouponResult,
+  ResetCouponResult,
+} from "@/package/core/types";
 import {PACKAGE_VERSION} from "@/package/version";
 
 export type WriteOutput = (text: string) => void;
@@ -26,6 +31,11 @@ export interface UsageServices {
 
 export interface CouponServices {
   loadCoupons: () => Promise<CouponResult>;
+}
+
+export interface ResetServices {
+  loadCoupons: () => Promise<CouponResult>;
+  consumeCoupon: (couponId: string) => Promise<ResetCouponResult>;
 }
 
 export interface AgentServices {
@@ -50,6 +60,7 @@ export interface CliRuntime {
   io: CliIo;
   usage: UsageServices;
   coupons: CouponServices;
+  reset: ResetServices;
   agents: AgentServices;
   doctor: DoctorServices;
   ui: UiServices;
@@ -60,6 +71,7 @@ export interface CliRuntimeOverrides {
   io?: Partial<CliIo>;
   usage?: Partial<UsageServices>;
   coupons?: Partial<CouponServices>;
+  reset?: Partial<ResetServices>;
   agents?: Partial<AgentServices>;
   doctor?: Partial<DoctorServices>;
   ui?: Partial<UiServices>;
@@ -77,6 +89,7 @@ export function createCliRuntime(overrides: CliRuntimeOverrides = {}): CliRuntim
     },
     usage: {loadLimits: getCodexLimits},
     coupons: {loadCoupons: getResetCoupons},
+    reset: {loadCoupons: getResetCoupons, consumeCoupon: consumeResetCoupon},
     agents: {integrations: AGENT_INTEGRATIONS},
     doctor: {
       loadCodexDiagnostics: getCodexDiagnostics,
@@ -91,6 +104,7 @@ export function createCliRuntime(overrides: CliRuntimeOverrides = {}): CliRuntim
     io: {...defaults.io, ...overrides.io},
     usage: {...defaults.usage, ...overrides.usage},
     coupons: {...defaults.coupons, ...overrides.coupons},
+    reset: {...defaults.reset, ...overrides.reset},
     agents: {...defaults.agents, ...overrides.agents},
     doctor: {...defaults.doctor, ...overrides.doctor},
     ui: {...defaults.ui, ...overrides.ui},

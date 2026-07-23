@@ -109,11 +109,11 @@ When you are working with Codex or agent-based coding tools, usage limits can in
 
 **`codex-limits`** gives you that information in one clean terminal view. It shows the usage windows currently supplied by Codex, including weekly usage and the 5-hour window when available, together with remaining percentages, progress bars, reset times, and reset-credit coupons, so you can quickly check your status and continue coding without leaving the terminal.
 
-It also includes plain-text commands for quick checks, a safe `codex-limits doctor` diagnostic report, JSON output for scripts and automation, optional agent integrations through `codex-limits agents`, and safe output that never prints tokens, account IDs, auth headers, cookies, private paths, or raw local files.
+It also includes plain-text commands for quick checks, an explicitly confirmed `codex-limits reset` action for using one reset coupon, a safe `codex-limits doctor` diagnostic report, JSON output for scripts and automation, optional agent integrations through `codex-limits agents`, and safe output that never prints tokens, account IDs, auth headers, cookies, private paths, or raw local files.
 
 ## Agent integrations
 
-Optional integrations make Codex limit information available directly inside supported coding agents while reusing the same read-only core and safety model as the CLI.
+Optional integrations make Codex limit information available directly inside supported coding agents while reusing the same normalized read paths and safety model as the CLI. Agent integrations do not receive the reset command's mutation capability.
 
 For installation details, adapter behavior, architecture, and contribution guidance, see the detailed [Agent integrations guide](docs/readme/agent-integrations.md).
 
@@ -154,16 +154,16 @@ See the [Contributing](./CONTRIBUTING.md) guide if you want to add support for a
 
 **`codex-limits`** is built around a shared core with different output surfaces on top of it.
 
-| Area               | Path                   | Purpose                                                                                                                                           |
-| ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CLI entry          | `src/package/cli.ts`   | Starts the `codex-limits` command and delegates to the shared command registry.                                                                   |
-| Core logic         | `src/package/core`     | Detects Codex data, reads local usage, fetches optional live information, normalizes usage windows, and keeps sensitive values out of the output. |
-| CLI commands       | `src/package/commands` | Defines command metadata, shared parsing and help, scoped runtime services, and focused command handlers.                                         |
-| Terminal UI        | `src/package/tui`      | Renders the clean Ink-based dashboard from normalized usage data.                                                                                 |
-| Agent integrations | `src/agents`           | Contains optional coding-agent adapters used by the `codex-limits agents` command group.                                                          |
-| Tests              | `tests`                | Contains the test suite used to validate core behavior, CLI output, safety rules, and integration logic.                                          |
+| Area               | Path                   | Purpose                                                                                                                                    |
+| ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| CLI entry          | `src/package/cli.ts`   | Starts the `codex-limits` command and delegates to the shared command registry.                                                            |
+| Core logic         | `src/package/core`     | Detects Codex data, normalizes live and local information, performs confirmed coupon redemption, and keeps sensitive values out of output. |
+| CLI commands       | `src/package/commands` | Defines command metadata, shared parsing and help, scoped runtime services, and focused command handlers.                                  |
+| Terminal UI        | `src/package/tui`      | Renders the clean Ink-based dashboard from normalized usage data.                                                                          |
+| Agent integrations | `src/agents`           | Contains optional coding-agent adapters used by the `codex-limits agents` command group.                                                   |
+| Tests              | `tests`                | Contains the test suite used to validate core behavior, CLI output, safety rules, and integration logic.                                   |
 
-This structure keeps the project easy to extend: the core decides what the data means, while the CLI, TUI, and agents only decide how that information is shown.
+This structure keeps the project easy to extend: the core owns data meaning and authenticated network operations, while commands control when capabilities are used and the TUI and agents remain rendering-only surfaces.
 
 ## Environment
 
@@ -183,7 +183,7 @@ Environment variables are only used as a fallback when automatic discovery is no
 
 ### Data access and safety
 
-Local Codex data is inspected read-only with bounded file, directory, JSONL, and response limits. Credentials, raw files, and private paths are excluded from public output. Live requests require HTTPS, except for loopback HTTP during local testing. See [`SECURITY.md`](./SECURITY.md#local-data-and-network-behavior) for the complete data-access and network-safety model.
+Local Codex data is always inspected read-only with bounded file, directory, JSONL, and response limits. Credentials, raw files, and private paths are excluded from public output. Live requests require HTTPS, except for loopback HTTP during local testing. Only `codex-limits reset` mutates the remote account, and it requires an interactive recap followed by an explicit `y` or `yes` confirmation. See [`SECURITY.md`](./SECURITY.md#local-data-and-network-behavior) for the complete data-access and network-safety model.
 
 ## Usage
 
@@ -193,6 +193,8 @@ Local Codex data is inspected read-only with bounded file, directory, JSONL, and
 | `codex-limits status`                    | Prints a plain usage summary.                          |
 | `codex-limits coupons`                   | Prints reset-credit coupon information.                |
 | `codex-limits coupons --json`            | Prints machine-readable reset-credit coupon data only. |
+| `codex-limits reset <coupon-index>`      | Reviews and uses the numbered available reset coupon.  |
+| `codex-limits reset --soonest`           | Reviews and uses the coupon that expires first.        |
 | `codex-limits --json`                    | Prints machine-readable usage and coupon data.         |
 | `codex-limits doctor`                    | Prints safe environment and connectivity diagnostics.  |
 | `codex-limits doctor --json`             | Prints machine-readable diagnostics only.              |
@@ -200,6 +202,19 @@ Local Codex data is inspected read-only with bounded file, directory, JSONL, and
 | `codex-limits agents install <agent...>` | Installs one or more named agent integrations.         |
 | `codex-limits agents install --all`      | Installs every supported agent integration.            |
 | `codex-limits init`                      | Runs the compatible interactive installation flow.     |
+
+### Resetting usage
+
+Use one available reset coupon by the number shown in `codex-limits coupons`, or let the command select the available coupon that expires first:
+
+```bash
+codex-limits reset <coupon-index>
+codex-limits reset --soonest
+```
+
+Reset is an irreversible remote mutation and works only in an interactive terminal. The command refreshes the coupon list, rejects missing or unavailable indexes, prints a recap with the selected coupon and expiration, and asks `Type y to confirm [y/N]`. Only `y` or `yes` sends the consume request; every other answer cancels without using a coupon. The request carries the coupon's internal service ID and a fresh idempotency key so an internal retry cannot consume a second coupon.
+
+If no coupon is available, the command reports that nothing was used. If the selected index is absent, coupon details cannot be verified, or the final service result is ambiguous, it exits without claiming success.
 
 ### Diagnostics
 
@@ -299,6 +314,7 @@ Useful development commands:
 | ------------------------- | ----------------------------------------------- | --------------------------------- | -------------------------------------- |
 | `codex-limits`            | Recognized Codex state and bounded session data | Nothing                           | Live usage and coupon endpoints        |
 | `status` / `coupons`      | Shared read-only core                           | Nothing                           | When live data is requested            |
+| `reset`                   | Current reset coupon list and Codex credentials | One selected remote coupon        | Confirmed reset-credit consume request |
 | `doctor`                  | Bounded Codex and agent configuration checks    | Nothing                           | Live usage endpoint when authenticated |
 | `agents install` / `init` | Selected agent configuration                    | Adds the integration registration | Does not send an LLM prompt            |
 

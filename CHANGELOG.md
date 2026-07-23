@@ -8,6 +8,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added `codex-limits reset` for consuming a numbered or soonest-expiring reset coupon after an interactive recap and explicit `y` confirmation.
+
 ### Changed
 
 ### Fixed

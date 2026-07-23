@@ -8,7 +8,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Security-private%20reporting-red" alt="Private security reporting" />
-  <img src="https://img.shields.io/badge/Data%20access-read--only-blue" alt="Read-only data access" />
+  <img src="https://img.shields.io/badge/Local%20data-read--only-blue" alt="Read-only local data access" />
   <img src="https://img.shields.io/badge/Supported-latest%20release%20%7C%20main-brightgreen" alt="Supported versions: latest release and main" />
   <img src="https://img.shields.io/github/license/simonesiega/codex-limits" alt="License" />
 </p>
@@ -59,11 +59,13 @@ Please do not publicly disclose the vulnerability until a fix is available or di
 
 ## Local data and network behavior
 
-`codex-limits` is designed to keep raw local Codex files and sensitive values on your machine. It makes authenticated requests to the documented ChatGPT Codex endpoints only when retrieving live usage or reset-credit information.
+`codex-limits` is designed to keep raw local Codex files and sensitive values on your machine. It makes authenticated requests to the recognized ChatGPT Codex endpoints when retrieving live usage or reset-credit information, and only sends a reset-credit consume request after the user invokes and confirms `codex-limits reset`.
 
 The CLI performs bounded, read-only inspection of recognized Codex home candidates. It reads small non-sensitive JSON state files, bounded `sessions/**/rollout-*.jsonl` logs, and `auth.json` only for credential resolution. Traversal depth, directory entries, file counts, file sizes, JSONL line sizes, and response sizes are limited; nested symbolic links are skipped. Raw local files and credentials are never returned by the public CLI or JSON contracts.
 
-For live usage and coupon information, the project contacts the default ChatGPT Codex endpoints. The only endpoint override is `CODEX_LIMITS_USAGE_ENDPOINT`, mainly for testing or advanced setups. Overrides must use HTTPS, except for loopback HTTP during local testing. Authenticated requests reject redirects, use bounded timeouts and responses, and never include credential headers in diagnostics.
+For live usage and coupon information, the project contacts the default ChatGPT Codex endpoints. The only environment endpoint override is `CODEX_LIMITS_USAGE_ENDPOINT`, mainly for testing or advanced setups. Overrides must use HTTPS, except for loopback HTTP during local testing. Authenticated requests reject redirects, use bounded timeouts and responses, and never include credential headers in diagnostics.
+
+The reset command first refreshes the coupon list and matches either the requested display index or the available coupon with the earliest expiration. Redemption requires an exact internal service ID and the recognized `codex_rate_limits` reset type; `--soonest` refuses incomplete or inconsistent availability details rather than selecting a different coupon. It requires an interactive terminal, a displayed recap, and an explicit `y` or `yes` answer. The consume request includes the selected coupon's internal service ID and a fresh UUID idempotency key; transport fallback reuses the same request body. Coupon IDs and reset types remain internal and are not added to text or JSON coupon output. Known no-op service outcomes are reported without claiming that a coupon was used, and malformed or ambiguous responses are reported as unconfirmed.
 
 Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send private Codex data to the agent, and not expose sensitive values inside the agent UI. The pi extension runs only its local command handler and does not inject a user or custom message into the model context.
 
@@ -73,13 +75,13 @@ The `codex-limits doctor` command exposes only package/runtime labels and bounde
 
 ### Command safety boundaries
 
-Every CLI command declares one enforced safety category. Dashboard, status, coupon, doctor, and agent-inspection commands are read-only and receive no write or account-mutation services. Agent installation is a local-write operation scoped to the selected agent configuration. Any future remote account mutation must use the separate `remote-mutation` category and declare an explicit boolean confirmation option before the router will execute it.
+Every CLI command declares one enforced safety category. Dashboard, status, coupon, doctor, and agent-inspection commands are read-only and receive no write or account-mutation services. Agent installation is a local-write operation scoped to the selected agent configuration. Reset is a `remote-mutation` command with a dedicated consume capability; the router requires an interactive terminal, and the handler requires the recap plus an explicit positive answer before calling that capability.
 
 The existing `codex-limits init` compatibility command and the preferred `codex-limits agents install` command share the same local-write implementation. Neither command modifies Codex data or sends an LLM prompt.
 
 ## What to report
 
-Please report any issue that could expose private data or break the read-only safety model of the project.
+Please report any issue that could expose private data, write local Codex data, or consume a reset coupon without the documented confirmation flow.
 
 Relevant examples include:
 
@@ -89,7 +91,9 @@ Relevant examples include:
 - raw local Codex files being printed, logged, snapshotted, or committed;
 - agent integrations exposing private Codex data inside the agent UI;
 - unexpected writes to local Codex data;
-- unexpected network behavior related to usage or coupon discovery;
+- a reset coupon consumed without a positive interactive answer;
+- duplicate coupon consumption after one confirmed action;
+- unexpected network behavior related to usage, coupon discovery, or coupon redemption;
 - unsafe handling of `CODEX_LIMITS_HOME`, `CODEX_LIMITS_ACCESS_TOKEN`, `CODEX_LIMITS_ACCOUNT_ID`, `CODEX_LIMITS_USAGE_ENDPOINT`, or `PI_CODING_AGENT_DIR`.
 
 ## Safety expectations
@@ -98,7 +102,8 @@ Relevant examples include:
 
 The project should:
 
-- remain read-only for local Codex data;
+- remain read-only for local Codex data and read-only remote commands;
+- isolate reset redemption behind the explicit remote-mutation confirmation flow;
 - keep sensitive values out of CLI output, TUI output, JSON output, tests, logs, and screenshots;
 - centralize data discovery, parsing, normalization, warnings, and redaction in the shared core;
 - keep agent integrations thin and reuse the shared core instead of reimplementing security-sensitive parsing;
