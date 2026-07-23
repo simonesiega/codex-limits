@@ -12,6 +12,9 @@ All notable changes to codex-limits are documented in this file.
 
 ### Changed
 
+- Changed package safety messaging to distinguish read-only inspection commands from the explicitly confirmed `reset` remote mutation.
+- Changed packed-runtime checks to validate the packed CLI on macOS with Node.js 22.
+
 ### Fixed
 
 ### Removed

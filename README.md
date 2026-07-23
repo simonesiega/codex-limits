@@ -3,7 +3,11 @@
 </h1>
 
 <p align="center">
-  A polished terminal dashboard for checking Codex usage limits, reset times, and reset-credit coupons.
+  <strong>Monitor OpenAI Codex usage limits, reset times, and reset-credit coupons directly from your terminal.</strong>
+</p>
+
+<p align="center">
+  Every inspection command is read-only. Only <code>codex-limits reset</code> can modify remote state, and it always requires explicit interactive confirmation.
 </p>
 
 <p align="center">
@@ -16,7 +20,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/npm/v/@simonesiega/codex-limits?label=npm" alt="npm version" />
-  <img src="https://img.shields.io/badge/test_coverage-96.2%25_lines-brightgreen" alt="Test coverage: 96.2% lines" />
+  <a href="https://github.com/simonesiega/codex-limits/actions/workflows/check.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/simonesiega/codex-limits/check.yml?branch=main&amp;label=tests" alt="Automated test status" /></a>
 </p>
 
 <p align="center">

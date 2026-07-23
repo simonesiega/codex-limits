@@ -24,16 +24,16 @@ These agent-host exports are not a general-purpose JavaScript API and do not ins
 
 The following environments are covered by the repository's automated checks or current local validation. Other compatible environments may also work, but they are not tested for every release.
 
-| Area                   | Tested environments                                                                                                |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Automated packaged CLI | GitHub Actions on `ubuntu-latest` with Node.js 20, 22, and 24, plus `windows-latest` with Node.js 20               |
-| Current local checks   | Windows build `10.0.26200.8875` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-07-23)                          |
-| Terminal rendering     | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix |
-| OpenCode agent adapter | Mocked current keymap and legacy command API shapes; no exact OpenCode host release is tested end-to-end           |
-| pi agent adapter       | Mocked command/UI APIs with real TUI components; package discovery validated in pi 0.81.1 print mode               |
-| Copilot CLI adapter    | Mocked SDK command/timeline APIs and packed installation; typed against `@github/copilot-sdk` 1.0.8                |
+| Area                   | Tested environments                                                                                                                 |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Automated packaged CLI | GitHub Actions on `ubuntu-latest` with Node.js 20, 22, and 24, `windows-latest` with Node.js 20, and `macos-latest` with Node.js 22 |
+| Current local checks   | Windows build `10.0.26200.8875` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-07-23)                                           |
+| Terminal rendering     | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix                  |
+| OpenCode agent adapter | Mocked current keymap and legacy command API shapes; no exact OpenCode host release is tested end-to-end                            |
+| pi agent adapter       | Mocked command/UI APIs with real TUI components; package discovery validated in pi 0.81.1 print mode                                |
+| Copilot CLI adapter    | Mocked SDK command/timeline APIs and packed installation; typed against `@github/copilot-sdk` 1.0.8                                 |
 
-The supported runtime and operating-system ranges are broader than this test matrix. In particular, macOS compatibility follows the cross-platform implementation but is not currently covered by the repository's automated workflow.
+The supported runtime and operating-system ranges are broader than this test matrix. Automated checks sample each supported operating system but do not test every supported Node.js version on every platform.
 
 ## Operating systems
 

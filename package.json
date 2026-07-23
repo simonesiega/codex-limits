@@ -1,7 +1,7 @@
 {
   "name": "@simonesiega/codex-limits",
   "version": "1.0.0",
-  "description": "Check Codex usage limits, reset times, and reset-credit coupons from a fast, read-only terminal dashboard.",
+  "description": "Inspect Codex usage limits, reset times, and reset-credit coupons from the terminal, or explicitly confirm a remote usage reset.",
   "type": "module",
   "bin": {
     "codex-limits": "dist/cli.js"
