@@ -8,6 +8,18 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [1.1.0] - 2026-07-31
+
+### Added
+
 - Added explicit OpenCode, pi, and GitHub Copilot CLI package subpath exports while keeping the package root dedicated to OpenCode loading and the internal core private.
 
 ### Changed
@@ -20,8 +32,6 @@ All notable changes to codex-limits are documented in this file.
 - Fixed packed-package validation for canonical temporary-directory paths on macOS.
 - Fixed inconsistent reset-coupon counts to be reported as partial data instead of complete availability.
 - Fixed agent summaries to label unknown usage percentages as unknown instead of displaying them as 0%.
-
-### Removed
 
 ### Security
 

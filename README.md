@@ -259,7 +259,7 @@ codex-limits doctor
 ```text
 Codex Limits diagnostics
 
-Package version:                1.0.0
+Package version:                1.1.0
 Node.js version:                22.0.0
 Operating system:               Windows
 Codex home detected:            Yes
