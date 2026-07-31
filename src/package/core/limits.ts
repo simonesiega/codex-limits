@@ -5,6 +5,8 @@ import {getResetCoupons} from "@/package/core/coupons/reset-coupons";
 import type {
   CodexLimitsOptions,
   CodexLimitsResult,
+  CouponResult,
+  CouponSummary,
   LocalUsageResult,
   UsageResult,
 } from "@/package/core/types";
@@ -25,13 +27,10 @@ export async function getCodexLimits(options: CodexLimitsOptions = {}): Promise<
   const couponRequest =
     options.includeCoupons === false ? Promise.resolve(null) : getResetCoupons(options);
   const [usage, couponResult] = await Promise.all([getUsageLimits(options), couponRequest]);
-  const coupons = couponResult
-    ? {...couponResult, warnings: redactWarnings(couponResult.warnings)}
-    : null;
+  const coupons = couponResult ? toDisplayCouponSummary(couponResult) : null;
 
   return {
     windows: usage.windows,
-    usageSource: usage.source,
     coupons,
     warnings: redactWarnings([...usage.warnings, ...(coupons?.warnings ?? [])]),
   };
@@ -45,18 +44,28 @@ export async function getUsageLimits(options: CodexLimitsOptions = {}): Promise<
   }
 
   const local = withUsageSource(await getLocalUsage(options), LOCAL_USAGE_SOURCE);
-  return selectUsageResult(live, local);
+  return local.status !== "unavailable"
+    ? local
+    : {...local, warnings: [...live.warnings, ...local.warnings]};
 }
 
-/** Selects recognized live usage before a local fallback. */
-export function selectUsageResult(live: UsageResult, local: UsageResult): UsageResult {
-  if (live.status !== "unavailable") {
-    return live;
-  }
-  if (local.status !== "unavailable") {
-    return local;
-  }
-  return {...local, warnings: [...live.warnings, ...local.warnings]};
+function toDisplayCouponSummary(result: CouponResult): CouponSummary {
+  return {
+    status: result.status,
+    available: result.available,
+    earnedThisPeriod: result.earnedThisPeriod,
+    nextExpirationDate: result.nextExpirationDate,
+    nextExpirationIn: result.nextExpirationIn,
+    items: result.items.map((item) => ({
+      index: item.index,
+      status: item.status,
+      grantedAt: item.grantedAt,
+      expiresAt: item.expiresAt,
+      expirationDate: item.expirationDate,
+      expiresIn: item.expiresIn,
+    })),
+    warnings: redactWarnings(result.warnings),
+  };
 }
 
 /** Reads and merges safe local session and state usage. */

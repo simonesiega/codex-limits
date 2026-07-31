@@ -7,9 +7,6 @@ export type CodexHomeCandidateSource = "env" | "default";
 /** Environment object shape used by filesystem discovery and credential checks. */
 export type EnvironmentMap = Record<string, string | undefined>;
 
-/** Credential configuration status for the reset-credit endpoint. */
-export type CouponCredentialStatus = "configured" | "partial" | "missing";
-
 /** Options used to make filesystem discovery testable and reusable. */
 export interface CodexHomeOptions {
   /** Environment values, defaults to process.env. */
@@ -20,12 +17,6 @@ export interface CodexHomeOptions {
   appData?: string;
   /** Windows local app data override for tests. */
   localAppData?: string;
-}
-
-/** Options for local usage parsing and aggregation. */
-export interface LocalUsageOptions extends CodexHomeOptions {
-  /** Current time override used to compute reset durations. */
-  now?: Date;
 }
 
 /** Options for authenticated Codex backend calls. */
@@ -218,12 +209,8 @@ export interface CodexDiagnosticsResult {
   liveEndpoint: LiveEndpointStatus;
 }
 
-/** One normalized reset-credit coupon. */
-export interface CouponItem {
-  /** Opaque service identifier kept internal for explicit redemption. */
-  id: string | null;
-  /** Server-provided reset category kept internal for safe redemption. */
-  resetType: string | null;
+/** One display-safe reset-credit coupon. */
+export interface CouponSummaryItem {
   /** 1-based display index after sorting by expiration. */
   index: number;
   /** Server-provided coupon status, such as available. */
@@ -238,6 +225,14 @@ export interface CouponItem {
   expiresIn: string | null;
 }
 
+/** Internal coupon details required only for explicit redemption. */
+export interface CouponItem extends CouponSummaryItem {
+  /** Opaque service identifier kept internal for explicit redemption. */
+  id: string | null;
+  /** Server-provided reset category kept internal for safe redemption. */
+  resetType: string | null;
+}
+
 /** Coupon summary used by the TUI, commands, and future adapters. */
 export interface CouponSummary {
   /** Whether live coupon data is complete, partial, or unavailable. */
@@ -250,8 +245,8 @@ export interface CouponSummary {
   nextExpirationDate: string | null;
   /** Time left for the next available or soonest expiring coupon. */
   nextExpirationIn: string | null;
-  /** Reset-credit coupons sorted by expiration. */
-  items: CouponItem[];
+  /** Display-safe reset-credit coupons sorted by expiration. */
+  items: CouponSummaryItem[];
   /** Non-sensitive coupon warnings. */
   warnings: string[];
 }
@@ -268,6 +263,8 @@ export interface CouponSource {
 
 /** Full reset-credit coupon result from the reusable core. */
 export interface CouponResult extends CouponSummary {
+  /** Coupon details retained only for the explicit reset flow. */
+  items: CouponItem[];
   /** Source metadata for the coupon lookup. */
   source: CouponSource;
 }
@@ -288,8 +285,6 @@ export interface ResetCouponResult {
 export interface CodexLimitsResult {
   /** Normalized 5-hour and weekly windows. */
   windows: UsageWindows;
-  /** Source for the usage-limit windows. */
-  usageSource: UsageSource;
   /** Reset-credit coupon summary, or null when intentionally omitted. */
   coupons: CouponSummary | null;
   /** Non-sensitive warnings from local and live sources. */

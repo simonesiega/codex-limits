@@ -1,4 +1,4 @@
-import type {CodexLimitsResult, CouponResult} from "@/package/core/types";
+import type {CodexLimitsResult, CouponResult, CouponSummary} from "@/package/core/types";
 
 export function createFakeLimitsResult(): CodexLimitsResult {
   return {
@@ -18,13 +18,28 @@ export function createFakeLimitsResult(): CodexLimitsResult {
         resetsIn: "2d 1h 40m",
       },
     },
-    usageSource: {
-      kind: "api",
-      label: "API",
-      endpoint: "https://chatgpt.com/backend-api/codex/usage",
-    },
-    coupons: createFakeCouponResult(),
+    coupons: createFakeCouponSummary(),
     warnings: [],
+  };
+}
+
+function createFakeCouponSummary(): CouponSummary {
+  const result = createFakeCouponResult();
+  return {
+    status: result.status,
+    available: result.available,
+    earnedThisPeriod: result.earnedThisPeriod,
+    nextExpirationDate: result.nextExpirationDate,
+    nextExpirationIn: result.nextExpirationIn,
+    items: result.items.map((item) => ({
+      index: item.index,
+      status: item.status,
+      grantedAt: item.grantedAt,
+      expiresAt: item.expiresAt,
+      expirationDate: item.expirationDate,
+      expiresIn: item.expiresIn,
+    })),
+    warnings: result.warnings,
   };
 }
 

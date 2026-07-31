@@ -264,6 +264,22 @@ async function extractSnapshotFromSessionFile(
   let discardingLine = false;
   let skippedOversizedLine = false;
 
+  const processLine = (rawLine: string): void => {
+    const parsed = parseSnapshotLine(rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine);
+    if (parsed.threadId) {
+      threadId = parsed.threadId;
+    }
+    if (parsed.rateLimits) {
+      latest = {
+        sessionFile,
+        relativePath,
+        threadId,
+        eventTimestamp: parsed.timestamp,
+        rateLimits: parsed.rateLimits,
+      };
+    }
+  };
+
   // Discard only an oversized line, not the stream, so a later safe snapshot can still be used.
   for await (const rawChunk of stream) {
     const chunk = String(rawChunk);
@@ -296,19 +312,7 @@ async function extractSnapshotFromSessionFile(
       }
 
       if (!discardingLine) {
-        const parsed = parseSnapshotLine(pending.endsWith("\r") ? pending.slice(0, -1) : pending);
-        if (parsed.threadId) {
-          threadId = parsed.threadId;
-        }
-        if (parsed.rateLimits) {
-          latest = {
-            sessionFile,
-            relativePath,
-            threadId,
-            eventTimestamp: parsed.timestamp,
-            rateLimits: parsed.rateLimits,
-          };
-        }
+        processLine(pending);
       }
 
       pending = "";
@@ -319,19 +323,7 @@ async function extractSnapshotFromSessionFile(
   }
 
   if (!discardingLine && pending.length > 0) {
-    const parsed = parseSnapshotLine(pending.endsWith("\r") ? pending.slice(0, -1) : pending);
-    if (parsed.threadId) {
-      threadId = parsed.threadId;
-    }
-    if (parsed.rateLimits) {
-      latest = {
-        sessionFile,
-        relativePath,
-        threadId,
-        eventTimestamp: parsed.timestamp,
-        rateLimits: parsed.rateLimits,
-      };
-    }
+    processLine(pending);
   }
 
   return {snapshot: latest, skippedOversizedLine};

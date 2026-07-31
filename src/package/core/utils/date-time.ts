@@ -100,27 +100,6 @@ export function isSameLocalDate(left: Date, right: Date): boolean {
   );
 }
 
-/** Formats local time with an explicit offset and no seconds or milliseconds. */
-export function formatLocalDateTime(date: Date): string {
-  const offsetMinutes = -date.getTimezoneOffset();
-  const sign = offsetMinutes >= 0 ? "+" : "-";
-  const absoluteOffset = Math.abs(offsetMinutes);
-  const offsetHours = Math.floor(absoluteOffset / 60);
-  const offsetRemainderMinutes = absoluteOffset % 60;
-
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}${sign}${pad(offsetHours)}:${pad(offsetRemainderMinutes)}`;
-}
-
-export function formatRelativeTime(isoTimestamp: string | null, now: Date = new Date()): string {
-  const date = parseDateValue(isoTimestamp);
-  if (!date) {
-    return "Unknown";
-  }
-
-  const elapsedMs = Math.max(now.getTime() - date.getTime(), 0);
-  return elapsedMs < 60_000 ? "Just now" : `${formatDuration(elapsedMs)} ago`;
-}
-
 function pad(value: number): string {
   return String(value).padStart(2, "0");
 }

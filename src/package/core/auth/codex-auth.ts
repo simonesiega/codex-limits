@@ -1,7 +1,7 @@
 import {join, normalize} from "node:path";
 import {detectCodexHome} from "@/package/core/codex/paths";
 import {warningDiagnostic, type Diagnostic} from "@/package/core/diagnostics";
-import type {CodexAuthOptions, CouponCredentialStatus} from "@/package/core/types";
+import type {CodexAuthOptions} from "@/package/core/types";
 import {BoundedFileError, readBoundedUtf8File} from "@/package/core/utils/bounded-file";
 import {readEnvValue, resolveEnvironment} from "@/package/core/utils/env";
 import {isRecord, readString} from "@/package/core/utils/unknown";
@@ -50,19 +50,6 @@ export async function resolveCodexCredentialResult(
   return authFile
     ? readAuthFile(authFile)
     : {credentials: null, status: "missing", diagnostics: []};
-}
-
-export async function resolveCodexCredentials(
-  options: CodexAuthOptions = {}
-): Promise<CodexCredentials | null> {
-  return (await resolveCodexCredentialResult(options)).credentials;
-}
-
-export async function getCodexCredentialStatus(
-  options: CodexAuthOptions = {}
-): Promise<CouponCredentialStatus> {
-  const {status} = await resolveCodexCredentialResult(options);
-  return status === "configured" ? "configured" : status === "partial" ? "partial" : "missing";
 }
 
 async function resolveCodexAuthFile(options: CodexAuthOptions): Promise<string | null> {

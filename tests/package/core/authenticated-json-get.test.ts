@@ -212,6 +212,7 @@ test("authenticatedJsonRequest preserves a POST body in the native fallback", as
           },
           {
             endpoint: `${origin}/consume`,
+            timeoutMs: 1_000,
             method: "POST",
             body: JSON.stringify({redeem_request_id: "test-request"}),
           }
@@ -265,7 +266,7 @@ test("authenticatedJsonGet closes native HTTP error bodies without draining them
           async () => {
             throw new Error("fetch failed");
           },
-          {endpoint: `${origin}/usage`}
+          {endpoint: `${origin}/usage`, timeoutMs: 1_000}
         )
       );
 
@@ -288,7 +289,7 @@ test("authenticatedJsonGet falls back from fetch to the bounded native transport
           async () => {
             throw new Error("fetch failed with fake-secret-token");
           },
-          {endpoint: `${origin}/usage`}
+          {endpoint: `${origin}/usage`, timeoutMs: 1_000}
         )
       );
 

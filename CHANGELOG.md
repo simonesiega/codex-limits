@@ -18,10 +18,15 @@ All notable changes to codex-limits are documented in this file.
 ### Fixed
 
 - Fixed packed-package validation for canonical temporary-directory paths on macOS.
+- Fixed inconsistent reset-coupon counts to be reported as partial data instead of complete availability.
+- Fixed agent summaries to label unknown usage percentages as unknown instead of displaying them as 0%.
 
 ### Removed
 
 ### Security
+
+- Kept usage endpoint metadata and coupon redemption identifiers outside the combined limits data supplied to read-only TUI and agent renderers, and enforced resolved-path containment for local state reads.
+- Bounded pi integration filter matching against adversarial configuration patterns and updated the locked `brace-expansion` dependency to a non-vulnerable release.
 
 ## [1.0.0] - 2026-07-23
 

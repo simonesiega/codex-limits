@@ -2,7 +2,7 @@ import {expect, test} from "bun:test";
 import {writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {getCouponCredentialStatus, getResetCoupons} from "@/package/core/coupons/reset-coupons";
+import {getResetCoupons} from "@/package/core/coupons/reset-coupons";
 import type {FetchLike} from "@/package/core/types";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
 
@@ -137,6 +137,34 @@ test("getResetCoupons rejects malformed timestamps and extra untrusted text", as
   expect(JSON.stringify(result)).not.toContain(secret);
 });
 
+test("getResetCoupons reports inconsistent coupon availability", async () => {
+  const result = await getResetCoupons({
+    env: {
+      CODEX_LIMITS_ACCESS_TOKEN: "fake-access-token",
+      CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
+    },
+    transport: async () => ({
+      ok: true,
+      status: 200,
+      transport: "fetch",
+      payload: {
+        available_count: 2,
+        credits: [
+          {
+            status: "available",
+            expires_at: "2026-07-11T20:38:07Z",
+          },
+        ],
+      },
+    }),
+  });
+
+  expect(result.status).toBe("partial");
+  expect(result.warnings).toEqual([
+    "Live reset coupon endpoint returned inconsistent availability data.",
+  ]);
+});
+
 test("getResetCoupons rejects fractional coupon counts", async () => {
   const result = await getResetCoupons({
     env: {
@@ -193,20 +221,6 @@ test("getResetCoupons returns unavailable without credentials", async () => {
 
   expect(result.status).toBe("unavailable");
   expect(result.warnings.join("\n")).toContain("Live reset coupons require");
-  expect(await getCouponCredentialStatus({env: {CODEX_LIMITS_ACCESS_TOKEN: "only-token"}})).toBe(
-    "partial"
-  );
-});
-
-test("getCouponCredentialStatus detects local auth.json", async () => {
-  await withAuthHome(async (home) => {
-    const status = await getCouponCredentialStatus({
-      env: {CODEX_LIMITS_HOME: home},
-      homeDirectory: join(home, "unused"),
-    });
-
-    expect(status).toBe("configured");
-  });
 });
 
 function withAuthHome(run: (home: string) => Promise<void>): Promise<void> {

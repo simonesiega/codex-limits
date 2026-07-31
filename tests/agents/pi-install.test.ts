@@ -78,6 +78,14 @@ test("installPiPlugin creates missing global settings from PI_CODING_AGENT_DIR",
     expect(await readJson<{packages: string[]}>(settingsPath)).toEqual({
       packages: [packageRoot],
     });
+
+    const defaultSettingsPath = join(directory, ".pi", "agent", "settings.json");
+    const defaultResult = await installPiPlugin({
+      packageRoot,
+      homeDirectory: directory,
+      env: {PI_CODING_AGENT_DIR: "   "},
+    });
+    expect(defaultResult).toEqual({changed: true, configPaths: [defaultSettingsPath]});
   });
 });
 
@@ -221,6 +229,32 @@ test("installPiPlugin preserves package filters that already enable its bundle",
         await readJson<{packages: Array<{source: string; extensions: string[]}>}>(settingsPath)
       ).toEqual(configured);
     }
+  });
+});
+
+test("installPiPlugin handles bounded adversarial glob filters", async () => {
+  await withPiConfig(async ({settingsPath, packageRoot}) => {
+    const adversarialFilter = `${"*".repeat(1_023)}x`;
+    await mkdir(dirname(settingsPath), {recursive: true});
+    await writeFile(
+      settingsPath,
+      JSON.stringify({
+        packages: [
+          {
+            source: "npm:@simonesiega/codex-limits",
+            extensions: [adversarialFilter],
+          },
+        ],
+      }),
+      "utf8"
+    );
+
+    expect(await inspectPiPlugin({settingsPath, packageRoot})).toBe("not-installed");
+    expect((await installPiPlugin({settingsPath, packageRoot})).changed).toBe(true);
+    const settings = await readJson<{
+      packages: Array<{source: string; extensions: string[]}>;
+    }>(settingsPath);
+    expect(settings.packages[0]?.extensions).toEqual([adversarialFilter, "+dist/pi.js"]);
   });
 });
 

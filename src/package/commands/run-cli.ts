@@ -3,11 +3,7 @@ import {getCommandSafetyViolation} from "@/package/commands/command-safety";
 import {formatHelp} from "@/package/commands/help";
 import {parseCliArguments} from "@/package/commands/parser";
 import {sanitizePublicErrorMessage} from "@/package/commands/safe-error";
-import {
-  createCliRuntime,
-  type CliRuntime,
-  type CliRuntimeOverrides,
-} from "@/package/commands/runtime";
+import {createCliRuntime, type CliRuntimeOverrides} from "@/package/commands/runtime";
 
 /** Routes one invocation through the shared registry and returns its process exit code. */
 export async function runCli(
@@ -60,11 +56,3 @@ export async function runCli(
     }
   }
 }
-
-/** Returns root help for callers that previously imported it from the router. */
-export function getHelpText(): string {
-  const runtime = createCliRuntime();
-  return formatHelp(createCommandRegistry(runtime));
-}
-
-export type {CliRuntime, CliRuntimeOverrides};

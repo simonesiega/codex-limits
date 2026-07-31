@@ -1,9 +1,5 @@
 import {randomUUID} from "node:crypto";
-import {
-  getCodexCredentialStatus,
-  resolveCodexCredentialResult,
-  type CodexCredentials,
-} from "@/package/core/auth/codex-auth";
+import {resolveCodexCredentialResult, type CodexCredentials} from "@/package/core/auth/codex-auth";
 import {isValidCouponId} from "@/package/core/coupons/coupon-id";
 import {diagnosticsToWarnings} from "@/package/core/diagnostics";
 import {
@@ -14,7 +10,6 @@ import {
 import {diagnosticForJsonFailure} from "@/package/core/network/transport-diagnostics";
 import type {
   AuthenticatedJsonRequest,
-  CouponCredentialStatus,
   CouponOptions,
   CouponResult,
   JsonGetFailure,
@@ -27,8 +22,7 @@ import {
 } from "@/package/core/coupons/payload";
 import {isRecord, readString} from "@/package/core/utils/unknown";
 
-export const LIVE_RESET_COUPONS_ENDPOINT =
-  "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits";
+const LIVE_RESET_COUPONS_ENDPOINT = "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits";
 export const LIVE_RESET_COUPONS_CONSUME_ENDPOINT = `${LIVE_RESET_COUPONS_ENDPOINT}/consume`;
 
 const DEFAULT_TIMEOUT_MS = 10_000;
@@ -122,12 +116,6 @@ export function unavailableCoupons(
   warnings: string[] = []
 ): CouponResult {
   return createUnavailableCoupons(sanitizeEndpoint(endpoint), warnings);
-}
-
-export async function getCouponCredentialStatus(
-  options: CouponOptions = {}
-): Promise<CouponCredentialStatus> {
-  return getCodexCredentialStatus(options);
 }
 
 function unavailableFromFailure(endpoint: string, failure: JsonGetFailure): CouponResult {

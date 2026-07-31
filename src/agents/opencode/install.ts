@@ -23,9 +23,7 @@ interface OpencodeConfigOptions {
 export async function installOpencodeIntegration(
   options: OpencodeConfigOptions = {}
 ): Promise<AgentInstallResult> {
-  const configDirectory = join(homedir(), ".config", "opencode");
-  const configPath = options.configPath ?? join(configDirectory, "opencode.json");
-  const tuiConfigPath = options.tuiConfigPath ?? join(configDirectory, "tui.json");
+  const {configPath, tuiConfigPath} = resolveOpencodePaths(options);
 
   // OpenCode versions discover TUI plugins from different global config files, so keep both in sync.
   const [config, tuiConfig] = await Promise.all([
@@ -53,9 +51,7 @@ export async function installOpencodeIntegration(
 export async function inspectOpencodeIntegration(
   options: OpencodeConfigOptions = {}
 ): Promise<AgentIntegrationStatus> {
-  const configDirectory = join(homedir(), ".config", "opencode");
-  const configPath = options.configPath ?? join(configDirectory, "opencode.json");
-  const tuiConfigPath = options.tuiConfigPath ?? join(configDirectory, "tui.json");
+  const {configPath, tuiConfigPath} = resolveOpencodePaths(options);
   const statuses = await Promise.all([
     inspectOpencodeConfig(configPath, "https://opencode.ai/config.json"),
     inspectOpencodeConfig(tuiConfigPath, "https://opencode.ai/tui.json"),
@@ -65,6 +61,17 @@ export async function inspectOpencodeIntegration(
     return "installed";
   }
   return statuses.every((status) => status === "not-installed") ? "not-installed" : "unknown";
+}
+
+function resolveOpencodePaths(options: OpencodeConfigOptions): {
+  configPath: string;
+  tuiConfigPath: string;
+} {
+  const configDirectory = join(homedir(), ".config", "opencode");
+  return {
+    configPath: options.configPath ?? join(configDirectory, "opencode.json"),
+    tuiConfigPath: options.tuiConfigPath ?? join(configDirectory, "tui.json"),
+  };
 }
 
 async function inspectOpencodeConfig(

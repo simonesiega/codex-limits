@@ -1,9 +1,9 @@
 import type {Dirent} from "node:fs";
-import {opendir} from "node:fs/promises";
+import {opendir, realpath} from "node:fs/promises";
 import {extname, join} from "node:path";
 import type {CodexStateFile, CodexStateReadResult} from "@/package/core/types";
 import {BoundedFileError, readBoundedUtf8File} from "@/package/core/utils/bounded-file";
-import {toSafeRelativePath} from "@/package/core/utils/safe-path";
+import {isPathWithin, toSafeRelativePath} from "@/package/core/utils/safe-path";
 
 const MAX_DEPTH = 2;
 const MAX_FILES = 25;
@@ -37,6 +37,16 @@ export async function readCodexState(homePath: string): Promise<CodexStateReadRe
     skippedSymlink: false,
     warnings: [],
   };
+  let realHomePath: string;
+  try {
+    realHomePath = await realpath(homePath);
+  } catch {
+    return {
+      homePath,
+      files: [],
+      warnings: ["Could not inspect the local Codex state directory safely."],
+    };
+  }
   await walk(homePath, 0, state);
 
   if (state.hitDirectoryLimit || state.hitEntryLimit || state.hitFileLimit) {
@@ -54,6 +64,11 @@ export async function readCodexState(homePath: string): Promise<CodexStateReadRe
   for (const filePath of paths.slice(0, MAX_FILES)) {
     const relativePath = toSafeRelativePath(homePath, filePath);
     try {
+      const resolvedFilePath = await realpath(filePath);
+      if (!isPathWithin(realHomePath, resolvedFilePath)) {
+        throw new BoundedFileError("not-file");
+      }
+      // Keep the original path so the bounded reader still rejects a replaced leaf symlink.
       const content = await readBoundedUtf8File(filePath, MAX_FILE_BYTES);
       const json = parseJson(content, state.warnings);
       files.push({path: filePath, relativePath, json: json.value, error: json.error});

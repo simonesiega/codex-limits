@@ -22,6 +22,18 @@ test("formatOpencodeLimits renders compact local-only UI", () => {
   expect(output).toBe(expected);
 });
 
+test("formatOpencodeLimits does not present an unknown percentage as zero", () => {
+  const result = createFakeLimitsResult();
+  result.windows.fiveHour!.remainingPercent = null;
+  result.windows.fiveHour!.usedPercent = null;
+
+  const output = formatOpencodeLimits(result);
+
+  expect(output).toContain("Remaining  Unknown");
+  expect(output).toContain("[                      ] Unknown");
+  expect(output).not.toContain("[                      ] 0%");
+});
+
 test("formatOpencodeLimits omits the 5-hour block when only weekly usage is provided", () => {
   const result = createFakeLimitsResult();
   result.windows.fiveHour = null;

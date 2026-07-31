@@ -77,6 +77,21 @@ test("installCopilotIntegration uses the default home and honors COPILOT_HOME", 
       expect(result).toEqual({changed: true, configPaths: [extensionPath]});
       expect(await readFile(extensionPath, "utf8")).toBe(BUNDLE);
     }
+
+    const defaultExtensionPath = join(
+      directory,
+      ".copilot",
+      "extensions",
+      "codex-limits",
+      "extension.mjs"
+    );
+    expect(
+      await installCopilotIntegration({
+        packageRoot,
+        homeDirectory: directory,
+        env: {COPILOT_HOME: "   "},
+      })
+    ).toEqual({changed: false, configPaths: [defaultExtensionPath]});
   });
 });
 

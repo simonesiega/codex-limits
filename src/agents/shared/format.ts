@@ -36,7 +36,11 @@ function formatWindow(title: string, window: UsageWindow): string[] {
 }
 
 function progressBar(value: number | null): string {
-  const percent = value === null ? 0 : Math.min(Math.max(value, 0), 100);
+  if (value === null) {
+    return `[${" ".repeat(BAR_WIDTH)}] Unknown`;
+  }
+
+  const percent = Math.min(Math.max(value, 0), 100);
   const filled = Math.round((percent / 100) * BAR_WIDTH);
   return `[${"=".repeat(filled)}${" ".repeat(BAR_WIDTH - filled)}] ${Math.round(percent)}%`;
 }

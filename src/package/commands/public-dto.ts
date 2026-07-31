@@ -1,8 +1,8 @@
 import type {AgentIntegrationStatus} from "@/agents";
 import type {
   CodexLimitsResult,
-  CouponItem,
   CouponSummary,
+  CouponSummaryItem,
   LiveEndpointStatus,
   UsageWindow,
 } from "@/package/core/types";
@@ -95,7 +95,7 @@ function toUsageWindowDto(window: UsageWindow | null): UsageWindowDto | null {
     : null;
 }
 
-function toCouponItemDto(item: CouponItem): CouponItemDto {
+function toCouponItemDto(item: CouponSummaryItem): CouponItemDto {
   return {
     index: item.index,
     status: item.status,

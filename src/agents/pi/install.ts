@@ -1,8 +1,9 @@
 import {lstat, stat} from "node:fs/promises";
 import {homedir} from "node:os";
-import {basename, dirname, isAbsolute, join, normalize, resolve} from "node:path";
+import {dirname, isAbsolute, join, normalize, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {writeAgentJsonAtomically} from "@/agents/shared/json-config";
+import {hasTildePrefix, resolvePackageRoot, resolveTildePath} from "@/agents/shared/paths";
 import {
   AgentInstallError,
   type AgentInstallResult,
@@ -10,6 +11,7 @@ import {
 } from "@/agents/types";
 import {BoundedFileError, readBoundedUtf8File} from "@/package/core/utils/bounded-file";
 import type {EnvironmentMap} from "@/package/core/types";
+import {readEnvValue} from "@/package/core/utils/env";
 import {isRecord} from "@/package/core/utils/unknown";
 
 const PACKAGE_NAME = "@simonesiega/codex-limits";
@@ -110,37 +112,16 @@ interface ResolvedPiPaths {
 function resolvePiPaths(options: PiConfigOptions): ResolvedPiPaths {
   const homeDirectory = resolve(options.homeDirectory ?? homedir());
   const env = options.env ?? process.env;
-  const configuredDirectory = options.agentDirectory ?? env.PI_CODING_AGENT_DIR ?? "";
+  const configuredDirectory = options.agentDirectory ?? readEnvValue(env, "PI_CODING_AGENT_DIR");
   const agentDirectory = configuredDirectory
     ? resolveTildePath(configuredDirectory, homeDirectory)
     : join(homeDirectory, ".pi", "agent");
 
   return {
     settingsPath: resolve(options.settingsPath ?? join(agentDirectory, "settings.json")),
-    packageRoot: resolve(options.packageRoot ?? getCurrentPackageRoot()),
+    packageRoot: resolve(options.packageRoot ?? resolvePackageRoot()),
     homeDirectory,
   };
-}
-
-function getCurrentPackageRoot(): string {
-  const moduleDirectory = dirname(fileURLToPath(import.meta.url));
-  return basename(moduleDirectory) === "dist"
-    ? dirname(moduleDirectory)
-    : resolve(moduleDirectory, "../../..");
-}
-
-function resolveTildePath(path: string, homeDirectory: string): string {
-  if (path === "~") {
-    return homeDirectory;
-  }
-  if (hasTildePrefix(path)) {
-    return resolve(homeDirectory, path.slice(2));
-  }
-  return resolve(path);
-}
-
-function hasTildePrefix(path: string): boolean {
-  return path.startsWith("~/") || (process.platform === "win32" && path.startsWith("~\\"));
 }
 
 async function isPiPackageAvailable(packageRoot: string): Promise<boolean> {
@@ -303,38 +284,68 @@ function enablePackageEntry(entry: Exclude<PiPackageEntry, string>): PiPackageEn
 
 function matchesPiBundlePattern(pattern: string): boolean | null {
   const normalizedPattern = normalizePackagePath(pattern);
-  if (/[\[\]{}()]/.test(normalizedPattern)) {
+  if (/[[\]{}()]/.test(normalizedPattern)) {
     return null;
   }
-  const expression = globToRegExp(normalizedPattern);
-  return expression.test(PI_BUNDLE_PATH) || expression.test("pi.js");
+  return (
+    matchesGlobPattern(PI_BUNDLE_PATH, normalizedPattern) ||
+    matchesGlobPattern("pi.js", normalizedPattern)
+  );
 }
 
-function globToRegExp(pattern: string): RegExp {
-  let expression = "";
-  for (let index = 0; index < pattern.length; index += 1) {
-    const character = pattern[index]!;
-    if (character === "*") {
-      if (pattern[index + 1] === "*") {
-        index += 1;
-        if (pattern[index + 1] === "/") {
-          index += 1;
-          expression += "(?:.*/)?";
-        } else {
-          expression += ".*";
+// Memoized matching avoids regex backtracking on untrusted package-filter patterns.
+function matchesGlobPattern(value: string, pattern: string): boolean {
+  const memo = new Map<number, boolean>();
+  const valueStates = value.length + 1;
+
+  const match = (patternIndex: number, valueIndex: number): boolean => {
+    const key = patternIndex * valueStates + valueIndex;
+    const cached = memo.get(key);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    let result: boolean;
+    const character = pattern[patternIndex];
+    if (character === undefined) {
+      result = valueIndex === value.length;
+    } else if (character === "*") {
+      let starEnd = patternIndex + 1;
+      while (pattern[starEnd] === "*") {
+        starEnd += 1;
+      }
+
+      const globstar = starEnd - patternIndex > 1;
+      if (globstar && pattern[starEnd] === "/") {
+        result = match(starEnd + 1, valueIndex);
+        for (let index = valueIndex; !result && index < value.length; index += 1) {
+          if (value[index] === "/") {
+            result = match(starEnd + 1, index + 1);
+          }
         }
       } else {
-        expression += "[^/]*";
+        result = match(starEnd, valueIndex);
+        for (let index = valueIndex; !result && index < value.length; index += 1) {
+          if (!globstar && value[index] === "/") {
+            break;
+          }
+          result = match(starEnd, index + 1);
+        }
       }
-      continue;
+    } else if (character === "?") {
+      result =
+        valueIndex < value.length &&
+        value[valueIndex] !== "/" &&
+        match(patternIndex + 1, valueIndex + 1);
+    } else {
+      result = character === value[valueIndex] && match(patternIndex + 1, valueIndex + 1);
     }
-    if (character === "?") {
-      expression += "[^/]";
-      continue;
-    }
-    expression += /[.+^${}()|[\]\\]/.test(character) ? `\\${character}` : character;
-  }
-  return new RegExp(`^${expression}$`);
+
+    memo.set(key, result);
+    return result;
+  };
+
+  return match(0, 0);
 }
 
 function isExactPiBundlePath(path: string): boolean {

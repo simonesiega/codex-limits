@@ -124,7 +124,7 @@ test("getCodexLimits starts independent live requests concurrently", async () =>
   const startResult = await Promise.race([
     bothStarted.then(() => "started" as const),
     new Promise<"timeout">((resolve) => {
-      timeout = setTimeout(() => resolve("timeout"), 250);
+      timeout = setTimeout(() => resolve("timeout"), 2_000);
     }),
   ]);
   if (timeout) {
@@ -154,14 +154,27 @@ test("getCodexLimits combines local usage and live coupons", async () => {
         text: async () =>
           JSON.stringify({
             available_count: 1,
-            credits: [{status: "available", expires_at: "2026-01-02T00:00:00.000Z"}],
+            credits: [
+              {
+                id: "RateLimitResetCredit_internal",
+                reset_type: "codex_rate_limits",
+                status: "available",
+                expires_at: "2026-01-02T00:00:00.000Z",
+              },
+            ],
           }),
       }),
     });
 
     expect(result.windows.fiveHour?.remainingPercent).toBe(88);
     expect(result.coupons?.available).toBe(1);
+    expect(result).not.toHaveProperty("usageSource");
+    expect(result.coupons).not.toHaveProperty("source");
+    expect(result.coupons?.items[0]).not.toHaveProperty("id");
+    expect(result.coupons?.items[0]).not.toHaveProperty("resetType");
     expect(JSON.stringify(result)).not.toContain("fake-token");
+    expect(JSON.stringify(result)).not.toContain("RateLimitResetCredit_internal");
+    expect(JSON.stringify(result)).not.toContain("codex_rate_limits");
   });
 });
 

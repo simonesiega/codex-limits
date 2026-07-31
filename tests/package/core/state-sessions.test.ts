@@ -39,6 +39,25 @@ test("readCodexState bounds malformed and oversized JSON files", async () => {
 });
 
 if (process.platform !== "win32") {
+  test("readCodexState supports a symbolic-link Codex home without escaping it", async () => {
+    await withTempDirectory("codex-limits-linked-home-", async (root) => {
+      const home = join(root, "home");
+      const linkedHome = join(root, "linked-home");
+      await mkdir(home);
+      await writeFile(
+        join(home, "limits.json"),
+        JSON.stringify({fiveHour: {remainingPercent: 80}}),
+        "utf8"
+      );
+      await symlink(home, linkedHome, "dir");
+
+      const state = await readCodexState(linkedHome);
+
+      expect(state.files.map((file) => file.relativePath)).toEqual(["limits.json"]);
+      expect(state.warnings).toEqual([]);
+    });
+  });
+
   test("local readers do not follow nested symbolic links", async () => {
     await withTempDirectory("codex-limits-symlinks-", async (root) => {
       const home = join(root, "home");

@@ -40,8 +40,8 @@ export function mapResetCouponsPayload(
     .filter((credit): credit is CouponItem => credit !== null)
     .sort(compareCouponsByExpiry)
     .map((credit, index) => ({...credit, index: index + 1}));
-  const nextExpiring =
-    items.find((item) => item.status?.toLowerCase() === "available") ?? items[0] ?? null;
+  const availableItems = items.filter((item) => item.status?.toLowerCase() === "available");
+  const nextExpiring = availableItems[0] ?? items[0] ?? null;
   const available = readNonNegativeInteger(payload, AVAILABLE_KEYS);
   const earnedThisPeriod = readNonNegativeInteger(payload, EARNED_KEYS);
   const warnings: string[] = [];
@@ -51,6 +51,9 @@ export function mapResetCouponsPayload(
   }
   if (available.malformed || earnedThisPeriod.malformed) {
     warnings.push("Live reset coupon endpoint ignored malformed summary fields.");
+  }
+  if (available.value !== null && available.value !== availableItems.length) {
+    warnings.push("Live reset coupon endpoint returned inconsistent availability data.");
   }
 
   return {

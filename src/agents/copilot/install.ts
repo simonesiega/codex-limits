@@ -1,8 +1,8 @@
 import {stat} from "node:fs/promises";
 import {homedir} from "node:os";
-import {basename, dirname, join, resolve} from "node:path";
-import {fileURLToPath} from "node:url";
+import {dirname, join, resolve} from "node:path";
 import {writeAgentFileAtomically} from "@/agents/shared/atomic-file";
+import {resolvePackageRoot, resolveTildePath} from "@/agents/shared/paths";
 import {
   AgentInstallError,
   type AgentInstallResult,
@@ -10,6 +10,7 @@ import {
 } from "@/agents/types";
 import {BoundedFileError, readBoundedUtf8File} from "@/package/core/utils/bounded-file";
 import type {EnvironmentMap} from "@/package/core/types";
+import {readEnvValue} from "@/package/core/utils/env";
 import {isRecord} from "@/package/core/utils/unknown";
 
 const PACKAGE_NAME = "@simonesiega/codex-limits";
@@ -76,7 +77,7 @@ interface ResolvedCopilotPaths {
 function resolveCopilotPaths(options: CopilotConfigOptions): ResolvedCopilotPaths {
   const homeDirectory = resolve(options.homeDirectory ?? homedir());
   const env = options.env ?? process.env;
-  const configuredHome = options.copilotHome ?? env.COPILOT_HOME ?? "";
+  const configuredHome = options.copilotHome ?? readEnvValue(env, "COPILOT_HOME");
   const copilotHome = configuredHome
     ? resolveTildePath(configuredHome, homeDirectory)
     : join(homeDirectory, ".copilot");
@@ -85,25 +86,8 @@ function resolveCopilotPaths(options: CopilotConfigOptions): ResolvedCopilotPath
     extensionPath: resolve(
       options.extensionPath ?? join(copilotHome, "extensions", "codex-limits", "extension.mjs")
     ),
-    packageRoot: resolve(options.packageRoot ?? getCurrentPackageRoot()),
+    packageRoot: resolve(options.packageRoot ?? resolvePackageRoot()),
   };
-}
-
-function getCurrentPackageRoot(): string {
-  const moduleDirectory = dirname(fileURLToPath(import.meta.url));
-  return basename(moduleDirectory) === "dist"
-    ? dirname(moduleDirectory)
-    : resolve(moduleDirectory, "../../..");
-}
-
-function resolveTildePath(path: string, homeDirectory: string): string {
-  if (path === "~") {
-    return homeDirectory;
-  }
-  if (path.startsWith("~/") || (process.platform === "win32" && path.startsWith("~\\"))) {
-    return resolve(homeDirectory, path.slice(2));
-  }
-  return resolve(path);
 }
 
 async function readCopilotBundle(packageRoot: string): Promise<string> {

@@ -4,7 +4,12 @@ import {
   isSameLocalDate,
   parseDateValue,
 } from "@/package/core/utils/date-time";
-import type {CodexLimitsResult, CouponItem, CouponSummary, UsageWindow} from "@/package/core/types";
+import type {
+  CodexLimitsResult,
+  CouponSummary,
+  CouponSummaryItem,
+  UsageWindow,
+} from "@/package/core/types";
 import type {TuiTone} from "@/package/tui/theme";
 
 export interface TuiUsageCard {
@@ -92,7 +97,7 @@ function createCouponRows(coupons: CouponSummary | null): TuiCouponRow[] {
   return (coupons?.items ?? []).map(formatCouponRow);
 }
 
-function formatCouponRow(item: CouponItem): TuiCouponRow {
+function formatCouponRow(item: CouponSummaryItem): TuiCouponRow {
   const available = (item.status ?? "").toLowerCase() === "available";
 
   return {

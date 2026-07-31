@@ -16,7 +16,7 @@ import type {
 import {mapLiveUsagePayload, unavailableLiveUsage} from "@/package/core/usage/live-payload";
 import {readEnvValue, resolveEnvironment} from "@/package/core/utils/env";
 
-export const LIVE_USAGE_ENDPOINT = "https://chatgpt.com/backend-api/codex/usage";
+const LIVE_USAGE_ENDPOINT = "https://chatgpt.com/backend-api/codex/usage";
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 const MAX_USAGE_RESPONSE_BYTES = 1_000_000;

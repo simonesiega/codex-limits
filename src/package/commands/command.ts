@@ -1,4 +1,3 @@
-export type CommandSafety = "read-only" | "local-write" | "remote-mutation";
 export type OptionValue = true | string | readonly string[];
 
 export interface OptionDefinition {

@@ -136,4 +136,3 @@ function registerCommand(api: TuiPluginApi, command: TuiCommand): void | (() => 
 const plugin = createOpencodePlugin();
 
 export default plugin;
-export const tui = plugin.tui;
