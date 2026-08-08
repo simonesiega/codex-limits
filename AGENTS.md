@@ -96,6 +96,7 @@ Testing:
 ```text
 README.md                                   → Product overview, setup, commands, and documentation routing.
 CONTRIBUTING.md                             → Development workflow and contribution standards.
+CODE_OF_CONDUCT.md                          → Community behavior, reporting, and enforcement standards.
 CHANGELOG.md                                → Released and unreleased user-facing changes.
 SECURITY.md                                 → Data-access, command-safety, and disclosure policy.
 AGENTS.md                                   → Repository instructions for coding agents.

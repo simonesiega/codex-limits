@@ -3,6 +3,9 @@ contact_links:
   - name: Report a security vulnerability
     url: https://github.com/simonesiega/codex-limits/security/advisories/new
     about: Report security vulnerabilities privately. Do not open a public issue.
+  - name: Report a conduct concern
+    url: https://github.com/simonesiega/codex-limits/blob/main/CODE_OF_CONDUCT.md#reporting-a-conduct-issue
+    about: Review the private conduct-reporting process. Do not open a public issue.
   - name: Troubleshooting guide
     url: https://github.com/simonesiega/codex-limits/blob/main/docs/readme/troubleshooting.md
     about: Diagnose CLI, Codex data, network, coupon, terminal, JSON, reset, and agent problems.

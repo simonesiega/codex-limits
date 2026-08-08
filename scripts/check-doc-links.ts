@@ -1,7 +1,14 @@
 import {readdir, readFile, stat} from "node:fs/promises";
 import {dirname, extname, relative, resolve, sep} from "node:path";
 
-const ROOT_DOCUMENTS = ["README.md", "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", "AGENTS.md"];
+const ROOT_DOCUMENTS = [
+  "README.md",
+  "CONTRIBUTING.md",
+  "CODE_OF_CONDUCT.md",
+  "SECURITY.md",
+  "CHANGELOG.md",
+  "AGENTS.md",
+];
 const root = resolve(import.meta.dir, "..");
 const markdownFiles = [
   ...ROOT_DOCUMENTS.map((path) => resolve(root, path)),

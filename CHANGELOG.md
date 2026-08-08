@@ -8,10 +8,13 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added a project Code of Conduct with private reporting and enforcement guidance.
 - Added JSON Schemas and sanitized example documents for `codex-limits coupons --json` and `codex-limits doctor --json`.
 - Added `codex-limits agents uninstall` with interactive, named, multi-agent, and `--all` modes for removing recognized OpenCode, pi, and GitHub Copilot CLI integrations.
 
 ### Changed
+
+- Changed the npm package description to include cross-platform CLI and agent integration support.
 
 ### Fixed
 

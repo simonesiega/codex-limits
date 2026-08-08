@@ -18,7 +18,7 @@
     <img src="https://img.shields.io/github/issues/simonesiega/codex-limits" alt="Open issues" />
 </p>
 
-Read [`README.md`](README.md) first, then use the [documentation hub](docs/README.md) to find the canonical guide for the area you plan to change.
+Read [`README.md`](README.md) first, follow the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) in every project interaction, then use the [documentation hub](docs/README.md) to find the canonical guide for the area you plan to change.
 
 ## Contents
 
@@ -207,7 +207,9 @@ Please follow the private reporting process in [`SECURITY.md`](./SECURITY.md).
 
 ## Community guidelines
 
-Be clear, respectful, and constructive in issues, Pull Requests, and reviews. Good contributions are focused, tested, documented, and easy to understand.
+Every project interaction is governed by the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Be clear, respectful, and constructive in issues, Pull Requests, and reviews. Report conduct concerns through its private reporting process rather than opening a public issue.
+
+Good contributions are focused, tested, documented, and easy to understand.
 
 ## Contact
 

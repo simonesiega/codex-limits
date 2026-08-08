@@ -21,7 +21,7 @@
 <p align="center">
   <img src="https://img.shields.io/npm/v/@simonesiega/codex-limits?label=npm" alt="npm version" />
   <a href="https://www.npmjs.com/package/@simonesiega/codex-limits">
-    <img src="https://img.shields.io/npm/dm/@simonesiega/codex-limits?label=monthly%20downloads" alt="npm downloads in the last month"/>
+    <img src="https://img.shields.io/npm/dt/@simonesiega/codex-limits?label=total%20downloads" alt="Total npm downloads"/>
   </a>
   <a href="https://github.com/simonesiega/codex-limits/actions/workflows/check.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/simonesiega/codex-limits/check.yml?branch=main&amp;label=tests" alt="Automated test status" /></a>
 </p>
@@ -283,14 +283,14 @@ Start with the read-only `codex-limits doctor` command, then follow the guide fo
 
 The [documentation hub](docs/README.md) routes CLI users, automation authors, agent users, and contributors to the appropriate canonical guide.
 
-| Area                   | Canonical guide                                                                                                                                                                                                                  |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CLI setup and commands | [Quick start](#quick-start) · [Usage](#usage)                                                                                                                                                                                    |
-| Troubleshooting        | [Troubleshooting guide](docs/readme/troubleshooting.md)                                                                                                                                                                          |
-| Automation             | [JSON output](docs/readme/json-output.md) · [Schemas](docs/schema/) · [Examples](docs/examples/)                                                                                                                                 |
-| Agent integrations     | [Overview](docs/readme/agent-integrations.md) · [OpenCode](docs/readme/agents/opencode.md) · [pi](docs/readme/agents/pi.md) · [GitHub Copilot CLI](docs/readme/agents/copilot.md)                                                |
-| Runtime support        | [Compatibility](docs/readme/compatibility.md)                                                                                                                                                                                    |
-| Development and safety | [Contributing](CONTRIBUTING.md) · [Issue forms](https://github.com/simonesiega/codex-limits/issues/new/choose) · [Pull Request template](.github/pull_request_template.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md) |
+| Area                   | Canonical guide                                                                                                                                                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CLI setup and commands | [Quick start](#quick-start) · [Usage](#usage)                                                                                                                                                                                                                            |
+| Troubleshooting        | [Troubleshooting guide](docs/readme/troubleshooting.md)                                                                                                                                                                                                                  |
+| Automation             | [JSON output](docs/readme/json-output.md) · [Schemas](docs/schema/) · [Examples](docs/examples/)                                                                                                                                                                         |
+| Agent integrations     | [Overview](docs/readme/agent-integrations.md) · [OpenCode](docs/readme/agents/opencode.md) · [pi](docs/readme/agents/pi.md) · [GitHub Copilot CLI](docs/readme/agents/copilot.md)                                                                                        |
+| Runtime support        | [Compatibility](docs/readme/compatibility.md)                                                                                                                                                                                                                            |
+| Development and safety | [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Issue forms](https://github.com/simonesiega/codex-limits/issues/new/choose) · [Pull Request template](.github/pull_request_template.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md) |
 
 ## Local development
 

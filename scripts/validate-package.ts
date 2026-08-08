@@ -181,6 +181,7 @@ try {
     "docs/photos/terminal/final_result_small.png",
     "README.md",
     "CONTRIBUTING.md",
+    "CODE_OF_CONDUCT.md",
     "SECURITY.md",
     "CHANGELOG.md",
     "LICENSE",

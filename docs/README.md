@@ -10,7 +10,7 @@ This documentation is organized by task. The root README is the product overview
 - **Writing a script or integration?** Read [JSON output](readme/json-output.md) and use the schema for [complete limits](schema/codex-limits.schema.json), [coupons](schema/codex-limits-coupons.schema.json), or [doctor diagnostics](schema/codex-limits-doctor.schema.json).
 - **Installing or removing an agent command?** Open the [agent integrations guide](readme/agent-integrations.md), then choose [OpenCode](readme/agents/opencode.md), [pi](readme/agents/pi.md), or [GitHub Copilot CLI](readme/agents/copilot.md).
 - **Diagnosing an environment?** Run `codex-limits doctor`, then use [Troubleshooting](readme/troubleshooting.md) and check the relevant [compatibility requirements](readme/compatibility.md).
-- **Contributing?** Start with [`CONTRIBUTING.md`](../CONTRIBUTING.md), use the [issue chooser](https://github.com/simonesiega/codex-limits/issues/new/choose) for bug reports or feature requests, and review the [security policy](../SECURITY.md).
+- **Contributing?** Start with [`CONTRIBUTING.md`](../CONTRIBUTING.md), follow the [Code of Conduct](../CODE_OF_CONDUCT.md), use the [issue chooser](https://github.com/simonesiega/codex-limits/issues/new/choose) for bug reports or feature requests, and review the [security policy](../SECURITY.md).
 
 ## CLI and automation
 
@@ -36,6 +36,7 @@ This documentation is organized by task. The root README is the product overview
 | Guide                                                                        | Covers                                                                                                |
 | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | [Contributing](../CONTRIBUTING.md)                                           | Repository setup, architecture boundaries, tests, documentation rules, and pull-request expectations. |
+| [Code of Conduct](../CODE_OF_CONDUCT.md)                                     | Community behavior, private conduct reporting, and enforcement guidelines.                            |
 | [Security](../SECURITY.md)                                                   | Responsible disclosure, local-data and network boundaries, command safety, and release security.      |
 | [Changelog](../CHANGELOG.md)                                                 | Released behavior and current unreleased changes.                                                     |
 | [Issue forms](https://github.com/simonesiega/codex-limits/issues/new/choose) | Structured bug reports and feature requests.                                                          |
