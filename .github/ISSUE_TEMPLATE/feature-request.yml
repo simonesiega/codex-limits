@@ -1,0 +1,69 @@
+name: Feature request
+description: Suggest a focused improvement for Codex Limits
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement. Search [existing issues](https://github.com/simonesiega/codex-limits/issues) first and describe the user problem rather than only an implementation.
+
+        For architecture-level changes, this issue is the place to discuss the design before opening a pull request. Review the [contribution guide](https://github.com/simonesiega/codex-limits/blob/main/CONTRIBUTING.md) and do not include credentials, private Codex data, or unredacted environment values.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find the same request.
+          required: true
+        - label: This request is focused on Codex Limits and includes a concrete user need.
+          required: true
+        - label: I removed private or sensitive data from this request.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What problem would this change solve, and who would benefit?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed solution
+      description: Describe the desired behavior, command, output, or integration.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe current workarounds or other approaches you considered.
+
+  - type: textarea
+    id: safety-compatibility
+    attributes:
+      label: Safety and compatibility considerations
+      description: Note any effect on read-only behavior, remote mutation, redaction, public CLI output, JSON contracts, package exports, or supported platforms.
+
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Would you like to contribute this change?
+      options:
+        - "Yes"
+        - "Maybe, with guidance"
+        - "No"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add sanitized examples, mockups, or links that clarify the request.

@@ -39,13 +39,13 @@ Read [`README.md`](README.md) first, then use the [documentation hub](docs/READM
 
 If you are new to the project, read [`README.md`](README.md) and the [documentation hub](docs/README.md), then choose one focused issue or improvement.
 
-| Step | Action                                          |
-| ---- | ----------------------------------------------- |
-| 1    | Fork the repository.                            |
-| 2    | Create a branch from `main`.                    |
-| 3    | Make one focused change.                        |
-| 4    | Run the local checks.                           |
-| 5    | Open a Pull Request with context and rationale. |
+| Step | Action                                                                                                 |
+| ---- | ------------------------------------------------------------------------------------------------------ |
+| 1    | Fork the repository.                                                                                   |
+| 2    | Create a branch from `main`.                                                                           |
+| 3    | Make one focused change.                                                                               |
+| 4    | Run the local checks.                                                                                  |
+| 5    | Open a [Pull Request](https://github.com/simonesiega/codex-limits/compare) with context and rationale. |
 
 ## Branch naming
 
@@ -59,9 +59,9 @@ If you are new to the project, read [`README.md`](README.md) and the [documentat
 
 ## Issues
 
-Before opening a new issue, check existing [Issues](https://github.com/simonesiega/codex-limits/issues) to avoid duplicates.
+Before opening a new issue, check existing [Issues](https://github.com/simonesiega/codex-limits/issues) to avoid duplicates. Then use the [issue chooser](https://github.com/simonesiega/codex-limits/issues/new/choose) to open the bug-report or feature-request form. Security vulnerabilities must use the private process in [`SECURITY.md`](SECURITY.md#reporting-a-vulnerability), not a public issue.
 
-Please include:
+The issue forms prompt for:
 
 | Field               | Why it matters                                           |
 | ------------------- | -------------------------------------------------------- |
@@ -187,7 +187,9 @@ Documentation-only changes do not require unrelated runtime changes, but the com
 
 ## Pull request checklist
 
-Before requesting review, verify:
+Opening a Pull Request loads the repository's [Pull Request template](.github/pull_request_template.md). Complete its summary, related-issue, validation, and screenshot sections before requesting review.
+
+Then verify:
 
 - [ ] The PR title and description explain what changed and why.
 - [ ] The change is focused and does not include unrelated cleanup.

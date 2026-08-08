@@ -283,14 +283,14 @@ Start with the read-only `codex-limits doctor` command, then follow the guide fo
 
 The [documentation hub](docs/README.md) routes CLI users, automation authors, agent users, and contributors to the appropriate canonical guide.
 
-| Area                   | Canonical guide                                                                                                                                                                   |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CLI setup and commands | [Quick start](#quick-start) · [Usage](#usage)                                                                                                                                     |
-| Troubleshooting        | [Troubleshooting guide](docs/readme/troubleshooting.md)                                                                                                                           |
-| Automation             | [JSON output](docs/readme/json-output.md) · [Schemas](docs/schema/) · [Examples](docs/examples/)                                                                                  |
-| Agent integrations     | [Overview](docs/readme/agent-integrations.md) · [OpenCode](docs/readme/agents/opencode.md) · [pi](docs/readme/agents/pi.md) · [GitHub Copilot CLI](docs/readme/agents/copilot.md) |
-| Runtime support        | [Compatibility](docs/readme/compatibility.md)                                                                                                                                     |
-| Development and safety | [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md)                                                                                             |
+| Area                   | Canonical guide                                                                                                                                                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CLI setup and commands | [Quick start](#quick-start) · [Usage](#usage)                                                                                                                                                                                    |
+| Troubleshooting        | [Troubleshooting guide](docs/readme/troubleshooting.md)                                                                                                                                                                          |
+| Automation             | [JSON output](docs/readme/json-output.md) · [Schemas](docs/schema/) · [Examples](docs/examples/)                                                                                                                                 |
+| Agent integrations     | [Overview](docs/readme/agent-integrations.md) · [OpenCode](docs/readme/agents/opencode.md) · [pi](docs/readme/agents/pi.md) · [GitHub Copilot CLI](docs/readme/agents/copilot.md)                                                |
+| Runtime support        | [Compatibility](docs/readme/compatibility.md)                                                                                                                                                                                    |
+| Development and safety | [Contributing](CONTRIBUTING.md) · [Issue forms](https://github.com/simonesiega/codex-limits/issues/new/choose) · [Pull Request template](.github/pull_request_template.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md) |
 
 ## Local development
 

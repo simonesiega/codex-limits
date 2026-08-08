@@ -1,0 +1,96 @@
+name: Bug report
+description: Report a reproducible problem with Codex Limits
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Search [existing issues](https://github.com/simonesiega/codex-limits/issues) and review the [troubleshooting guide](https://github.com/simonesiega/codex-limits/blob/main/docs/readme/troubleshooting.md) before continuing.
+
+        Do not include access tokens, account IDs, cookies, authorization headers, private paths, raw Codex files, or unredacted environment values. Report security vulnerabilities privately through the [security policy](https://github.com/simonesiega/codex-limits/blob/main/SECURITY.md#reporting-a-vulnerability).
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I reviewed the troubleshooting guide and could not resolve the problem.
+          required: true
+        - label: I removed private or sensitive data from this report.
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Codex Limits version
+      description: Run `codex-limits --version`, or provide the installed package version.
+      placeholder: "x.y.z"
+    validations:
+      required: true
+
+  - type: input
+    id: command
+    attributes:
+      label: Command or integration
+      description: Which command or agent integration shows the problem?
+      placeholder: "codex-limits doctor, /codex-limits in pi, or another command"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual behavior
+      description: Describe what happened, including any safely redacted output.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: Describe what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest reliable sequence that reproduces the problem.
+      placeholder: |
+        1. Run ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the operating system, Node.js version, installation method, terminal, and relevant agent host and version.
+      placeholder: |
+        OS: Windows 11
+        Node.js: 22.x
+        Installation: npm global
+        Terminal: Windows Terminal
+        Agent host: Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      description: Optionally include relevant, safely redacted `codex-limits doctor` output, logs, or screenshots. Never include credentials or raw local files.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add anything else that may help investigate the problem.
