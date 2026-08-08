@@ -2,7 +2,7 @@
 
 [← Documentation hub](../README.md) · [Project README](../../README.md)
 
-This page is the central index for supported agent integrations. Each agent has a dedicated guide covering installation, usage, compatibility, removal, and troubleshooting.
+This page is the central index for supported agent integrations. Each agent has a dedicated guide covering installation, usage, removal, troubleshooting, and links to compatibility requirements.
 
 `codex-limits` can expose the shared, read-only limits dashboard inside supported coding agents. Integrations remain thin and load normalized data through the same core as the CLI.
 
@@ -49,9 +49,9 @@ Each agent name links to its dedicated installation, usage, compatibility, and t
 
 ## Data and privacy
 
-All agent integrations run the shared `codex-limits` core locally. They do not send prompts or Codex limit data to an LLM. Tokens, account IDs, authorization headers, cookies, raw local files, and private paths are excluded from displayed output.
+Agent integrations are read-only views over the shared local core. The Security policy is canonical for [agent data flow and installer safeguards](../../SECURITY.md#agent-integrations-and-installers) and [command safety boundaries](../../SECURITY.md#command-safety-boundaries).
 
-Agent adapters must reuse the shared core rather than independently reading Codex data, resolving credentials, making live requests, or defining redaction rules.
+Agent adapters must reuse the shared core rather than independently reading Codex data, resolving credentials, making live requests, or defining safety rules.
 
 ## Adding another agent
 
@@ -67,15 +67,16 @@ src/agents/<agent-name>/
 
 Register the exported descriptor once in `src/agents/index.ts`. Shared installation commands, generated compatibility help, and doctor diagnostics consume that registry automatically. Every registered agent must also use a matching `src/package/<agent-name>.ts` wrapper and expose `@simonesiega/codex-limits/<agent-name>` through the shared package-entry build and declaration flow. Put behavior used by multiple agents in `src/agents/shared` rather than duplicating it.
 
-New adapters should remain thin, reuse `src/package/core`, avoid sending limit data to an LLM, and include installer, formatter, and host-behavior tests. Each supported integration should also have a dedicated guide under `docs/readme/agents/<agent-name>.md` and an entry in the [Agents](#agents) table.
+New adapters should remain thin, reuse `src/package/core`, avoid sending the request or limit data to the LLM, and include installer, formatter, and host-behavior tests. Each supported integration should also have a dedicated guide under `docs/readme/agents/<agent-name>.md` and an entry in the [Agents](#agents) table.
 
 See [Contributing](../../CONTRIBUTING.md#adding-a-new-agent) for the complete contribution checklist.
 
 ## Related documentation
 
-- [Compatibility](compatibility.md) — Runtime, operating-system, terminal, network, and agent compatibility.
+- [Compatibility](compatibility.md) — Canonical runtime, operating-system, terminal, network, and agent support requirements.
 - [JSON output](json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
 - [Contributing](../../CONTRIBUTING.md#adding-a-new-agent) — Complete checklist for developing and submitting another agent adapter.
 - [Security policy](../../SECURITY.md) — Local-data safeguards, network behavior, and vulnerability reporting.
+- [Troubleshooting](troubleshooting.md) — Cross-surface diagnosis and links to agent-specific problem resolution.
 - [Documentation hub](../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
-- [Project README](../../README.md) — Product overview, installation, commands, configuration, and troubleshooting.
+- [Project README](../../README.md) — Product overview, installation, commands, and configuration.

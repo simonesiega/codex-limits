@@ -33,7 +33,6 @@ src/package/core      → Shared domain logic. Owns Codex data discovery, usage 
 src/package/commands  → CLI command layer. Owns the declarative registry, shared parser/help, scoped runtime services, and focused command handlers.
 src/package/tui       → Ink terminal UI. Owns rendering only and consumes normalized display-ready data.
 src/agents            → Agent integration source. Owns supported agent adapters and registration.
-agents                → Generated/installable agent files when integrations require them.
 tests                 → Behavior, output, safety, and integration tests.
 docs/photos           → README screenshots and visual documentation assets.
 ```
@@ -45,7 +44,7 @@ Terminal usage:
 user terminal → codex-limits CLI → shared core reads/discovers Codex data → command output or Ink TUI
 
 Script usage:
-script/automation → codex-limits --json → shared core → stable machine-readable JSON
+script/automation → supported --json command → shared core → stable machine-readable JSON
 
 Agent usage:
 coding agent command → agent adapter → shared core → read-only Codex limits view inside the agent
@@ -54,7 +53,7 @@ Reset usage:
 user terminal → reset command → fresh coupon load → interactive confirmation → one remote coupon mutation
 ```
 
-- The **core package** is the authority for Codex data discovery, parsing, normalization, optional live data fetching, warnings, and redaction.
+- The **core package** is the authority for Codex data discovery, parsing, normalization, authenticated reads, confirmed reset redemption, warnings, and redaction.
 - The **commands package** is responsible for CLI behavior. Command metadata belongs in the shared registry model, while each handler should receive only the runtime capabilities it uses.
 - The **TUI package** is a rendering layer. It must not read local Codex files, fetch live data directly, or define safety rules.
 - The **agents package** is an adapter layer for OpenCode, pi, and GitHub Copilot CLI. Each integration should use the shared adapter contract, stay thin, reuse the shared core, and remain read-only.
@@ -66,7 +65,7 @@ user terminal → reset command → fresh coupon load → interactive confirmati
 
 ```text
 Published runtime:
-- Node.js 20 or newer
+- Node.js, with supported versions defined in docs/readme/compatibility.md
 - Node-compatible package entry points
 - npm global install
 
@@ -92,7 +91,7 @@ Testing:
 ## Documentation Inventory
 
 ```text
-README.md                                   → Product overview, setup, commands, and troubleshooting.
+README.md                                   → Product overview, setup, commands, and documentation routing.
 CONTRIBUTING.md                             → Development workflow and contribution standards.
 CHANGELOG.md                                → Released and unreleased user-facing changes.
 SECURITY.md                                 → Data-access, command-safety, and disclosure policy.
@@ -100,8 +99,9 @@ AGENTS.md                                   → Repository instructions for codi
 docs/README.md                              → Task-oriented documentation hub.
 docs/readme/json-output.md                  → Public JSON contracts and automation guidance.
 docs/readme/compatibility.md                → Runtime, platform, data, terminal, and network support.
+docs/readme/troubleshooting.md              → Cross-surface diagnosis and problem resolution.
 docs/readme/agent-integrations.md           → Shared agent integration behavior and development.
-docs/readme/agents/{opencode,pi,copilot}.md → Agent-specific installation and usage guides.
+docs/readme/agents/{opencode,pi,copilot}.md → Agent-specific setup, usage, removal, and troubleshooting.
 docs/schema/*.schema.json                   → JSON Schemas for complete, coupon, and doctor output.
 docs/examples/*.example.json                → Sanitized JSON documents validated against the schemas.
 docs/photos                                 → Sanitized screenshots and project identity assets.
@@ -124,6 +124,7 @@ docs/photos                                 → Sanitized screenshots and projec
   - `bun run build`
 - Before editing a nested area, check whether that area contains its own `AGENTS.md`. If it exists, read and follow it in addition to this root file.
 - Read [`README.md`](README.md), [`CONTRIBUTING.md`](CONTRIBUTING.md), and [`CHANGELOG.md`](CHANGELOG.md) before making broad or release-relevant changes.
+- Keep deep safety behavior canonical in [`SECURITY.md`](SECURITY.md), support requirements canonical in [`docs/readme/compatibility.md`](docs/readme/compatibility.md), cross-surface diagnosis in [`docs/readme/troubleshooting.md`](docs/readme/troubleshooting.md), and agent-specific setup, removal, and troubleshooting in the matching guide under [`docs/readme/agents`](docs/readme/agents). Summarize and link instead of duplicating those details elsewhere.
 
 ## Maintainability
 
@@ -146,7 +147,7 @@ The project should remain small. Avoid large abstractions unless they clearly re
 - Do not rely only on search snippets for broad changes.
 - Single-line helper functions with a single call site are usually unnecessary; inline them unless they improve clarity.
 - Always ask before removing functionality or code that appears intentional.
-- Do not preserve backward compatibility unless the user explicitly asks for it or the change affects published CLI behavior.
+- Preserve compatibility for documented CLI behavior, JSON contracts, package exports, and agent integrations unless a deliberate breaking change is explicitly requested and documented. Internal implementation details can change freely.
 - Keep public CLI output stable unless the task is specifically about changing it.
 - Keep `--json` output machine-readable and predictable.
 

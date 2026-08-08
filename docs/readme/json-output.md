@@ -48,52 +48,73 @@ interface UsageWindowJson {
 }
 ```
 
-This example represents one snapshot captured at `2026-07-13T16:00:07.000Z` on a system configured for UTC:
+This example represents a sanitized snapshot:
+
+<!-- validated-example: codex-limits-output.example.json -->
 
 ```json
 {
   "windows": {
     "fiveHour": {
       "label": "5-hour usage limit",
-      "remainingPercent": 93,
-      "usedPercent": 7,
-      "resetsAt": "2026-07-13T19:55:07.000Z",
+      "remainingPercent": 80,
+      "usedPercent": 20,
+      "resetsAt": "2026-07-14T01:30:15.000Z",
       "resetsIn": "3h 55m"
     },
     "weekly": {
       "label": "Weekly usage limit",
-      "remainingPercent": 11,
-      "usedPercent": 89,
-      "resetsAt": "2026-07-15T17:40:07.000Z",
-      "resetsIn": "2d 1h 40m"
+      "remainingPercent": 31,
+      "usedPercent": 69,
+      "resetsAt": "2026-07-18T11:15:15.000Z",
+      "resetsIn": "4d 13h 40m"
     }
   },
   "coupons": {
-    "available": 2,
-    "earnedThisPeriod": 4,
-    "nextExpirationDate": "Monday 20 July 2026",
-    "nextExpirationIn": "7d 4h 38m",
+    "available": 4,
+    "earnedThisPeriod": 0,
+    "nextExpirationDate": "Saturday 18 July 2026",
+    "nextExpirationIn": "4d 2h 42m",
     "items": [
       {
         "index": 1,
         "status": "available",
-        "grantedAt": "2026-06-20T20:38:07Z",
-        "expiresAt": "2026-07-20T20:38:07Z",
-        "expirationDate": "Monday 20 July 2026",
-        "expiresIn": "7d 4h 38m"
+        "grantedAt": "2026-06-18T00:17:20.252556Z",
+        "expiresAt": "2026-07-18T00:17:20.252556Z",
+        "expirationDate": "Saturday 18 July 2026",
+        "expiresIn": "4d 2h 42m"
       },
       {
         "index": 2,
         "status": "available",
-        "grantedAt": "2026-06-27T20:38:07Z",
-        "expiresAt": "2026-07-27T20:38:07Z",
+        "grantedAt": "2026-06-26T23:48:13.132409Z",
+        "expiresAt": "2026-07-26T23:48:13.132409Z",
         "expirationDate": "Monday 27 July 2026",
-        "expiresIn": "14d 4h 38m"
+        "expiresIn": "13d 2h 12m"
+      },
+      {
+        "index": 3,
+        "status": "available",
+        "grantedAt": "2026-07-01T19:59:47.228684Z",
+        "expiresAt": "2026-07-31T19:59:47.228684Z",
+        "expirationDate": "Friday 31 July 2026",
+        "expiresIn": "17d 22h 24m"
+      },
+      {
+        "index": 4,
+        "status": "available",
+        "grantedAt": "2026-07-13T17:48:41.527506Z",
+        "expiresAt": "2026-08-12T17:48:41.527506Z",
+        "expirationDate": "Wednesday 12 August 2026",
+        "expiresIn": "29d 20h 13m"
       }
     ],
     "warnings": []
   },
-  "warnings": []
+  "warnings": [
+    "Skipped a sensitive-looking local file.",
+    "Skipped a local cache file because it is too large to inspect safely."
+  ]
 }
 ```
 
@@ -121,11 +142,13 @@ interface CouponItemJson {
 }
 ```
 
-Using the same reference time and timezone as the complete example ([download this sanitized coupon example](../examples/codex-limits-coupons-output.example.json)):
+Sanitized example ([see the sanitized coupon example](../examples/codex-limits-coupons-output.example.json)):
+
+<!-- validated-example: codex-limits-coupons-output.example.json -->
 
 ```json
 {
-  "available": 1,
+  "available": 2,
   "earnedThisPeriod": 4,
   "nextExpirationDate": "Monday 20 July 2026",
   "nextExpirationIn": "7d 4h 38m",
@@ -137,6 +160,14 @@ Using the same reference time and timezone as the complete example ([download th
       "expiresAt": "2026-07-20T20:38:07Z",
       "expirationDate": "Monday 20 July 2026",
       "expiresIn": "7d 4h 38m"
+    },
+    {
+      "index": 2,
+      "status": "available",
+      "grantedAt": "2026-06-27T20:38:07Z",
+      "expiresAt": "2026-07-27T20:38:07Z",
+      "expirationDate": "Monday 27 July 2026",
+      "expiresIn": "14d 4h 38m"
     }
   ],
   "warnings": []
@@ -162,7 +193,9 @@ interface DoctorJson {
 }
 ```
 
-Sanitized example ([download the JSON file](../examples/codex-limits-doctor-output.example.json)):
+Sanitized example ([see the JSON example](../examples/codex-limits-doctor-output.example.json)):
+
+<!-- validated-example: codex-limits-doctor-output.example.json -->
 
 ```json
 {
@@ -292,5 +325,6 @@ Consumers should tolerate `null` values and warning entries. Parse fields as JSO
 - [Doctor example](../examples/codex-limits-doctor-output.example.json) and [schema](../schema/codex-limits-doctor.schema.json) — Resources for `codex-limits doctor --json`.
 - [Compatibility](compatibility.md) — Runtime, operating system, local-data, terminal, and network requirements.
 - [Agent integrations](agent-integrations.md) — Installation, architecture, behavior, and development of supported agent integrations.
+- [Troubleshooting](troubleshooting.md) — Diagnosis for JSON output, automation, and data availability problems.
 - [Documentation hub](../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
-- [Project README](../../README.md) — Product overview, installation, commands, configuration, and troubleshooting.
+- [Project README](../../README.md) — Product overview, installation, commands, and configuration.

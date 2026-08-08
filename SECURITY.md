@@ -19,6 +19,12 @@
 - [Reporting a vulnerability](#reporting-a-vulnerability)
 - [What to expect](#what-to-expect)
 - [Local data and network behavior](#local-data-and-network-behavior)
+  - [Local data](#local-data)
+  - [Network requests](#network-requests)
+  - [Reset redemption](#reset-redemption)
+  - [Agent integrations and installers](#agent-integrations-and-installers)
+  - [Diagnostics](#diagnostics)
+  - [Command safety boundaries](#command-safety-boundaries)
 - [What to report](#what-to-report)
 - [Safety expectations](#safety-expectations)
 - [Dependency and release security](#dependency-and-release-security)
@@ -70,23 +76,35 @@ Please do not publicly disclose the vulnerability until a fix is available or di
 
 ## Local data and network behavior
 
-`codex-limits` is designed to keep raw local Codex files and sensitive values on your machine. It makes authenticated requests to the recognized ChatGPT Codex endpoints when retrieving live usage or reset-credit information, and only sends a reset-credit consume request after the user invokes and confirms `codex-limits reset`.
+This section is the canonical reference for deep data-access, network, redaction, installer, diagnostic, and mutation safety behavior. Other guides summarize these guarantees and link here.
+
+### Local data
+
+`codex-limits` keeps raw local Codex files out of public output and uses discovered credentials only for authenticated requests to recognized ChatGPT Codex endpoints. It sends a reset-credit consume request only after the user invokes and confirms `codex-limits reset`.
 
 The CLI performs bounded, read-only inspection of recognized Codex home candidates. It reads small non-sensitive JSON state files, bounded `sessions/**/rollout-*.jsonl` logs, and `auth.json` only for credential resolution. Traversal depth, directory entries, file counts, file sizes, JSONL line sizes, and response sizes are limited; nested symbolic links are skipped, and resolved state files must remain inside the detected Codex home. Filesystem diagnostics are path-free, and fallback reset-duration text is accepted only in a compact normalized form. Raw local files, private paths, and credentials are never returned by the public CLI or JSON contracts.
 
-For live usage and coupon information, the project contacts the default ChatGPT Codex endpoints. The only environment endpoint override is `CODEX_LIMITS_USAGE_ENDPOINT`, mainly for testing or advanced setups. Overrides must use HTTPS, except for loopback HTTP during local testing. Authenticated requests reject redirects, use bounded timeouts and responses, and never include credential headers in diagnostics.
+### Network requests
+
+For live usage and coupon information, the project contacts the default ChatGPT Codex endpoints. The only environment endpoint override is `CODEX_LIMITS_USAGE_ENDPOINT`, mainly for testing or advanced setups. Overrides must use HTTPS, except for loopback HTTP during local testing; embedded credentials and other protocols are rejected. Authenticated requests reject redirects, use a 10-second timeout and 1 MB response limit by default, and never include credential headers in diagnostics.
+
+### Reset redemption
 
 The reset command first refreshes the coupon list and matches either the requested display index or the available coupon with the earliest expiration. Coupon timestamps must be bounded RFC 3339 values before they can reach public output or participate in selection. Redemption requires an exact internal service ID and the recognized `codex_rate_limits` reset type; `--soonest` refuses incomplete or inconsistent availability details rather than selecting a different coupon. It requires an interactive terminal, a displayed recap, and an explicit `y` or `yes` answer. The consume request includes the selected coupon's internal service ID and a fresh UUID idempotency key; transport fallback reuses the same request body. Coupon IDs and reset types remain internal and are not added to text or JSON coupon output. Known no-op service outcomes are reported without claiming that a coupon was used, and malformed or ambiguous responses are reported as unconfirmed.
 
-Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send private Codex data to the agent, and not expose sensitive values inside the agent UI. Before combined limits data reaches TUI or agent renderers, the core removes usage endpoint metadata, opaque coupon identifiers, and coupon reset types needed only by the confirmed reset flow. The pi extension runs only its local command handler and does not inject a user or custom message into the model context. The GitHub Copilot CLI extension registers only a local session command, writes its safe result to the host timeline, and does not call the SDK's model-message methods.
+### Agent integrations and installers
 
-Agent installers use bounded reads and owner-only atomic replacements. The pi installer uses bounded package-filter matching, registers the already installed local package root, and does not download a package or execute dependency lifecycle scripts. The Copilot installer copies the bounded extension bundle already present in the package, refuses to overwrite an unrecognized entry point, and does not install the SDK or another package.
+Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send the request or limit data to the LLM, and not expose sensitive values inside the agent UI. Before combined limits data reaches TUI or agent renderers, the core removes usage endpoint metadata, opaque coupon identifiers, and coupon reset types needed only by the confirmed reset flow. The pi extension runs only its local command handler and does not inject a user or custom message into the model context. The GitHub Copilot CLI extension registers only a local session command, writes its safe result to the host timeline, and does not call the SDK's model-message methods.
+
+Agent installers use bounded reads and owner-only atomic replacements, refuse symbolic-link or malformed configuration targets, and redact unexpected output paths. OpenCode configuration and pi settings files are limited to 1 MB. The pi installer also uses bounded package-filter matching, registers the already installed local package root, and does not download a package or execute dependency lifecycle scripts. The Copilot installer limits extension files to 5 MB, copies the bounded bundle already present in the package, refuses unrecognized or competing entry points, and does not install the SDK or another package.
+
+### Diagnostics
 
 The `codex-limits doctor` command exposes only package/runtime labels and bounded availability statuses. Its Codex, OpenCode, pi, and GitHub Copilot CLI checks never return credential values, private paths, endpoint URLs, configuration contents, or raw local files. The optional live reachability check uses the same authenticated, bounded, redirect-free usage transport as the dashboard.
 
 ### Command safety boundaries
 
-Every CLI command declares one enforced safety category. Dashboard, status, coupon, doctor, and agent-inspection commands are read-only and receive no write or account-mutation services. Agent installation is a local-write operation scoped to the selected agent configuration. Reset is a `remote-mutation` command with a dedicated consume capability; the router requires an interactive terminal, and the handler requires the recap plus an explicit positive answer before calling that capability.
+Every CLI command declares one enforced safety category. Inspection and reporting commands such as the `codex-limits` dashboard, `status`, `coupons`, and `doctor` are read-only and receive no write or account-mutation services. Agent installation is a local-write operation scoped to the selected agent configuration. Reset is a `remote-mutation` command with a dedicated consume capability; the router requires an interactive terminal, and the handler requires the recap plus an explicit positive answer before calling that capability.
 
 The existing `codex-limits init` compatibility command and the preferred `codex-limits agents install` command share the same local-write implementation. Neither command modifies Codex data or sends an LLM prompt.
 
@@ -136,5 +154,6 @@ The project should:
 - [Documentation hub](docs/README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
 - [Compatibility](docs/readme/compatibility.md) — Supported runtimes, operating systems, Codex data, networks, terminals, and agent hosts.
 - [JSON output](docs/readme/json-output.md) — Public machine-readable fields and deliberately omitted sensitive data.
-- [Agent integrations](docs/readme/agent-integrations.md) — Shared adapter architecture, installation, and privacy guarantees.
+- [Troubleshooting](docs/readme/troubleshooting.md) — Safe diagnosis for data, network, terminal, reset, and integration problems.
+- [Agent integrations](docs/readme/agent-integrations.md) — Supported-agent index, shared installation modes, and adapter architecture.
 - [Contributing](CONTRIBUTING.md) — Development workflow, safety rules, and review expectations.

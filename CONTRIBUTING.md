@@ -138,18 +138,7 @@ When adding a CLI command, create a focused command module and register it in `s
 
 ## Safety rules
 
-`codex-limits` treats local Codex data as read-only and should remain safe by default.
-
-Do not print, log, snapshot, or commit:
-
-- access tokens;
-- account IDs;
-- auth headers;
-- cookies;
-- raw local Codex files;
-- private environment values.
-
-If a change touches local data discovery, live coupon data, warnings, output formatting, or agent integrations, make sure sensitive values are redacted before they can reach the CLI, TUI, JSON output, tests, or screenshots.
+[`SECURITY.md`](SECURITY.md#local-data-and-network-behavior) is the canonical reference for local-data, network, redaction, installer, diagnostic, and reset-mutation safeguards. Contributors must preserve those boundaries and use only synthetic or redacted values in output, tests, documentation, and screenshots.
 
 Command handlers should let the router replace unexpected exceptions with their fixed command failure message. Use `AgentInstallError` only for bounded, deliberately user-safe adapter messages; never pass through a raw filesystem, network, or credential error.
 
@@ -170,7 +159,7 @@ New agents should use the same small adapter shape as [`src/agents/opencode`](sr
 | 9    | Add or update screenshots when the visual output changes.                                                                       |
 | 10   | Run the documentation link and schema checks.                                                                                   |
 
-The goal of every integration is the same: show Codex limit information quickly, safely, and without sending unnecessary work to the LLM.
+The goal of every integration is the same: show Codex limit information quickly and safely without sending the request or limit data to the LLM.
 
 ## Documentation changes
 
@@ -181,7 +170,9 @@ Keep documentation changes consistent with these rules:
 - use relative links for files in this repository;
 - keep commands executable from their documented working directory;
 - keep heading anchors stable when another file links to them;
-- synchronize every JSON example with its corresponding schema under `docs/schema`;
+- keep deep safety behavior in [`SECURITY.md`](SECURITY.md), support requirements in [Compatibility](docs/readme/compatibility.md), cross-surface diagnosis in [Troubleshooting](docs/readme/troubleshooting.md), and agent-specific setup, removal, and troubleshooting in the matching guide under [`docs/readme/agents`](docs/readme/agents);
+- summarize and link to the canonical guide instead of copying its detailed procedures or guarantees;
+- synchronize every external and inline JSON example with its corresponding schema under `docs/schema`; `bun run docs:schema` enforces the linked examples in `docs/readme/json-output.md`;
 - use descriptive image alt text and sanitized screenshots;
 - never include tokens, account IDs, cookies, authorization headers, private paths, environment contents, or raw Codex files.
 

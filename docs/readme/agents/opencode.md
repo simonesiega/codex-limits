@@ -2,7 +2,7 @@
 
 [← Documentation hub](../../README.md) · [Agent integrations](../agent-integrations.md) · [Project README](../../../README.md)
 
-The OpenCode integration adds a read-only `/codex-limits` command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending a prompt to an LLM.
+The OpenCode integration adds a read-only `/codex-limits` command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limit data to the LLM.
 
 ## Overview
 
@@ -42,16 +42,9 @@ It adds the following package to each file's `plugin` array:
 
 The package root and the explicit `@simonesiega/codex-limits/opencode` host subpath resolve to the same bundled plugin. The installer uses the root package name for OpenCode plugin-loader compatibility; the subpath is not a separate installation method.
 
-Both files are updated because compatible OpenCode versions discover TUI plugins through different global configuration files. The installer:
+Both files are updated because compatible OpenCode versions discover TUI plugins through different global configuration files. The installer creates missing configuration objects, preserves unrelated fields and plugins, recognizes common package version forms, and avoids duplicate registrations. If one file is already configured and the other is not, only the missing plugin registration is added.
 
-- creates a missing configuration as a JSON object with the appropriate OpenCode schema;
-- preserves existing configuration fields and plugin entries;
-- recognizes unversioned, tagged, pinned, and tuple forms of the package and does not add duplicates;
-- writes changed files through a sibling temporary file to avoid partial JSON;
-- refuses symbolic-link configuration files instead of following or replacing the link;
-- refuses to modify malformed, non-object, oversized, or invalid `plugin` configurations.
-
-Configuration files larger than 1 MB are not modified. If one file is already configured and the other is not, only the missing plugin registration is added. Installation results shorten paths under the user home to `~/...`; unexpected paths outside the home are displayed as `[path]`.
+Installer file-handling, size, symbolic-link, atomic-write, and path-redaction guarantees are canonical in the [Security policy](../../../SECURITY.md#agent-integrations-and-installers).
 
 ## Using `/codex-limits`
 
@@ -81,14 +74,7 @@ Loading failures are reduced to a static safe error instead of exposing raw file
 
 ## Compatibility
 
-The adapter supports OpenCode hosts that expose either:
-
-- the current keymap layer registration API; or
-- the legacy command registration API.
-
-Compatibility is determined from the API shape available at runtime rather than from a list of exact OpenCode versions. Automated adapter tests use host mocks for both supported API shapes; the repository does not currently claim end-to-end validation against named OpenCode releases.
-
-See the general [Compatibility guide](../compatibility.md) for tested runtimes, operating systems, terminals, and network behavior.
+See [OpenCode compatibility](../compatibility.md#opencode-compatibility) for the canonical host API, test coverage, runtime, operating-system, terminal, and network support requirements.
 
 ## Re-running or removing the integration
 
@@ -115,7 +101,7 @@ Run `codex-limits status` outside OpenCode. If data is also unavailable there, v
 
 ## Data and privacy
 
-The integration follows the safety guarantees defined for [all agent integrations](../agent-integrations.md#data-and-privacy). It does not send a prompt or Codex limit data to an LLM, and displayed output excludes sensitive credentials and raw local data.
+See the [Security policy](../../../SECURITY.md#agent-integrations-and-installers) for the canonical agent, credential, local-data, installer, and output safety guarantees.
 
 ## Related documentation
 
@@ -124,5 +110,6 @@ The integration follows the safety guarantees defined for [all agent integration
 - [JSON output](../json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
 - [Security policy](../../../SECURITY.md) — Local-data safeguards, network behavior, and vulnerability reporting.
 - [OpenCode](https://opencode.ai/) — Official agent website.
+- [Troubleshooting](../troubleshooting.md) — Cross-surface diagnosis and common problem resolution.
 - [Documentation hub](../../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
-- [Project README](../../../README.md) — Product overview, installation, commands, configuration, and troubleshooting.
+- [Project README](../../../README.md) — Product overview, installation, commands, and configuration.

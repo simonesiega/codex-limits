@@ -2,7 +2,7 @@
 
 [← Documentation hub](../../README.md) · [Agent integrations](../agent-integrations.md) · [Project README](../../../README.md)
 
-The pi integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending a prompt to an LLM.
+The pi integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limit data to the LLM.
 
 ## Overview
 
@@ -46,16 +46,9 @@ When `PI_CODING_AGENT_DIR` is set, the installer uses `settings.json` under that
 
 Registering the local package root avoids another download and keeps the extension synchronized with the globally installed `codex-limits` package. The same host module is exposed explicitly as `@simonesiega/codex-limits/pi`, but pi installation continues to use the package manifest rather than that subpath directly. The installer also recognizes existing unversioned, tagged, or pinned `npm:@simonesiega/codex-limits` pi package registrations. If a matching object registration filters out the bundled extension, the named installer force-enables only `dist/pi.js` while preserving unrelated resource filters.
 
-The installer:
+The installer creates missing settings objects, preserves unrelated settings and package registrations, avoids duplicates, and verifies that the package manifest and `dist/pi.js` bundle are available.
 
-- creates a missing settings file as a JSON object;
-- preserves unrelated settings and package registrations;
-- avoids duplicate local and npm package registrations;
-- verifies that the package manifest declares the bundled `dist/pi.js` extension and that the bundle is available;
-- writes changes through an owner-only sibling temporary file to avoid partial JSON;
-- refuses symbolic-link, malformed, non-object, oversized, or invalid `packages` settings.
-
-Settings files larger than 1 MB are not modified. Installation output shortens paths under the user home to `~/...` and displays unexpected paths outside it as `[path]`.
+Installer file-handling, size, symbolic-link, atomic-write, package-filter, and path-redaction guarantees are canonical in the [Security policy](../../../SECURITY.md#agent-integrations-and-installers).
 
 Pi's native package command is also supported because the npm package includes the pi manifest:
 
@@ -87,11 +80,7 @@ The command is interactive-TUI-only. In pi RPC, print, and JSON modes, it perfor
 
 ## Compatibility
 
-The adapter uses pi's extension APIs for command registration, footer status, notifications, and custom overlays. It is developed against `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 0.81.x. Those host packages are optional peers and are not bundled into `codex-limits`.
-
-Pi 0.81.x requires Node.js 22.19 or newer. This requirement applies to the pi host; the standalone `codex-limits` CLI continues to support Node.js 20 or newer. Automated tests use extension-host mocks and the real pi TUI component classes. Local validation also confirmed package discovery and command interception with pi 0.81.1 in print mode, without invoking the model; the interactive overlay is not terminal-tested against every pi release.
-
-See the general [Compatibility guide](../compatibility.md) for tested runtimes, operating systems, terminals, and network behavior.
+See [pi compatibility](../compatibility.md#pi-compatibility) for the canonical host version, Node.js, peer dependency, test coverage, operating-system, terminal, and network support requirements.
 
 ## Re-running or removing the integration
 
@@ -128,9 +117,7 @@ Run `codex-limits doctor` and `codex-limits status` outside pi. If data is also 
 
 ## Data and privacy
 
-The integration follows the safety guarantees defined for [all agent integrations](../agent-integrations.md#data-and-privacy). It does not send a prompt or Codex limit data to an LLM, and displayed output excludes sensitive credentials, private paths, and raw local data.
-
-Pi extensions execute with the current user's system permissions. Install only packages you trust, as described in pi's own extension security guidance.
+See the [Security policy](../../../SECURITY.md#agent-integrations-and-installers) for the canonical agent, credential, local-data, installer, and output safety guarantees. Pi extensions execute with the current user's system permissions, so install only packages you trust.
 
 ## Related documentation
 
@@ -139,5 +126,6 @@ Pi extensions execute with the current user's system permissions. Install only p
 - [JSON output](../json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
 - [Security policy](../../../SECURITY.md) — Local-data safeguards, network behavior, and vulnerability reporting.
 - [pi](https://pi.dev/) — Official agent website.
+- [Troubleshooting](../troubleshooting.md) — Cross-surface diagnosis and common problem resolution.
 - [Documentation hub](../../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
-- [Project README](../../../README.md) — Product overview, installation, commands, configuration, and troubleshooting.
+- [Project README](../../../README.md) — Product overview, installation, commands, and configuration.

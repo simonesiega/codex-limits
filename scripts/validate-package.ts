@@ -168,6 +168,7 @@ try {
     "docs/readme/agents/pi.md",
     "docs/readme/compatibility.md",
     "docs/readme/json-output.md",
+    "docs/readme/troubleshooting.md",
     "docs/schema/codex-limits.schema.json",
     "docs/schema/codex-limits-coupons.schema.json",
     "docs/schema/codex-limits-doctor.schema.json",
