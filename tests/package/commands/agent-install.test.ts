@@ -18,6 +18,9 @@ function createIntegration(
       this.installs += 1;
       return {changed: true, configPaths};
     },
+    async uninstall() {
+      return {changed: false, configPaths};
+    },
     async inspect() {
       return "not-installed";
     },

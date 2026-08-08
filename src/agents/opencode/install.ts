@@ -1,12 +1,17 @@
 import {homedir} from "node:os";
 import {join} from "node:path";
-import {writeAgentJsonAtomically} from "@/agents/shared/json-config";
 import {
-  AgentInstallError,
+  readAgentJsonObject,
+  writeAgentJsonFilesAtomically,
+  type AgentJsonDocument,
+  type AgentJsonUpdate,
+} from "@/agents/shared/json-config";
+import {createAgentOperationError, type AgentOperation} from "@/agents/shared/operation";
+import {
   type AgentInstallResult,
   type AgentIntegrationStatus,
+  type AgentUninstallResult,
 } from "@/agents/types";
-import {BoundedFileError, readBoundedUtf8File} from "@/package/core/utils/bounded-file";
 import {isRecord} from "@/package/core/utils/unknown";
 
 const OPENCODE_PLUGIN_SPEC = "@simonesiega/codex-limits";
@@ -30,19 +35,31 @@ export async function installOpencodeIntegration(
     readOpencodeConfig(configPath, "https://opencode.ai/config.json"),
     readOpencodeConfig(tuiConfigPath, "https://opencode.ai/tui.json"),
   ]);
-  const configChanged = addPlugin(config);
-  const tuiConfigChanged = addPlugin(tuiConfig);
+  const configChanged = addPlugin(config.value);
+  const tuiConfigChanged = addPlugin(tuiConfig.value);
+  await writeOpencodeConfigs("install", [
+    {...config, path: configPath, changed: configChanged},
+    {...tuiConfig, path: tuiConfigPath, changed: tuiConfigChanged},
+  ]);
 
-  try {
-    if (configChanged) {
-      await writeAgentJsonAtomically(configPath, config);
-    }
-    if (tuiConfigChanged) {
-      await writeAgentJsonAtomically(tuiConfigPath, tuiConfig);
-    }
-  } catch {
-    throw new AgentInstallError("Could not safely update the OpenCode configuration.");
-  }
+  return {changed: configChanged || tuiConfigChanged, configPaths: [configPath, tuiConfigPath]};
+}
+
+/** Removes only recognized Codex Limits entries from OpenCode's plugin configurations. */
+export async function uninstallOpencodeIntegration(
+  options: OpencodeConfigOptions = {}
+): Promise<AgentUninstallResult> {
+  const {configPath, tuiConfigPath} = resolveOpencodePaths(options);
+  const [config, tuiConfig] = await Promise.all([
+    readOpencodeConfig(configPath, "https://opencode.ai/config.json", "uninstall"),
+    readOpencodeConfig(tuiConfigPath, "https://opencode.ai/tui.json", "uninstall"),
+  ]);
+  const configChanged = removePlugin(config.value);
+  const tuiConfigChanged = removePlugin(tuiConfig.value);
+  await writeOpencodeConfigs("uninstall", [
+    {...config, path: configPath, changed: configChanged},
+    {...tuiConfig, path: tuiConfigPath, changed: tuiConfigChanged},
+  ]);
 
   return {changed: configChanged || tuiConfigChanged, configPaths: [configPath, tuiConfigPath]};
 }
@@ -80,38 +97,51 @@ async function inspectOpencodeConfig(
 ): Promise<AgentIntegrationStatus> {
   try {
     const config = await readOpencodeConfig(path, schema);
-    return readPluginArray(config.plugin).some(isCodexLimitsPlugin) ? "installed" : "not-installed";
+    return readPluginArray(config.value.plugin).some(isCodexLimitsPlugin)
+      ? "installed"
+      : "not-installed";
   } catch {
     return "unknown";
   }
 }
 
-async function readOpencodeConfig(path: string, schema: string): Promise<Record<string, unknown>> {
-  let content: string;
-  try {
-    content = await readBoundedUtf8File(path, MAX_CONFIG_BYTES);
-  } catch (error) {
-    if (error instanceof BoundedFileError) {
-      if (error.code === "not-found") {
-        return {$schema: schema};
-      }
-      if (error.code === "too-large") {
-        throw new AgentInstallError("OpenCode configuration is too large to update safely.");
-      }
-    }
-    throw new AgentInstallError("Could not safely read the OpenCode configuration.");
+async function readOpencodeConfig(
+  path: string,
+  schema: string,
+  operation: AgentOperation = "install"
+): Promise<AgentJsonDocument> {
+  const document = await readAgentJsonObject(path, {
+    maxBytes: MAX_CONFIG_BYTES,
+    operation,
+    messages: {
+      tooLarge: "OpenCode configuration is too large to update safely.",
+      read: "Could not safely read the OpenCode configuration.",
+      invalidJson: "opencode config must contain valid JSON.",
+      notObject: "opencode config must be a JSON object.",
+    },
+  });
+  return operation === "install"
+    ? {...document, value: {$schema: schema, ...document.value}}
+    : document;
+}
+
+async function writeOpencodeConfigs(
+  operation: AgentOperation,
+  configs: ReadonlyArray<AgentJsonUpdate & {changed: boolean}>
+): Promise<void> {
+  const updates = configs.filter((config) => config.changed);
+  if (updates.length === 0) {
+    return;
   }
 
-  let parsed: unknown;
   try {
-    parsed = JSON.parse(content) as unknown;
+    await writeAgentJsonFilesAtomically(updates);
   } catch {
-    throw new AgentInstallError("opencode config must contain valid JSON.");
+    throw createAgentOperationError(
+      operation,
+      "Could not safely update the OpenCode configuration."
+    );
   }
-  if (!isRecord(parsed)) {
-    throw new AgentInstallError("opencode config must be a JSON object.");
-  }
-  return {$schema: schema, ...parsed};
 }
 
 function addPlugin(config: Record<string, unknown>): boolean {
@@ -123,12 +153,25 @@ function addPlugin(config: Record<string, unknown>): boolean {
   return true;
 }
 
-function readPluginArray(value: unknown): OpencodePluginEntry[] {
+function removePlugin(config: Record<string, unknown>): boolean {
+  const plugins = readPluginArray(config.plugin, "uninstall");
+  const remaining = plugins.filter((plugin) => !isCodexLimitsPlugin(plugin));
+  if (remaining.length === plugins.length) {
+    return false;
+  }
+  config.plugin = remaining;
+  return true;
+}
+
+function readPluginArray(
+  value: unknown,
+  operation: AgentOperation = "install"
+): OpencodePluginEntry[] {
   if (value === undefined) {
     return [];
   }
   if (!Array.isArray(value) || !value.every(isPluginEntry)) {
-    throw new AgentInstallError("opencode config field `plugin` must be an array.");
+    throw createAgentOperationError(operation, "opencode config field `plugin` must be an array.");
   }
   return value;
 }
@@ -146,5 +189,8 @@ function isPluginEntry(value: unknown): value is OpencodePluginEntry {
 function isCodexLimitsPlugin(value: OpencodePluginEntry): boolean {
   // A pinned version or tag has the same package identity and must not be added a second time.
   const spec = Array.isArray(value) ? value[0] : value;
-  return spec === OPENCODE_PLUGIN_SPEC || spec.startsWith(`${OPENCODE_PLUGIN_SPEC}@`);
+  return (
+    spec === OPENCODE_PLUGIN_SPEC ||
+    (spec.startsWith(`${OPENCODE_PLUGIN_SPEC}@`) && spec.length > OPENCODE_PLUGIN_SPEC.length + 1)
+  );
 }

@@ -1,4 +1,8 @@
-import {inspectCopilotIntegration, installCopilotIntegration} from "@/agents/copilot/install";
+import {
+  inspectCopilotIntegration,
+  installCopilotIntegration,
+  uninstallCopilotIntegration,
+} from "@/agents/copilot/install";
 import type {AgentIntegration} from "@/agents/types";
 
 /** GitHub Copilot CLI adapter metadata and lifecycle operations used by shared commands. */
@@ -13,5 +17,6 @@ export const copilotIntegration: AgentIntegration = {
     },
   ],
   install: installCopilotIntegration,
+  uninstall: uninstallCopilotIntegration,
   inspect: inspectCopilotIntegration,
 };

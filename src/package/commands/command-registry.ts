@@ -1,5 +1,6 @@
 import type {AgentIntegration} from "@/agents";
 import {createAgentsInstallCommand} from "@/package/commands/agents/install-command";
+import {createAgentsUninstallCommand} from "@/package/commands/agents/uninstall-command";
 import type {
   CommandGroupDefinition,
   CommandRegistry,
@@ -70,7 +71,7 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
       safetyNotes: [
         "Dashboard, status, coupon, and doctor commands are read-only.",
         "Reset requires an interactive recap and an explicit y or yes confirmation.",
-        "Agent installation writes only to the explicitly selected agent configuration.",
+        "Agent install and uninstall write only to explicitly selected agent configurations.",
         "Output never includes tokens, account IDs, auth headers, cookies, or raw local files.",
       ],
     },
@@ -87,6 +88,10 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
         packageInfo: runtime.packageInfo,
       }),
       createAgentsInstallCommand({
+        io: runtime.io,
+        integrations: runtime.agents.integrations,
+      }),
+      createAgentsUninstallCommand({
         io: runtime.io,
         integrations: runtime.agents.integrations,
       }),

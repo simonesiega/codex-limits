@@ -6,13 +6,14 @@ The pi integration adds a read-only `/codex-limits` extension command that loads
 
 ## Overview
 
-| Detail             | Value                            |
-| ------------------ | -------------------------------- |
-| Agent              | [pi](https://pi.dev/)            |
-| Status             | Supported                        |
-| Agent command      | `/codex-limits`                  |
-| Install command    | `codex-limits agents install pi` |
-| Installation scope | Global for the current user      |
+| Detail             | Value                              |
+| ------------------ | ---------------------------------- |
+| Agent              | [pi](https://pi.dev/)              |
+| Status             | Supported                          |
+| Agent command      | `/codex-limits`                    |
+| Install command    | `codex-limits agents install pi`   |
+| Uninstall command  | `codex-limits agents uninstall pi` |
+| Installation scope | Global for the current user        |
 
 ## Installation
 
@@ -86,13 +87,15 @@ See [pi compatibility](../compatibility.md#pi-compatibility) for the canonical h
 
 Running `codex-limits agents install pi` again is safe. It reports `already installed` when the matching local or npm package registration is already enabled.
 
-There is no `codex-limits` uninstall command. To remove an integration installed by the named installer, delete only the Codex Limits package entry from the global pi `packages` array, then restart pi or run `/reload`. If it was installed with pi's native package manager, use:
+Remove recognized registrations with:
 
 ```bash
-pi remove npm:@simonesiega/codex-limits
+codex-limits agents uninstall pi
 ```
 
-Do not remove unrelated pi packages or settings.
+The uninstaller removes only package entries that exactly identify the current local Codex Limits package root or an unversioned, tagged, or pinned `npm:@simonesiega/codex-limits` source. It handles those recognized registrations regardless of whether they were added by `codex-limits` or pi's native package manager, and preserves unrelated packages and settings. It does not invoke pi's package manager or remove any separate package-manager cache. Use `pi remove npm:@simonesiega/codex-limits` instead when you want pi to manage its complete native package lifecycle.
+
+An absent registration reports `not installed`. Malformed, oversized, or symbolic-link settings fail without being rewritten. Restart pi or run `/reload` after successful removal.
 
 ## Troubleshooting
 

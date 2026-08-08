@@ -37,6 +37,7 @@ test("registry formally separates read-only, local-write, and remote-mutation co
     reset: "remote-mutation",
     doctor: "read-only",
     "agents.install": "local-write",
+    "agents.uninstall": "local-write",
     init: "local-write",
   });
 });
@@ -151,6 +152,9 @@ test("registry validation rejects unsafe or drifting contributor metadata", () =
               async install() {
                 return {changed: false};
               },
+              async uninstall() {
+                return {changed: false};
+              },
               async inspect() {
                 return "not-installed";
               },
@@ -210,8 +214,10 @@ test("root and nested help are generated from registry metadata", () => {
   const rootHelp = formatHelp(registry);
   const agents = registry.groups.find((group) => group.id === "agents")!;
   const install = registry.commands.find((command) => command.id === "agents.install")!;
+  const uninstall = registry.commands.find((command) => command.id === "agents.uninstall")!;
   const agentsHelp = formatHelp(registry, agents);
   const installHelp = formatHelp(registry, install);
+  const uninstallHelp = formatHelp(registry, uninstall);
 
   expect(rootHelp).toContain("status   Print a non-interactive usage summary");
   expect(rootHelp).toContain("reset    Consume one coupon to reset current Codex usage limits");
@@ -223,8 +229,10 @@ test("root and nested help are generated from registry metadata", () => {
   expect(rootHelp).toContain("Account ID for live usage and reset coupons");
   expect(rootHelp).toContain("PI_CODING_AGENT_DIR");
   expect(rootHelp).toContain("COPILOT_HOME");
-  expect(agentsHelp).toContain("install  Install optional agent integrations");
+  expect(agentsHelp).toContain("install    Install optional agent integrations");
+  expect(agentsHelp).toContain("uninstall  Safely uninstall optional agent integrations");
   expect(installHelp).toContain("[<agent...>]");
+  expect(uninstallHelp).toContain("[<agent...>]");
 
   const registryWithGlobalOption: CommandRegistry = {
     ...registry,

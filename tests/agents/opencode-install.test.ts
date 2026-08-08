@@ -4,6 +4,7 @@ import {join} from "node:path";
 import {
   inspectOpencodeIntegration as inspectOpencodePlugin,
   installOpencodeIntegration as installOpencodePlugin,
+  uninstallOpencodeIntegration as uninstallOpencodePlugin,
 } from "@/agents/opencode/install";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
 
@@ -63,6 +64,67 @@ test("installOpencodePlugin creates global plugin config", async () => {
   });
 });
 
+test("uninstallOpencodePlugin does not create missing configurations", async () => {
+  await withOpencodeConfigs(async ({configPath, tuiConfigPath}) => {
+    expect(await uninstallOpencodePlugin({configPath, tuiConfigPath})).toEqual({
+      changed: false,
+      configPaths: [configPath, tuiConfigPath],
+    });
+    await expect(lstat(configPath)).rejects.toThrow();
+    await expect(lstat(tuiConfigPath)).rejects.toThrow();
+  });
+});
+
+test("uninstallOpencodePlugin removes only recognized entries from both configurations", async () => {
+  await withOpencodeConfigs(async ({configPath, tuiConfigPath}) => {
+    await writeFile(
+      configPath,
+      JSON.stringify({
+        model: "anthropic/test",
+        plugin: [
+          "another-plugin",
+          "@simonesiega/codex-limits@",
+          "@simonesiega/codex-limits-extra",
+          ["@simonesiega/codex-limits@1.0.0", {theme: "safe"}],
+        ],
+      }),
+      "utf8"
+    );
+    await writeFile(
+      tuiConfigPath,
+      JSON.stringify({theme: "opencode", plugin: ["@simonesiega/codex-limits"]}),
+      "utf8"
+    );
+
+    expect(await uninstallOpencodePlugin({configPath, tuiConfigPath})).toEqual({
+      changed: true,
+      configPaths: [configPath, tuiConfigPath],
+    });
+    expect(await readJson<Record<string, unknown>>(configPath)).toEqual({
+      model: "anthropic/test",
+      plugin: ["another-plugin", "@simonesiega/codex-limits@", "@simonesiega/codex-limits-extra"],
+    });
+    expect(await readJson<Record<string, unknown>>(tuiConfigPath)).toEqual({
+      theme: "opencode",
+      plugin: [],
+    });
+    expect((await uninstallOpencodePlugin({configPath, tuiConfigPath})).changed).toBe(false);
+  });
+});
+
+test("uninstallOpencodePlugin fails before rewriting when either configuration is malformed", async () => {
+  await withOpencodeConfigs(async ({configPath, tuiConfigPath}) => {
+    const config = JSON.stringify({plugin: ["@simonesiega/codex-limits", "another-plugin"]});
+    await writeFile(configPath, config, "utf8");
+    await writeFile(tuiConfigPath, "{ private-invalid-json", "utf8");
+
+    await expect(uninstallOpencodePlugin({configPath, tuiConfigPath})).rejects.toThrow(
+      "opencode config must contain valid JSON."
+    );
+    expect(await readFile(configPath, "utf8")).toBe(config);
+  });
+});
+
 test("installOpencodePlugin rejects invalid plugin config", async () => {
   await withOpencodeConfigs(async ({configPath, tuiConfigPath}) => {
     await writeFile(configPath, JSON.stringify({plugin: "@simonesiega/codex-limits"}), "utf8");
@@ -105,6 +167,9 @@ if (process.platform !== "win32") {
       await symlink(targetPath, configPath, "file");
 
       await expect(installOpencodePlugin({configPath, tuiConfigPath})).rejects.toThrow(
+        "Could not safely read the OpenCode configuration."
+      );
+      await expect(uninstallOpencodePlugin({configPath, tuiConfigPath})).rejects.toThrow(
         "Could not safely read the OpenCode configuration."
       );
       expect(await readFile(targetPath, "utf8")).toBe(targetConfig);

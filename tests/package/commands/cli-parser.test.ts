@@ -72,6 +72,18 @@ test("parser accepts root, nested, compatibility, and order-independent options"
       options: {},
     },
     {
+      args: ["agents", "uninstall", "opencode", "pi"],
+      kind: "command",
+      commandId: "agents.uninstall",
+      options: {},
+    },
+    {
+      args: ["agents", "uninstall", "--all"],
+      kind: "command",
+      commandId: "agents.uninstall",
+      options: {"agents.uninstall.all": true},
+    },
+    {
       args: ["init", "--opencode"],
       kind: "command",
       commandId: "init",
@@ -113,6 +125,9 @@ test("parser rejects malformed combinations with structured sanitized errors", (
     {args: ["reset", "not-an-index"], code: "invalid-positional"},
     {args: ["init", "--all", "--opencode"], code: "conflicting-options"},
     {args: ["agents", "install", "unknown"], code: "invalid-positional"},
+    {args: ["agents", "uninstall", "unknown"], code: "invalid-positional"},
+    {args: ["agents", "uninstall", "opencode", "opencode"], code: "invalid-positional"},
+    {args: ["agents", "uninstall", "opencode", "--all"], code: "conflicting-options"},
     {args: ["agents", "unknown"], code: "unknown-command"},
     {args: ["unknown"], code: "unknown-command"},
   ] as const;

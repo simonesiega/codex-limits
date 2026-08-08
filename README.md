@@ -97,21 +97,23 @@ The canonical [Compatibility guide](docs/readme/compatibility.md) documents supp
 
 ## Usage
 
-| Command                                  | Description                                            |
-| ---------------------------------------- | ------------------------------------------------------ |
-| `codex-limits`                           | Opens the interactive terminal dashboard.              |
-| `codex-limits status`                    | Prints a plain usage summary.                          |
-| `codex-limits coupons`                   | Prints reset-credit coupon information.                |
-| `codex-limits coupons --json`            | Prints machine-readable reset-credit coupon data only. |
-| `codex-limits reset <coupon-index>`      | Reviews and uses the numbered available reset coupon.  |
-| `codex-limits reset --soonest`           | Reviews and uses the coupon that expires first.        |
-| `codex-limits --json`                    | Prints machine-readable usage and coupon data.         |
-| `codex-limits doctor`                    | Prints safe environment and connectivity diagnostics.  |
-| `codex-limits doctor --json`             | Prints machine-readable diagnostics only.              |
-| `codex-limits agents`                    | Lists the available agent-management subcommands.      |
-| `codex-limits agents install <agent...>` | Installs one or more named agent integrations.         |
-| `codex-limits agents install --all`      | Installs every supported agent integration.            |
-| `codex-limits init`                      | Runs the compatible interactive installation flow.     |
+| Command                                    | Description                                            |
+| ------------------------------------------ | ------------------------------------------------------ |
+| `codex-limits`                             | Opens the interactive terminal dashboard.              |
+| `codex-limits status`                      | Prints a plain usage summary.                          |
+| `codex-limits coupons`                     | Prints reset-credit coupon information.                |
+| `codex-limits coupons --json`              | Prints machine-readable reset-credit coupon data only. |
+| `codex-limits reset <coupon-index>`        | Reviews and uses the numbered available reset coupon.  |
+| `codex-limits reset --soonest`             | Reviews and uses the coupon that expires first.        |
+| `codex-limits --json`                      | Prints machine-readable usage and coupon data.         |
+| `codex-limits doctor`                      | Prints safe environment and connectivity diagnostics.  |
+| `codex-limits doctor --json`               | Prints machine-readable diagnostics only.              |
+| `codex-limits agents`                      | Lists the available agent-management subcommands.      |
+| `codex-limits agents install <agent...>`   | Installs one or more named agent integrations.         |
+| `codex-limits agents install --all`        | Installs every supported agent integration.            |
+| `codex-limits agents uninstall <agent...>` | Safely removes one or more named agent integrations.   |
+| `codex-limits agents uninstall --all`      | Safely removes every recognized agent integration.     |
+| `codex-limits init`                        | Runs the compatible interactive installation flow.     |
 
 ### Resetting usage
 
@@ -155,18 +157,21 @@ The doctor reports bounded availability statuses for Codex and every registered 
 
 ### Agent management
 
-Use `codex-limits agents install` to install optional integrations. Installation only updates the selected agent configuration; it does not send a prompt to an LLM or modify Codex data.
+Use `codex-limits agents install` and `codex-limits agents uninstall` to manage optional integrations. Both are local-write operations scoped to recognized agent configuration; neither sends a prompt to an LLM or modifies Codex data.
 
-| Command                                                         | What it does                                                                                                                                  |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `codex-limits agents`                                           | Prints help for the agent-management command group.                                                                                           |
-| `codex-limits agents install`                                   | Prompts for every supported integration when stdin and stdout are interactive terminals. If no integration is selected, nothing is installed. |
-| `codex-limits agents install <agent...>`                        | Installs one or more named supported integrations without prompting.                                                                          |
-| `codex-limits agents install --all`                             | Installs every supported integration without prompting.                                                                                       |
-| `codex-limits agents install --help` or `-h`                    | Prints generated installation help without changing any configuration.                                                                        |
-| `codex-limits init --<agent-name>` or `codex-limits init --all` | Preserves the existing initialization syntax as a compatibility command.                                                                      |
+| Command                                                         | What it does                                                                                                       |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `codex-limits agents`                                           | Prints help for the agent-management command group.                                                                |
+| `codex-limits agents install`                                   | Prompts for every supported integration in an interactive terminal. If none is selected, nothing is installed.     |
+| `codex-limits agents install <agent...>`                        | Installs one or more named supported integrations without prompting.                                               |
+| `codex-limits agents install --all`                             | Installs every supported integration without prompting.                                                            |
+| `codex-limits agents uninstall`                                 | Prompts only for integrations currently recognized as installed. An empty answer keeps each integration installed. |
+| `codex-limits agents uninstall <agent...>`                      | Removes recognized Codex Limits configuration for one or more named integrations without prompting.                |
+| `codex-limits agents uninstall --all`                           | Attempts safe removal for every registered integration without prompting.                                          |
+| `codex-limits agents <action> --help` or `-h`                   | Prints generated help for the selected lifecycle action without changing configuration.                            |
+| `codex-limits init --<agent-name>` or `codex-limits init --all` | Preserves the existing initialization syntax as a compatibility installation command.                              |
 
-`--all` cannot be combined with agent names. Duplicate and unknown agent names, unknown options, and extra positional arguments are rejected before any integration is installed. In a non-interactive terminal, provide `--all` or at least one agent name.
+For either lifecycle action, `--all` cannot be combined with agent names. Duplicate and unknown names, unknown options, and extra positional arguments are rejected before any configuration is changed. In a non-interactive terminal, provide `--all` or at least one agent name. Uninstall reports `not installed` without failing when a selected integration is absent, continues to report each selected agent when another fails, and refuses malformed, symbolic-link, or unrecognized targets rather than rewriting or deleting them.
 
 ## Agent integrations
 
@@ -176,13 +181,13 @@ For installation details, adapter behavior, architecture, and contribution guida
 
 ### Supported agents
 
-| Agent              | Status    | Agent command   | Guide                                                    | Description                                                                                      |
-| ------------------ | --------- | --------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| OpenCode           | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/opencode.md) | Opens a fast, read-only dashboard without sending the request or limit data to the LLM.          |
-| pi                 | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/pi.md)       | Opens a themed, read-only overlay without sending the request or limit data to the LLM.          |
-| GitHub Copilot CLI | Supported | `/codex-limits` | [Installation and usage](docs/readme/agents/copilot.md)  | Logs a compact, read-only timeline summary without sending the request or limit data to the LLM. |
+| Agent              | Status    | Agent command   | Guide                                                       | Description                                                                                      |
+| ------------------ | --------- | --------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| OpenCode           | Supported | `/codex-limits` | [Setup, usage, and removal](docs/readme/agents/opencode.md) | Opens a fast, read-only dashboard without sending the request or limit data to the LLM.          |
+| pi                 | Supported | `/codex-limits` | [Setup, usage, and removal](docs/readme/agents/pi.md)       | Opens a themed, read-only overlay without sending the request or limit data to the LLM.          |
+| GitHub Copilot CLI | Supported | `/codex-limits` | [Setup, usage, and removal](docs/readme/agents/copilot.md)  | Logs a compact, read-only timeline summary without sending the request or limit data to the LLM. |
 
-Agent integrations are not enabled automatically during package installation. They must be installed with `codex-limits agents install` (or the compatible `codex-limits init` syntax) and are only available in the agent terminal after a restart. See [Adding new agents](#adding-new-agents) if you want to add support for another agent.
+Agent integrations are not enabled automatically during package installation. They must be installed with `codex-limits agents install` (or the compatible `codex-limits init` syntax) and are only available in the agent terminal after a restart. Remove them with `codex-limits agents uninstall`; restart the agent after either lifecycle change. See [Adding new agents](#adding-new-agents) if you want to add support for another agent.
 
 ### Selected agent integration screenshots
 
@@ -212,7 +217,7 @@ The GitHub Copilot CLI integration adds a `/codex-limits` command that displays 
 
 ### Adding new agents
 
-New agents use the same four-file adapter layout under `src/agents/<agent-name>`: `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. The integration descriptor owns its metadata, environment help, installer, and read-only diagnostic check; registering that descriptor in `src/agents/index.ts` automatically connects shared installation, compatibility help, and doctor diagnostics. Every registered agent must also use a matching `src/package/<agent-name>.ts` host wrapper and expose `@simonesiega/codex-limits/<agent-name>` through the shared package-entry build. Each integration should show Codex limit information quickly and safely without exposing tokens, account IDs, cookies, auth headers, or raw local files.
+New agents use the same four-file adapter layout under `src/agents/<agent-name>`: `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. The integration descriptor owns its metadata, environment help, install, uninstall, and read-only inspection behavior; registering that descriptor in `src/agents/index.ts` automatically connects shared lifecycle commands, compatibility help, and doctor diagnostics. Every registered agent must also use a matching `src/package/<agent-name>.ts` host wrapper and expose `@simonesiega/codex-limits/<agent-name>` through the shared package-entry build. Each integration should show Codex limit information quickly and safely without exposing tokens, account IDs, cookies, auth headers, or raw local files.
 
 See the [Contributing](./CONTRIBUTING.md) guide if you want to add support for another agent.
 
@@ -314,13 +319,14 @@ Useful development commands:
 
 ## Security
 
-| Operation                 | Reads                                           | Writes                            | Network                                |
-| ------------------------- | ----------------------------------------------- | --------------------------------- | -------------------------------------- |
-| `codex-limits`            | Recognized Codex state and bounded session data | Nothing                           | Live usage and coupon endpoints        |
-| `status` / `coupons`      | Shared read-only core                           | Nothing                           | When live data is requested            |
-| `reset`                   | Current reset coupon list and Codex credentials | One selected remote coupon        | Confirmed reset-credit consume request |
-| `doctor`                  | Bounded Codex and agent configuration checks    | Nothing                           | Live usage endpoint when authenticated |
-| `agents install` / `init` | Selected agent configuration                    | Adds the integration registration | Does not send an LLM prompt            |
+| Operation                 | Reads                                           | Writes                               | Network                                |
+| ------------------------- | ----------------------------------------------- | ------------------------------------ | -------------------------------------- |
+| `codex-limits`            | Recognized Codex state and bounded session data | Nothing                              | Live usage and coupon endpoints        |
+| `status` / `coupons`      | Shared read-only core                           | Nothing                              | When live data is requested            |
+| `reset`                   | Current reset coupon list and Codex credentials | One selected remote coupon           | Confirmed reset-credit consume request |
+| `doctor`                  | Bounded Codex and agent configuration checks    | Nothing                              | Live usage endpoint when authenticated |
+| `agents install` / `init` | Selected agent configuration                    | Updates selected agent configuration | Does not send an LLM prompt            |
+| `agents uninstall`        | Selected agent configuration                    | Removes recognized integration state | Does not send an LLM prompt            |
 
 For vulnerability reports and local data safety details, see [`SECURITY.md`](./SECURITY.md).
 

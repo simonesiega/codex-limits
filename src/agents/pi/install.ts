@@ -2,14 +2,20 @@ import {lstat, stat} from "node:fs/promises";
 import {homedir} from "node:os";
 import {dirname, isAbsolute, join, normalize, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
-import {writeAgentJsonAtomically} from "@/agents/shared/json-config";
+import {
+  readAgentJsonObject,
+  writeAgentJsonAtomically,
+  type AgentJsonDocument,
+} from "@/agents/shared/json-config";
+import {createAgentOperationError, type AgentOperation} from "@/agents/shared/operation";
 import {hasTildePrefix, resolvePackageRoot, resolveTildePath} from "@/agents/shared/paths";
 import {
   AgentInstallError,
   type AgentInstallResult,
   type AgentIntegrationStatus,
+  type AgentUninstallResult,
 } from "@/agents/types";
-import {BoundedFileError, readBoundedUtf8File} from "@/package/core/utils/bounded-file";
+import {readBoundedUtf8File} from "@/package/core/utils/bounded-file";
 import type {EnvironmentMap} from "@/package/core/types";
 import {readEnvValue} from "@/package/core/utils/env";
 import {isRecord} from "@/package/core/utils/unknown";
@@ -34,8 +40,8 @@ export async function installPiIntegration(
   options: PiConfigOptions = {}
 ): Promise<AgentInstallResult> {
   const paths = resolvePiPaths(options);
-  const settings = await readPiSettings(paths.settingsPath);
-  const packages = readPackageEntries(settings.packages);
+  const document = await readPiSettings(paths.settingsPath);
+  const packages = readPackageEntries(document.value.packages);
   const matchingIndexes = packages
     .map((entry, index) =>
       isCodexLimitsPackage(entry, paths.packageRoot, paths.settingsPath, paths.homeDirectory)
@@ -72,11 +78,36 @@ export async function installPiIntegration(
   }
 
   if (changed) {
-    settings.packages = packages;
+    document.value.packages = packages;
     try {
-      await writeAgentJsonAtomically(paths.settingsPath, settings);
+      await writeAgentJsonAtomically(paths.settingsPath, document.value, document.source);
     } catch {
       throw new AgentInstallError("Could not safely update the pi settings.");
+    }
+  }
+
+  return {changed, configPaths: [paths.settingsPath]};
+}
+
+/** Removes only recognized Codex Limits package registrations from pi's global settings. */
+export async function uninstallPiIntegration(
+  options: PiConfigOptions = {}
+): Promise<AgentUninstallResult> {
+  const paths = resolvePiPaths(options);
+  const document = await readPiSettings(paths.settingsPath, "uninstall");
+  const packages = readPackageEntries(document.value.packages, "uninstall");
+  const remaining = packages.filter(
+    (entry) =>
+      !isCodexLimitsPackage(entry, paths.packageRoot, paths.settingsPath, paths.homeDirectory)
+  );
+  const changed = remaining.length !== packages.length;
+
+  if (changed) {
+    document.value.packages = remaining;
+    try {
+      await writeAgentJsonAtomically(paths.settingsPath, document.value, document.source);
+    } catch {
+      throw createAgentOperationError("uninstall", "Could not safely update the pi settings.");
     }
   }
 
@@ -90,8 +121,8 @@ export async function inspectPiIntegration(
   const paths = resolvePiPaths(options);
 
   try {
-    const settings = await readPiSettings(paths.settingsPath);
-    const packages = readPackageEntries(settings.packages);
+    const document = await readPiSettings(paths.settingsPath);
+    const packages = readPackageEntries(document.value.packages);
     const configured = packages.some(
       (entry) =>
         isPackageEntryEnabled(entry) &&
@@ -150,40 +181,34 @@ async function isPiPackageAvailable(packageRoot: string): Promise<boolean> {
   }
 }
 
-async function readPiSettings(path: string): Promise<Record<string, unknown>> {
-  let content: string;
-  try {
-    content = await readBoundedUtf8File(path, MAX_SETTINGS_BYTES);
-  } catch (error) {
-    if (error instanceof BoundedFileError) {
-      if (error.code === "not-found") {
-        return {};
-      }
-      if (error.code === "too-large") {
-        throw new AgentInstallError("Pi settings are too large to update safely.");
-      }
-    }
-    throw new AgentInstallError("Could not safely read the pi settings.");
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(content) as unknown;
-  } catch {
-    throw new AgentInstallError("pi settings must contain valid JSON.");
-  }
-  if (!isRecord(parsed)) {
-    throw new AgentInstallError("pi settings must be a JSON object.");
-  }
-  return parsed;
+function readPiSettings(
+  path: string,
+  operation: AgentOperation = "install"
+): Promise<AgentJsonDocument> {
+  return readAgentJsonObject(path, {
+    maxBytes: MAX_SETTINGS_BYTES,
+    operation,
+    messages: {
+      tooLarge: "Pi settings are too large to update safely.",
+      read: "Could not safely read the pi settings.",
+      invalidJson: "pi settings must contain valid JSON.",
+      notObject: "pi settings must be a JSON object.",
+    },
+  });
 }
 
-function readPackageEntries(value: unknown): PiPackageEntry[] {
+function readPackageEntries(
+  value: unknown,
+  operation: AgentOperation = "install"
+): PiPackageEntry[] {
   if (value === undefined) {
     return [];
   }
   if (!Array.isArray(value) || !value.every(isPackageEntry)) {
-    throw new AgentInstallError("pi settings field `packages` must contain package sources.");
+    throw createAgentOperationError(
+      operation,
+      "pi settings field `packages` must contain package sources."
+    );
   }
   return [...value];
 }

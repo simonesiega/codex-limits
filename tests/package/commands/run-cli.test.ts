@@ -19,6 +19,9 @@ function createDiagnosticIntegration(
     async install() {
       return {changed: false};
     },
+    async uninstall() {
+      return {changed: false};
+    },
     inspect,
   };
 }
@@ -301,7 +304,10 @@ test("runCli generates nested and compatibility command help", async () => {
     io: {stdout: (text) => initOutput.push(text)},
   });
 
-  expect(agentsOutput.join("")).toContain("install  Install optional agent integrations");
+  expect(agentsOutput.join("")).toContain("install    Install optional agent integrations");
+  expect(agentsOutput.join("")).toContain(
+    "uninstall  Safely uninstall optional agent integrations"
+  );
   expect(installOutput.join("")).toContain("[<agent...>]");
   expect(initOutput.join("")).toContain("codex-limits init --opencode");
   expect(initOutput.join("")).toContain("codex-limits init --pi");

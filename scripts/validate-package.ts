@@ -426,6 +426,10 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
     {args: ["doctor", "--json"], json: true},
     {args: ["agents", "--help"], includes: "Manage optional coding-agent integrations"},
     {args: ["agents", "install", "--help"], includes: "Install optional agent integrations"},
+    {
+      args: ["agents", "uninstall", "--help"],
+      includes: "Safely uninstall optional agent integrations",
+    },
     {args: ["agents", "install", "pi"], includes: "pi: installed"},
     {args: ["agents", "install", "copilot"], includes: "copilot: installed"},
     {
@@ -489,6 +493,57 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
     installedCopilotExtension === packedCopilotExtension,
     "Packed CLI installed an unexpected Copilot extension."
   );
+
+  const uninstallResult = await runResult(
+    "node",
+    [join(packedRoot, "dist", "cli.js"), "agents", "uninstall", "pi", "copilot"],
+    packedRoot,
+    env
+  );
+  assert(uninstallResult.exitCode === 0, "Packed CLI could not uninstall agent integrations.");
+  assert(uninstallResult.stderr === "", "Packed agent uninstall unexpectedly wrote to stderr.");
+  assert(
+    uninstallResult.stdout.includes("pi: uninstalled") &&
+      uninstallResult.stdout.includes("copilot: uninstalled"),
+    "Packed agent uninstall did not report every integration."
+  );
+
+  const removedPiSettings = JSON.parse(
+    await readFile(join(home, ".pi", "agent", "settings.json"), "utf8")
+  ) as {packages?: unknown[]};
+  assert(removedPiSettings.packages?.length === 0, "Packed CLI left the pi integration installed.");
+  assert(
+    !(await pathExists(join(home, ".copilot", "extensions", "codex-limits", "extension.mjs"))),
+    "Packed CLI left the Copilot extension installed."
+  );
+
+  const doctorAfterUninstall = await runResult(
+    "node",
+    [join(packedRoot, "dist", "cli.js"), "doctor", "--json"],
+    packedRoot,
+    env
+  );
+  assert(
+    doctorAfterUninstall.exitCode === 0 && doctorAfterUninstall.stderr === "",
+    "Packed diagnostics failed after agent uninstallation."
+  );
+  const diagnostics = JSON.parse(doctorAfterUninstall.stdout) as {
+    agentIntegrations?: Record<string, unknown>;
+  };
+  assert(
+    diagnostics.agentIntegrations?.pi === "not-installed" &&
+      diagnostics.agentIntegrations.copilot === "not-installed",
+    "Packed diagnostics did not reflect agent uninstallation."
+  );
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function run(command: string, args: string[], cwd: string): Promise<string> {

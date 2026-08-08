@@ -9,6 +9,7 @@ All notable changes to codex-limits are documented in this file.
 ### Added
 
 - Added JSON Schemas and sanitized example documents for `codex-limits coupons --json` and `codex-limits doctor --json`.
+- Added `codex-limits agents uninstall` with interactive, named, multi-agent, and `--all` modes for removing recognized OpenCode, pi, and GitHub Copilot CLI integrations.
 
 ### Changed
 
@@ -17,6 +18,8 @@ All notable changes to codex-limits are documented in this file.
 ### Removed
 
 ### Security
+
+- Kept agent removal scoped to recognized Codex Limits registrations, revalidating bounded mutation targets before changing them and refusing stale, malformed, symbolic-link, or unrecognized targets while preserving unrelated agent configuration.
 
 ## [1.1.0] - 2026-07-31
 

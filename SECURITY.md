@@ -96,7 +96,7 @@ The reset command first refreshes the coupon list and matches either the request
 
 Agent integrations follow the same safety model: they should display a read-only summary by reusing the shared core, not send the request or limit data to the LLM, and not expose sensitive values inside the agent UI. Before combined limits data reaches TUI or agent renderers, the core removes usage endpoint metadata, opaque coupon identifiers, and coupon reset types needed only by the confirmed reset flow. The pi extension runs only its local command handler and does not inject a user or custom message into the model context. The GitHub Copilot CLI extension registers only a local session command, writes its safe result to the host timeline, and does not call the SDK's model-message methods.
 
-Agent installers use bounded reads and owner-only atomic replacements, refuse symbolic-link or malformed configuration targets, and redact unexpected output paths. OpenCode configuration and pi settings files are limited to 1 MB. The pi installer also uses bounded package-filter matching, registers the already installed local package root, and does not download a package or execute dependency lifecycle scripts. The Copilot installer limits extension files to 5 MB, copies the bounded bundle already present in the package, refuses unrecognized or competing entry points, and does not install the SDK or another package.
+Agent lifecycle operations use bounded reads, revalidate each mutation target against its bounded source snapshot immediately before changing it, use owner-only atomic replacements for configuration rewrites, refuse symbolic-link or malformed configuration targets, and redact unexpected output paths. Uninstallers fail closed instead of rewriting stale or malformed configuration or deleting changed or unrecognized targets. OpenCode install and uninstall operations limit configurations to 1 MB and change only recognized `@simonesiega/codex-limits` entries in plugin arrays. Pi operations limit settings to 1 MB; installation uses bounded package-filter matching and registers the already installed local package root without downloads or lifecycle scripts, while uninstallation removes only exact recognized local-root or `npm:@simonesiega/codex-limits` package registrations, including registrations added through pi's native package manager. Copilot operations limit extension files to 5 MB; installation copies the bounded bundle already present in the package and refuses unrecognized or competing entry points, while uninstallation refuses competing entry points, removes only an `extension.mjs` carrying the Codex Limits management marker, and preserves other sibling files.
 
 ### Diagnostics
 
@@ -104,9 +104,9 @@ The `codex-limits doctor` command exposes only package/runtime labels and bounde
 
 ### Command safety boundaries
 
-Every CLI command declares one enforced safety category. Inspection and reporting commands such as the `codex-limits` dashboard, `status`, `coupons`, and `doctor` are read-only and receive no write or account-mutation services. Agent installation is a local-write operation scoped to the selected agent configuration. Reset is a `remote-mutation` command with a dedicated consume capability; the router requires an interactive terminal, and the handler requires the recap plus an explicit positive answer before calling that capability.
+Every CLI command declares one enforced safety category. Inspection and reporting commands such as the `codex-limits` dashboard, `status`, `coupons`, and `doctor` are read-only and receive no write or account-mutation services. Agent installation and uninstallation are local-write operations scoped to selected, recognized agent configuration. Reset is a `remote-mutation` command with a dedicated consume capability; the router requires an interactive terminal, and the handler requires the recap plus an explicit positive answer before calling that capability.
 
-The existing `codex-limits init` compatibility command and the preferred `codex-limits agents install` command share the same local-write implementation. Neither command modifies Codex data or sends an LLM prompt.
+The existing `codex-limits init` compatibility command and the preferred `codex-limits agents install` command share the same local-write installation implementation. `codex-limits agents uninstall` provides named, all-agent, and installed-only interactive removal. A selected absent integration is a successful no-op; adapter failures are isolated per agent. None of these agent-management commands modifies Codex data or sends an LLM prompt.
 
 ## What to report
 
@@ -155,5 +155,5 @@ The project should:
 - [Compatibility](docs/readme/compatibility.md) — Supported runtimes, operating systems, Codex data, networks, terminals, and agent hosts.
 - [JSON output](docs/readme/json-output.md) — Public machine-readable fields and deliberately omitted sensitive data.
 - [Troubleshooting](docs/readme/troubleshooting.md) — Safe diagnosis for data, network, terminal, reset, and integration problems.
-- [Agent integrations](docs/readme/agent-integrations.md) — Supported-agent index, shared installation modes, and adapter architecture.
+- [Agent integrations](docs/readme/agent-integrations.md) — Supported-agent index, shared lifecycle modes, and adapter architecture.
 - [Contributing](CONTRIBUTING.md) — Development workflow, safety rules, and review expectations.

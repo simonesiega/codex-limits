@@ -140,24 +140,24 @@ When adding a CLI command, create a focused command module and register it in `s
 
 [`SECURITY.md`](SECURITY.md#local-data-and-network-behavior) is the canonical reference for local-data, network, redaction, installer, diagnostic, and reset-mutation safeguards. Contributors must preserve those boundaries and use only synthetic or redacted values in output, tests, documentation, and screenshots.
 
-Command handlers should let the router replace unexpected exceptions with their fixed command failure message. Use `AgentInstallError` only for bounded, deliberately user-safe adapter messages; never pass through a raw filesystem, network, or credential error.
+Command handlers should let the router replace unexpected exceptions with their fixed command failure message. Use `AgentInstallError` or `AgentUninstallError` only for bounded, deliberately user-safe adapter messages; never pass through a raw filesystem, network, or credential error.
 
 ## Adding a new agent
 
 New agents should use the same small adapter shape as [`src/agents/opencode`](src/agents/opencode), [`src/agents/pi`](src/agents/pi), and [`src/agents/copilot`](src/agents/copilot): `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. Put reusable presentation and safe configuration behavior in `src/agents/shared`.
 
-| Step | Action                                                                                                                          |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | Create `src/agents/<agent-name>` with the standard four-file adapter layout.                                                    |
-| 2    | Define metadata, optional environment help, `install`, and `inspect` in `integration.ts`.                                       |
-| 3    | Keep `plugin.ts` focused on the target host API and load Codex data only through the shared package core.                       |
-| 4    | Register the integration descriptor once in `src/agents/index.ts`; shared install and doctor commands consume it automatically. |
-| 5    | Add installer, formatter, and host-behavior tests. When end-to-end automation is impractical, document the manual validation.   |
-| 6    | Add `docs/readme/agents/<agent-name>.md`.                                                                                       |
-| 7    | Add the integration to [Agent Integrations](docs/readme/agent-integrations.md).                                                 |
-| 8    | Add `src/package/<agent-name>.ts`, its host-only `./<agent-name>` subpath, and the shared package-build metadata.               |
-| 9    | Add or update screenshots when the visual output changes.                                                                       |
-| 10   | Run the documentation link and schema checks.                                                                                   |
+| Step | Action                                                                                                                              |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Create `src/agents/<agent-name>` with the standard four-file adapter layout.                                                        |
+| 2    | Define metadata, optional environment help, `install`, `uninstall`, and `inspect` in `integration.ts`.                              |
+| 3    | Keep `plugin.ts` focused on the target host API and load Codex data only through the shared package core.                           |
+| 4    | Register the integration descriptor once in `src/agents/index.ts`; shared lifecycle and doctor commands consume it automatically.   |
+| 5    | Add install, conservative uninstall, formatter, and host-behavior tests. Document manual validation when automation is impractical. |
+| 6    | Add `docs/readme/agents/<agent-name>.md`.                                                                                           |
+| 7    | Add the integration to [Agent Integrations](docs/readme/agent-integrations.md).                                                     |
+| 8    | Add `src/package/<agent-name>.ts`, its host-only `./<agent-name>` subpath, and the shared package-build metadata.                   |
+| 9    | Add or update screenshots when the visual output changes.                                                                           |
+| 10   | Run the documentation link and schema checks.                                                                                       |
 
 The goal of every integration is the same: show Codex limit information quickly and safely without sending the request or limit data to the LLM.
 

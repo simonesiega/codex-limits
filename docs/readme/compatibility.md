@@ -90,14 +90,14 @@ An internet connection is therefore recommended for current usage and required f
 
 ## Terminal and automation compatibility
 
-| Surface                        | Requirement                                                |
-| ------------------------------ | ---------------------------------------------------------- |
-| Interactive dashboard          | A terminal capable of running the Ink UI                   |
-| `status` and `coupons`         | Any environment that can capture standard output           |
-| JSON output                    | Any environment that can capture and parse standard output |
-| Reset coupon redemption        | Both standard input and standard output must be TTYs       |
-| Interactive agent installation | Both standard input and standard output must be TTYs       |
-| Explicit agent installation    | Works non-interactively with an agent name or `--all`      |
+| Surface                     | Requirement                                                |
+| --------------------------- | ---------------------------------------------------------- |
+| Interactive dashboard       | A terminal capable of running the Ink UI                   |
+| `status` and `coupons`      | Any environment that can capture standard output           |
+| JSON output                 | Any environment that can capture and parse standard output |
+| Reset coupon redemption     | Both standard input and standard output must be TTYs       |
+| Interactive agent lifecycle | Both standard input and standard output must be TTYs       |
+| Explicit agent lifecycle    | Install and uninstall work with agent names or `--all`     |
 
 Use [`codex-limits --json`](json-output.md), `codex-limits coupons --json`, or `codex-limits doctor --json` in scripts. Errors use a non-zero exit code and are written to standard error; successful machine-readable output is written to standard output. `codex-limits reset` is intentionally interactive and has no JSON or unattended confirmation mode.
 
@@ -130,7 +130,7 @@ The latest npm release is supported. The current `main` branch is supported for 
 ## Related documentation
 
 - [JSON output](json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
-- [Agent integrations](agent-integrations.md) — Supported-agent index, shared installation modes, and adapter architecture.
+- [Agent integrations](agent-integrations.md) — Supported-agent index, shared lifecycle modes, and adapter architecture.
 - [Security policy](../../SECURITY.md) — Data-access safeguards, network behavior, and vulnerability reporting.
 - [Troubleshooting](troubleshooting.md) — Diagnosis for Codex data, network, terminal, reset, and agent problems.
 - [Documentation hub](../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.

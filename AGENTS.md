@@ -32,7 +32,7 @@ If a tradeoff is required, choose correctness, redaction, and stability over con
 src/package/core      → Shared domain logic. Owns Codex data discovery, usage parsing, live coupon data, confirmed reset operations, normalization, warnings, and redaction.
 src/package/commands  → CLI command layer. Owns the declarative registry, shared parser/help, scoped runtime services, and focused command handlers.
 src/package/tui       → Ink terminal UI. Owns rendering only and consumes normalized display-ready data.
-src/agents            → Agent integration source. Owns supported agent adapters and registration.
+src/agents            → Agent integration source. Owns supported agent adapters, lifecycle operations, and registration.
 tests                 → Behavior, output, safety, and integration tests.
 docs/photos           → README screenshots and visual documentation assets.
 ```
@@ -49,6 +49,9 @@ script/automation → supported --json command → shared core → stable machin
 Agent usage:
 coding agent command → agent adapter → shared core → read-only Codex limits view inside the agent
 
+Agent lifecycle:
+user terminal → agents install/uninstall → shared command selection → selected adapter updates only recognized host configuration
+
 Reset usage:
 user terminal → reset command → fresh coupon load → interactive confirmation → one remote coupon mutation
 ```
@@ -56,7 +59,7 @@ user terminal → reset command → fresh coupon load → interactive confirmati
 - The **core package** is the authority for Codex data discovery, parsing, normalization, authenticated reads, confirmed reset redemption, warnings, and redaction.
 - The **commands package** is responsible for CLI behavior. Command metadata belongs in the shared registry model, while each handler should receive only the runtime capabilities it uses.
 - The **TUI package** is a rendering layer. It must not read local Codex files, fetch live data directly, or define safety rules.
-- The **agents package** is an adapter layer for OpenCode, pi, and GitHub Copilot CLI. Each integration should use the shared adapter contract, stay thin, reuse the shared core, and remain read-only.
+- The **agents package** is an adapter layer for OpenCode, pi, and GitHub Copilot CLI. Each integration should use the shared descriptor contract for install, uninstall, and inspection, stay thin, reuse the shared core, and keep its host command read-only.
 - The **reset command** is the only remote-mutation surface. It must refresh coupon data, fail closed when selection cannot be verified, and require an explicit interactive `y` or `yes` before consumption.
 - The **tests folder** protects behavior, output stability, safety rules, and integration logic.
 - The **docs/photos folder** is only for visual assets used in documentation. Screenshots must never contain private tokens, account IDs, cookies, auth headers, or raw local files.

@@ -4,10 +4,8 @@ import {
   type LocalWriteCommandDefinition,
   type OptionDefinition,
 } from "@/package/commands/command";
-import {
-  getAgentInstallSelection,
-  installAgentIntegrations,
-} from "@/package/commands/agents/install";
+import {installAgentIntegrations} from "@/package/commands/agents/install";
+import {getAgentLifecycleSelection} from "@/package/commands/agents/lifecycle";
 import type {CliIo} from "@/package/commands/runtime";
 
 const ALL_OPTION_KEY = "init.all";
@@ -62,7 +60,7 @@ export function createInitCommand(
       const selectedIds = dependencies.integrations
         .filter((integration) => hasOption(values, `${AGENT_OPTION_PREFIX}${integration.id}`))
         .map((integration) => integration.id);
-      const selection = getAgentInstallSelection(
+      const selection = getAgentLifecycleSelection(
         hasOption(values, ALL_OPTION_KEY),
         selectedIds,
         dependencies.integrations.map((integration) => integration.id)

@@ -15,6 +15,7 @@ test("registered agents expose the shared adapter contract and layout", async ()
   for (const integration of AGENT_INTEGRATIONS) {
     expect(integration.displayName.length).toBeGreaterThan(0);
     expect(typeof integration.install).toBe("function");
+    expect(typeof integration.uninstall).toBe("function");
     expect(typeof integration.inspect).toBe("function");
 
     await Promise.all([

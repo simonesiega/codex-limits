@@ -17,6 +17,7 @@ Use this guide when Codex data, live usage, reset-credit coupons, JSON output, t
 - [Reset redemption does not proceed](#reset-redemption-does-not-proceed)
 - [An agent command does not appear](#an-agent-command-does-not-appear)
 - [Agent installation reports invalid or conflicting configuration](#agent-installation-reports-invalid-or-conflicting-configuration)
+- [Agent uninstallation refuses a target](#agent-uninstallation-refuses-a-target)
 - [The problem persists](#the-problem-persists)
 - [Related documentation](#related-documentation)
 
@@ -129,6 +130,17 @@ Installers intentionally refuse malformed, oversized, symbolic-link, or conflict
 
 Do not remove unrelated plugins, packages, extensions, or configuration fields.
 
+## Agent uninstallation refuses a target
+
+Uninstallers intentionally fail closed on malformed, oversized, symbolic-link, unreadable, or unrecognized targets. They do not rewrite or delete the target merely because it occupies an expected path.
+
+1. Run `codex-limits doctor` to review the bounded installed status.
+2. Read the removal section for [OpenCode](agents/opencode.md#re-running-or-removing-the-integration), [pi](agents/pi.md#re-running-or-removing-the-integration), or [GitHub Copilot CLI](agents/copilot.md#re-running-or-removing-the-integration).
+3. Correct malformed host configuration before retrying.
+4. For an unrecognized Copilot entry point, inspect the dedicated extension directory and remove it manually only if you can independently verify its ownership.
+
+With multiple named targets or `--all`, review every per-agent result: one failure does not prevent other adapters from attempting safe removal.
+
 ## The problem persists
 
 1. Run `codex-limits doctor` and the affected read-only command again.
@@ -142,7 +154,7 @@ For a suspected credential, data-exposure, unsafe-write, or reset-redemption vul
 
 - [Compatibility](compatibility.md) — Canonical runtime, operating-system, Codex-data, network, terminal, and agent-host requirements.
 - [JSON output](json-output.md) — Machine-readable contracts, schemas, examples, and scripting behavior.
-- [Agent integrations](agent-integrations.md) — Supported-agent index and shared installation modes.
+- [Agent integrations](agent-integrations.md) — Supported-agent index and shared lifecycle modes.
 - [Security policy](../../SECURITY.md) — Canonical safety behavior and private vulnerability reporting.
 - [Documentation hub](../README.md) — Task-oriented documentation index.
 - [Project README](../../README.md) — Product overview, installation, and command reference.

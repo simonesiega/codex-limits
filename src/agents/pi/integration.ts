@@ -1,4 +1,8 @@
-import {inspectPiIntegration, installPiIntegration} from "@/agents/pi/install";
+import {
+  inspectPiIntegration,
+  installPiIntegration,
+  uninstallPiIntegration,
+} from "@/agents/pi/install";
 import type {AgentIntegration} from "@/agents/types";
 
 /** Pi adapter metadata and lifecycle operations used by shared commands. */
@@ -13,5 +17,6 @@ export const piIntegration: AgentIntegration = {
     },
   ],
   install: installPiIntegration,
+  uninstall: uninstallPiIntegration,
   inspect: inspectPiIntegration,
 };

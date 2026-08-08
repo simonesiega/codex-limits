@@ -8,7 +8,7 @@ This documentation is organized by task. The root README is the product overview
 
 - **Installing or using the CLI?** Begin with the [quick start](../README.md#quick-start), then use the [command reference](../README.md#usage).
 - **Writing a script or integration?** Read [JSON output](readme/json-output.md) and use the schema for [complete limits](schema/codex-limits.schema.json), [coupons](schema/codex-limits-coupons.schema.json), or [doctor diagnostics](schema/codex-limits-doctor.schema.json).
-- **Installing an agent command?** Open the [agent integrations guide](readme/agent-integrations.md), then choose [OpenCode](readme/agents/opencode.md), [pi](readme/agents/pi.md), or [GitHub Copilot CLI](readme/agents/copilot.md).
+- **Installing or removing an agent command?** Open the [agent integrations guide](readme/agent-integrations.md), then choose [OpenCode](readme/agents/opencode.md), [pi](readme/agents/pi.md), or [GitHub Copilot CLI](readme/agents/copilot.md).
 - **Diagnosing an environment?** Run `codex-limits doctor`, then use [Troubleshooting](readme/troubleshooting.md) and check the relevant [compatibility requirements](readme/compatibility.md).
 - **Contributing?** Start with [`CONTRIBUTING.md`](../CONTRIBUTING.md) and review the [security policy](../SECURITY.md).
 
@@ -24,12 +24,12 @@ This documentation is organized by task. The root README is the product overview
 
 ## Agent integrations
 
-| Guide                                              | Covers                                                                                          |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| [Agent integrations](readme/agent-integrations.md) | Supported-agent index, shared installation modes, adapter architecture, and contribution rules. |
-| [OpenCode](readme/agents/opencode.md)              | Canonical OpenCode setup, usage, removal, and troubleshooting.                                  |
-| [pi](readme/agents/pi.md)                          | Canonical pi setup, usage, removal, and troubleshooting.                                        |
-| [GitHub Copilot CLI](readme/agents/copilot.md)     | Canonical Copilot CLI setup, usage, removal, and troubleshooting.                               |
+| Guide                                              | Covers                                                                                       |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| [Agent integrations](readme/agent-integrations.md) | Supported-agent index, shared lifecycle modes, adapter architecture, and contribution rules. |
+| [OpenCode](readme/agents/opencode.md)              | Canonical OpenCode setup, usage, removal, and troubleshooting.                               |
+| [pi](readme/agents/pi.md)                          | Canonical pi setup, usage, removal, and troubleshooting.                                     |
+| [GitHub Copilot CLI](readme/agents/copilot.md)     | Canonical Copilot CLI setup, usage, removal, and troubleshooting.                            |
 
 ## Development and security
 

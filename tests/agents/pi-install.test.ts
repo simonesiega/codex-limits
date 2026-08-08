@@ -4,6 +4,7 @@ import {dirname, join} from "node:path";
 import {
   inspectPiIntegration as inspectPiPlugin,
   installPiIntegration as installPiPlugin,
+  uninstallPiIntegration as uninstallPiPlugin,
 } from "@/agents/pi/install";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
 
@@ -61,6 +62,50 @@ test("installPiPlugin registers the package while preserving pi settings", async
       configPaths: [settingsPath],
     });
     expect(await inspectPiPlugin({settingsPath, packageRoot})).toBe("installed");
+  });
+});
+
+test("uninstallPiPlugin removes recognized local and npm registrations only", async () => {
+  await withPiConfig(async ({settingsPath, packageRoot}) => {
+    await mkdir(dirname(settingsPath), {recursive: true});
+    await writeFile(
+      settingsPath,
+      JSON.stringify({
+        theme: "dark",
+        packages: [
+          "npm:another-package",
+          packageRoot,
+          {source: "npm:@simonesiega/codex-limits@latest", extensions: ["dist/pi.js"]},
+          {source: "npm:unrelated", extensions: ["dist/pi.js"]},
+        ],
+      }),
+      "utf8"
+    );
+
+    expect(await uninstallPiPlugin({settingsPath, packageRoot})).toEqual({
+      changed: true,
+      configPaths: [settingsPath],
+    });
+    expect(await readJson<Record<string, unknown>>(settingsPath)).toEqual({
+      theme: "dark",
+      packages: ["npm:another-package", {source: "npm:unrelated", extensions: ["dist/pi.js"]}],
+    });
+    expect((await uninstallPiPlugin({settingsPath, packageRoot})).changed).toBe(false);
+  });
+});
+
+test("uninstallPiPlugin does not create missing settings and rejects malformed settings", async () => {
+  await withPiConfig(async ({settingsPath, packageRoot}) => {
+    expect(await uninstallPiPlugin({settingsPath, packageRoot})).toEqual({
+      changed: false,
+      configPaths: [settingsPath],
+    });
+
+    await mkdir(dirname(settingsPath), {recursive: true});
+    await writeFile(settingsPath, "{ private-invalid-json", "utf8");
+    await expect(uninstallPiPlugin({settingsPath, packageRoot})).rejects.toThrow(
+      "pi settings must contain valid JSON."
+    );
   });
 });
 
@@ -391,6 +436,9 @@ if (process.platform !== "win32") {
       await symlink(targetPath, settingsPath, "file");
 
       await expect(installPiPlugin({settingsPath, packageRoot})).rejects.toThrow(
+        "Could not safely read the pi settings."
+      );
+      await expect(uninstallPiPlugin({settingsPath, packageRoot})).rejects.toThrow(
         "Could not safely read the pi settings."
       );
       expect(await readFile(targetPath, "utf8")).toBe(targetSettings);

@@ -1,7 +1,11 @@
 import {expect, test} from "bun:test";
 import {lstat, mkdir, readFile, symlink, writeFile} from "node:fs/promises";
 import {dirname, join} from "node:path";
-import {inspectCopilotIntegration, installCopilotIntegration} from "@/agents/copilot/install";
+import {
+  inspectCopilotIntegration,
+  installCopilotIntegration,
+  uninstallCopilotIntegration,
+} from "@/agents/copilot/install";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 const EXTENSION_MARKER = "codex-limits-copilot-extension-v1";
@@ -53,6 +57,44 @@ test("installCopilotIntegration installs the bundled user extension idempotently
       changed: false,
       configPaths: [extensionPath],
     });
+  });
+});
+
+test("uninstallCopilotIntegration removes only a recognized managed entry", async () => {
+  await withCopilotConfig(async ({extensionPath, packageRoot}) => {
+    await installCopilotIntegration({extensionPath, packageRoot});
+
+    expect(await uninstallCopilotIntegration({extensionPath})).toEqual({
+      changed: true,
+      configPaths: [extensionPath],
+    });
+    expect(await inspectCopilotIntegration({extensionPath})).toBe("not-installed");
+    await expect(lstat(dirname(extensionPath))).rejects.toThrow();
+    expect(await uninstallCopilotIntegration({extensionPath})).toEqual({
+      changed: false,
+      configPaths: [extensionPath],
+    });
+  });
+});
+
+test("uninstallCopilotIntegration preserves sibling files and refuses unknown entries", async () => {
+  await withCopilotConfig(async ({extensionPath}) => {
+    const siblingPath = join(dirname(extensionPath), "notes.txt");
+    await mkdir(dirname(extensionPath), {recursive: true});
+    await Promise.all([
+      writeFile(extensionPath, `export const marker = "${EXTENSION_MARKER}";\n`, "utf8"),
+      writeFile(siblingPath, "keep this file", "utf8"),
+    ]);
+
+    expect((await uninstallCopilotIntegration({extensionPath})).changed).toBe(true);
+    expect(await readFile(siblingPath, "utf8")).toBe("keep this file");
+
+    const unknown = "export const privateExtension = true;\n";
+    await writeFile(extensionPath, unknown, "utf8");
+    await expect(uninstallCopilotIntegration({extensionPath})).rejects.toThrow(
+      "not recognized as Codex Limits-managed"
+    );
+    expect(await readFile(extensionPath, "utf8")).toBe(unknown);
   });
 });
 
@@ -134,6 +176,9 @@ test("installCopilotIntegration refuses a competing extension entry point", asyn
     await expect(installCopilotIntegration({extensionPath, packageRoot})).rejects.toThrow(
       "The GitHub Copilot CLI extension directory already contains another entry point."
     );
+    await expect(uninstallCopilotIntegration({extensionPath})).rejects.toThrow(
+      "The GitHub Copilot CLI extension directory already contains another entry point."
+    );
     expect(await readFile(competingPath, "utf8")).toBe(existing);
     expect(await inspectCopilotIntegration({extensionPath})).toBe("not-installed");
   });
@@ -152,11 +197,34 @@ test("installCopilotIntegration rejects unavailable bundles and oversized target
     await expect(installCopilotIntegration({extensionPath, packageRoot})).rejects.toThrow(
       "The existing GitHub Copilot CLI extension is too large to update safely."
     );
+    await expect(uninstallCopilotIntegration({extensionPath})).rejects.toThrow(
+      "The existing GitHub Copilot CLI extension is too large to remove safely."
+    );
     expect(await inspectCopilotIntegration({extensionPath})).toBe("unknown");
   });
 });
 
 if (process.platform !== "win32") {
+  test("Copilot lifecycle operations refuse a symbolic-link extension directory", async () => {
+    await withCopilotConfig(async ({directory, extensionPath, packageRoot}) => {
+      const targetDirectory = join(directory, "private-extension-directory");
+      const targetPath = join(targetDirectory, "extension.mjs");
+      await mkdir(targetDirectory, {recursive: true});
+      await mkdir(dirname(dirname(extensionPath)), {recursive: true});
+      await writeFile(targetPath, `export const marker = "${EXTENSION_MARKER}";\n`, "utf8");
+      await symlink(targetDirectory, dirname(extensionPath), "dir");
+
+      await expect(installCopilotIntegration({extensionPath, packageRoot})).rejects.toThrow(
+        "Could not safely inspect the GitHub Copilot CLI extension directory."
+      );
+      await expect(uninstallCopilotIntegration({extensionPath})).rejects.toThrow(
+        "Could not safely inspect the GitHub Copilot CLI extension directory."
+      );
+      expect(await readFile(targetPath, "utf8")).toContain(EXTENSION_MARKER);
+      expect(await inspectCopilotIntegration({extensionPath})).toBe("unknown");
+    });
+  });
+
   test("installCopilotIntegration refuses to replace a symbolic-link entry", async () => {
     await withCopilotConfig(async ({directory, extensionPath, packageRoot}) => {
       const targetPath = join(directory, "private-extension.mjs");
@@ -166,6 +234,9 @@ if (process.platform !== "win32") {
       await symlink(targetPath, extensionPath, "file");
 
       await expect(installCopilotIntegration({extensionPath, packageRoot})).rejects.toThrow(
+        "Could not safely read the GitHub Copilot CLI extension."
+      );
+      await expect(uninstallCopilotIntegration({extensionPath})).rejects.toThrow(
         "Could not safely read the GitHub Copilot CLI extension."
       );
       expect(await readFile(targetPath, "utf8")).toBe(targetContent);

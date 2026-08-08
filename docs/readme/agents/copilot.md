@@ -6,14 +6,15 @@ The GitHub Copilot CLI integration adds a read-only `/codex-limits` extension co
 
 ## Overview
 
-| Detail             | Value                                 |
-| ------------------ | ------------------------------------- |
-| Agent              | [GitHub Copilot CLI][copilot-cli]     |
-| Status             | Supported                             |
-| Agent command      | `/codex-limits`                       |
-| Install command    | `codex-limits agents install copilot` |
-| Installation scope | Global for the current user           |
-| Host API           | Experimental Copilot CLI extensions   |
+| Detail             | Value                                   |
+| ------------------ | --------------------------------------- |
+| Agent              | [GitHub Copilot CLI][copilot-cli]       |
+| Status             | Supported                               |
+| Agent command      | `/codex-limits`                         |
+| Install command    | `codex-limits agents install copilot`   |
+| Uninstall command  | `codex-limits agents uninstall copilot` |
+| Installation scope | Global for the current user             |
+| Host API           | Experimental Copilot CLI extensions     |
 
 ## Installation
 
@@ -74,13 +75,13 @@ See [GitHub Copilot CLI compatibility](../compatibility.md#github-copilot-cli-co
 
 Running `codex-limits agents install copilot` again is safe. It reports `already installed` when the installed entry point matches the current package and replaces only a previously managed older bundle.
 
-There is no `codex-limits` uninstall command. To remove the integration, delete only this dedicated directory, then restart Copilot CLI:
+Remove the managed extension with:
 
-```text
-~/.copilot/extensions/codex-limits
+```bash
+codex-limits agents uninstall copilot
 ```
 
-Use the equivalent path under `COPILOT_HOME` when that variable is set. Do not remove unrelated Copilot configuration or extension directories.
+The uninstaller uses the same `COPILOT_HOME` resolution as installation. It removes only `extensions/codex-limits/extension.mjs` when the bounded file contains the Codex Limits management marker. It removes the dedicated directory only when empty and preserves unrelated sibling files. A missing entry with no competing entry point reports `not installed`; an unrecognized, competing, oversized, unreadable, or symbolic-link entry fails closed and is not deleted. Restart Copilot CLI after successful removal.
 
 ## Troubleshooting
 

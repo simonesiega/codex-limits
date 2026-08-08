@@ -3,12 +3,14 @@ import {opencodeIntegration} from "@/agents/opencode/integration";
 import {piIntegration} from "@/agents/pi/integration";
 import type {AgentIntegration} from "@/agents/types";
 
-export {AgentInstallError} from "@/agents/types";
+export {AgentInstallError, AgentUninstallError} from "@/agents/types";
 export type {
   AgentEnvironmentVariable,
   AgentInstallResult,
   AgentIntegration,
   AgentIntegrationStatus,
+  AgentLifecycleResult,
+  AgentUninstallResult,
 } from "@/agents/types";
 
 /** Optional integrations available through every agent-aware command. */

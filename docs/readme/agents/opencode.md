@@ -6,13 +6,14 @@ The OpenCode integration adds a read-only `/codex-limits` command that loads the
 
 ## Overview
 
-| Detail             | Value                                  |
-| ------------------ | -------------------------------------- |
-| Agent              | [OpenCode](https://opencode.ai/)       |
-| Status             | Supported                              |
-| Agent command      | `/codex-limits`                        |
-| Install command    | `codex-limits agents install opencode` |
-| Installation scope | Global for the current user            |
+| Detail             | Value                                    |
+| ------------------ | ---------------------------------------- |
+| Agent              | [OpenCode](https://opencode.ai/)         |
+| Status             | Supported                                |
+| Agent command      | `/codex-limits`                          |
+| Install command    | `codex-limits agents install opencode`   |
+| Uninstall command  | `codex-limits agents uninstall opencode` |
+| Installation scope | Global for the current user              |
 
 ## Installation
 
@@ -80,7 +81,13 @@ See [OpenCode compatibility](../compatibility.md#opencode-compatibility) for the
 
 Running `codex-limits agents install opencode` again is safe. It reports `already installed` when both configuration files already contain the package.
 
-There is no uninstall command. To remove the integration, delete every `@simonesiega/codex-limits` entry from the `plugin` arrays in both OpenCode configuration files, then restart OpenCode. Do not remove unrelated plugins or configuration fields.
+Remove it with:
+
+```bash
+codex-limits agents uninstall opencode
+```
+
+The uninstaller reads both configuration files before writing either one, removes every recognized unversioned, tagged, pinned, or tuple-form Codex Limits entry from their `plugin` arrays, and preserves every other plugin and unrelated field. If neither file contains a matching entry, it reports `not installed`. If either file is malformed, oversized, symbolic-linked, or has an invalid `plugin` field, removal fails without rewriting the configuration. Restart OpenCode after successful removal.
 
 ## Troubleshooting
 
