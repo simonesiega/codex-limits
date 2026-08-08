@@ -181,7 +181,7 @@ Keep documentation changes consistent with these rules:
 - use relative links for files in this repository;
 - keep commands executable from their documented working directory;
 - keep heading anchors stable when another file links to them;
-- synchronize JSON examples with `docs/schema/codex-limits.schema.json`;
+- synchronize every JSON example with its corresponding schema under `docs/schema`;
 - use descriptive image alt text and sanitized screenshots;
 - never include tokens, account IDs, cookies, authorization headers, private paths, environment contents, or raw Codex files.
 

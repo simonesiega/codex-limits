@@ -1,0 +1,25 @@
+{
+  "available": 2,
+  "earnedThisPeriod": 4,
+  "nextExpirationDate": "Monday 20 July 2026",
+  "nextExpirationIn": "7d 4h 38m",
+  "items": [
+    {
+      "index": 1,
+      "status": "available",
+      "grantedAt": "2026-06-20T20:38:07Z",
+      "expiresAt": "2026-07-20T20:38:07Z",
+      "expirationDate": "Monday 20 July 2026",
+      "expiresIn": "7d 4h 38m"
+    },
+    {
+      "index": 2,
+      "status": "available",
+      "grantedAt": "2026-06-27T20:38:07Z",
+      "expiresAt": "2026-07-27T20:38:07Z",
+      "expirationDate": "Monday 27 July 2026",
+      "expiresIn": "14d 4h 38m"
+    }
+  ],
+  "warnings": []
+}

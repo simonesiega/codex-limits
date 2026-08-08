@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simonesiega/codex-limits/main/docs/schema/codex-limits-doctor.schema.json",
+  "title": "Codex Limits Doctor JSON Output",
+  "description": "Schema for the output of `codex-limits doctor --json`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "packageVersion",
+    "nodeVersion",
+    "operatingSystem",
+    "codexHomeDetected",
+    "authenticationFound",
+    "localUsageFound",
+    "liveEndpoint",
+    "agentIntegrations"
+  ],
+  "properties": {
+    "packageVersion": {
+      "type": "string"
+    },
+    "nodeVersion": {
+      "type": "string"
+    },
+    "operatingSystem": {
+      "type": "string"
+    },
+    "codexHomeDetected": {
+      "type": "boolean"
+    },
+    "authenticationFound": {
+      "type": "boolean"
+    },
+    "localUsageFound": {
+      "type": "boolean"
+    },
+    "liveEndpoint": {
+      "enum": ["not-checked", "reachable", "unreachable"]
+    },
+    "agentIntegrations": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$"
+      },
+      "additionalProperties": {
+        "enum": ["installed", "not-installed", "unknown"]
+      }
+    }
+  }
+}

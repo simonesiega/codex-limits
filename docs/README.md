@@ -7,7 +7,7 @@ This documentation is organized by task. The root README is the product overview
 ## Start here
 
 - **Installing or using the CLI?** Begin with the [quick start](../README.md#quick-start), then use the [command reference](../README.md#usage).
-- **Writing a script or integration?** Read [JSON output](readme/json-output.md) and use the versioned [JSON Schema](schema/codex-limits.schema.json).
+- **Writing a script or integration?** Read [JSON output](readme/json-output.md) and use the schema for [complete limits](schema/codex-limits.schema.json), [coupons](schema/codex-limits-coupons.schema.json), or [doctor diagnostics](schema/codex-limits-doctor.schema.json).
 - **Installing an agent command?** Open the [agent integrations guide](readme/agent-integrations.md), then choose [OpenCode](readme/agents/opencode.md), [pi](readme/agents/pi.md), or [GitHub Copilot CLI](readme/agents/copilot.md).
 - **Diagnosing an environment?** Run `codex-limits doctor`, then check [compatibility](readme/compatibility.md) and [troubleshooting](../README.md#troubleshooting).
 - **Contributing?** Start with [`CONTRIBUTING.md`](../CONTRIBUTING.md) and review the [security policy](../SECURITY.md).
@@ -41,11 +41,12 @@ This documentation is organized by task. The root README is the product overview
 
 ## Schemas, examples, and visual assets
 
-| Resource                                                           | Purpose                                                           |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| [Complete JSON example](examples/codex-limits-output.example.json) | Sanitized example produced by `codex-limits --json`.              |
-| [JSON Schema](schema/codex-limits.schema.json)                     | Draft 2020-12 schema for validating the complete limits document. |
-| [`photos/`](photos/)                                               | README screenshots and project identity assets.                   |
+| Resource                                                                                                                  | Purpose                                         |
+| ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| [Complete limits example](examples/codex-limits-output.example.json) and [schema](schema/codex-limits.schema.json)        | Resources for validating `codex-limits --json`. |
+| [Coupon example](examples/codex-limits-coupons-output.example.json) and [schema](schema/codex-limits-coupons.schema.json) | Resources for validating `coupons --json`.      |
+| [Doctor example](examples/codex-limits-doctor-output.example.json) and [schema](schema/codex-limits-doctor.schema.json)   | Resources for validating `doctor --json`.       |
+| [`photos/`](photos/)                                                                                                      | README screenshots and project identity assets. |
 
 Visual assets are grouped by purpose:
 
@@ -61,7 +62,7 @@ photos/
 - Commands are shown from the repository root unless a guide says otherwise.
 - Keep internal repository links relative and route readers through this hub when no more specific canonical guide exists.
 - Treat the root [Usage](../README.md#usage) section and generated `--help` output as the command reference; do not duplicate complete command procedures across guides.
-- Keep JSON field claims synchronized with [JSON output](readme/json-output.md), the [schema](schema/codex-limits.schema.json), and the sanitized [example](examples/codex-limits-output.example.json).
+- Keep JSON field claims synchronized with [JSON output](readme/json-output.md) and each command's schema and sanitized example.
 - Use placeholders in examples. Never include tokens, account IDs, authorization headers, cookies, private paths, raw Codex files, or unredacted environment values.
 - Use repository-relative image paths and descriptive alt text. Screenshots must contain only synthetic or safely redacted data.
 - Run `bun run docs:check` after documentation changes.

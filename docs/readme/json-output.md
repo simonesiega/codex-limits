@@ -121,7 +121,7 @@ interface CouponItemJson {
 }
 ```
 
-Using the same reference time and timezone as the complete example:
+Using the same reference time and timezone as the complete example ([download this sanitized coupon example](../examples/codex-limits-coupons-output.example.json)):
 
 ```json
 {
@@ -162,7 +162,7 @@ interface DoctorJson {
 }
 ```
 
-Example:
+Sanitized example ([download the JSON file](../examples/codex-limits-doctor-output.example.json)):
 
 ```json
 {
@@ -287,8 +287,9 @@ Consumers should tolerate `null` values and warning entries. Parse fields as JSO
 
 ## Related documentation
 
-- [Example JSON output](../examples/codex-limits-output.example.json) — Complete example response produced by `codex-limits --json`.
-- [JSON Schema](../schema/codex-limits.schema.json) — Machine-readable schema for validating the complete JSON response.
+- [Complete limits example](../examples/codex-limits-output.example.json) and [schema](../schema/codex-limits.schema.json) — Resources for `codex-limits --json`.
+- [Coupon example](../examples/codex-limits-coupons-output.example.json) and [schema](../schema/codex-limits-coupons.schema.json) — Resources for `codex-limits coupons --json`.
+- [Doctor example](../examples/codex-limits-doctor-output.example.json) and [schema](../schema/codex-limits-doctor.schema.json) — Resources for `codex-limits doctor --json`.
 - [Compatibility](compatibility.md) — Runtime, operating system, local-data, terminal, and network requirements.
 - [Agent integrations](agent-integrations.md) — Installation, architecture, behavior, and development of supported agent integrations.
 - [Documentation hub](../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.

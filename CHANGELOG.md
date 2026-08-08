@@ -8,6 +8,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added JSON Schemas and sanitized example documents for `codex-limits coupons --json` and `codex-limits doctor --json`.
+
 ### Changed
 
 ### Fixed
@@ -65,24 +67,12 @@ All notable changes to codex-limits are documented in this file.
 
 ## [0.1.6] - 2026-07-22
 
-### Breaking Changes
-
 ### Added
 
 - Added `codex-limits doctor` and `codex-limits doctor --json` for safe environment, connectivity, local usage, authentication, OpenCode, and pi integration diagnostics.
 - Added the pi agent integration with `codex-limits agents install pi` and a read-only `/codex-limits` overlay that does not send limit data to the LLM.
 
-### Changed
-
-### Fixed
-
-### Removed
-
-### Security
-
 ## [0.1.5] - 2026-07-22
-
-### Breaking Changes
 
 ### Added
 
@@ -102,8 +92,6 @@ All notable changes to codex-limits are documented in this file.
 - Fixed Windows checkouts to preserve LF line endings so local formatting checks remain stable.
 - Fixed weekly-only usage data to use declared window durations across live and local sources, avoid stale local fallback for recognized live windows, and omit unavailable 5-hour sections from terminal dashboards and the OpenCode integration.
 - Fixed clean production builds and kept terminal rendering compatible with Node.js 20.
-
-### Removed
 
 ### Security
 

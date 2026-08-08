@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/simonesiega/codex-limits/main/docs/schema/codex-limits-coupons.schema.json",
+  "title": "Codex Limits Coupons JSON Output",
+  "description": "Schema for the output of `codex-limits coupons --json`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "available",
+    "earnedThisPeriod",
+    "nextExpirationDate",
+    "nextExpirationIn",
+    "items",
+    "warnings"
+  ],
+  "properties": {
+    "available": {
+      "$ref": "#/$defs/nullableNonNegativeInteger"
+    },
+    "earnedThisPeriod": {
+      "$ref": "#/$defs/nullableNonNegativeInteger"
+    },
+    "nextExpirationDate": {
+      "$ref": "#/$defs/nullableString"
+    },
+    "nextExpirationIn": {
+      "$ref": "#/$defs/nullableString"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/couponItem"
+      }
+    },
+    "warnings": {
+      "$ref": "#/$defs/warnings"
+    }
+  },
+  "$defs": {
+    "couponItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "status", "grantedAt", "expiresAt", "expirationDate", "expiresIn"],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grantedAt": {
+          "$ref": "#/$defs/nullableDateTime"
+        },
+        "expiresAt": {
+          "$ref": "#/$defs/nullableDateTime"
+        },
+        "expirationDate": {
+          "$ref": "#/$defs/nullableString"
+        },
+        "expiresIn": {
+          "$ref": "#/$defs/nullableString"
+        }
+      }
+    },
+    "nullableDateTime": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nullableNonNegativeInteger": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nullableString": {
+      "type": ["string", "null"]
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

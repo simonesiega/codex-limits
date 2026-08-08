@@ -1,0 +1,14 @@
+{
+  "packageVersion": "1.1.0",
+  "nodeVersion": "22.0.0",
+  "operatingSystem": "Windows",
+  "codexHomeDetected": true,
+  "authenticationFound": true,
+  "localUsageFound": true,
+  "liveEndpoint": "reachable",
+  "agentIntegrations": {
+    "opencode": "installed",
+    "pi": "installed",
+    "copilot": "installed"
+  }
+}
