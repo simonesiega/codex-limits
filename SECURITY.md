@@ -13,8 +13,6 @@
   <img src="https://img.shields.io/github/license/simonesiega/codex-limits" alt="License" />
 </p>
 
-[← Project README](README.md) · [Documentation hub](docs/README.md)
-
 ## Contents
 
 - [Supported versions](#supported-versions)

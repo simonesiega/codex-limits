@@ -1,10 +1,10 @@
-# agents.md
+# AGENTS.md
 
 ## Purpose
 
-This project (`codex-limits`) is a TypeScript/Bun CLI for checking Codex usage limits, reset times, and reset-credit coupons from the terminal.
+This project (`codex-limits`) is a TypeScript CLI for checking Codex usage limits, reset times, and reset-credit coupons from the terminal. The published CLI runs on Node.js, while Bun provides the repository's package-management, scripting, testing, and build tooling.
 
-The goal is to provide a **small, safe, read-only dashboard** for Codex users without forcing them to open a browser, inspect local files manually, or break their coding flow.
+The goal is to provide a **small, safe, read-only dashboard** for Codex users without forcing them to open a browser, inspect local files manually, or break their coding flow. Inspection commands are read-only; `codex-limits reset` is the sole remote mutation and requires explicit interactive confirmation.
 
 The CLI can be used directly from the terminal, from plain-text commands, from JSON output, and from supported agent integrations. This repository focuses on:
 
@@ -12,8 +12,9 @@ The CLI can be used directly from the terminal, from plain-text commands, from J
 - usage window normalization
 - safe terminal output
 - reset-credit coupon summaries
+- explicitly confirmed reset-credit redemption
 - scriptable CLI commands
-- thin coding-agent integrations
+- thin OpenCode, pi, and GitHub Copilot CLI integrations
 
 The goal for `codex-limits` is to stay fast, predictable, safe by default, and easy to extend with new agent adapters.
 
@@ -28,7 +29,7 @@ If a tradeoff is required, choose correctness, redaction, and stability over con
 ## High-Level Architecture
 
 ```text
-src/package/core      → Shared domain logic. Owns Codex data discovery, usage parsing, live coupon data, normalization, warnings, and redaction.
+src/package/core      → Shared domain logic. Owns Codex data discovery, usage parsing, live coupon data, confirmed reset operations, normalization, warnings, and redaction.
 src/package/commands  → CLI command layer. Owns the declarative registry, shared parser/help, scoped runtime services, and focused command handlers.
 src/package/tui       → Ink terminal UI. Owns rendering only and consumes normalized display-ready data.
 src/agents            → Agent integration source. Owns supported agent adapters and registration.
@@ -48,43 +49,62 @@ script/automation → codex-limits --json → shared core → stable machine-rea
 
 Agent usage:
 coding agent command → agent adapter → shared core → read-only Codex limits view inside the agent
+
+Reset usage:
+user terminal → reset command → fresh coupon load → interactive confirmation → one remote coupon mutation
 ```
 
 - The **core package** is the authority for Codex data discovery, parsing, normalization, optional live data fetching, warnings, and redaction.
 - The **commands package** is responsible for CLI behavior. Command metadata belongs in the shared registry model, while each handler should receive only the runtime capabilities it uses.
 - The **TUI package** is a rendering layer. It must not read local Codex files, fetch live data directly, or define safety rules.
-- The **agents package** is an adapter layer. Each integration should use the shared adapter contract, stay thin, and reuse the shared core.
+- The **agents package** is an adapter layer for OpenCode, pi, and GitHub Copilot CLI. Each integration should use the shared adapter contract, stay thin, reuse the shared core, and remain read-only.
+- The **reset command** is the only remote-mutation surface. It must refresh coupon data, fail closed when selection cannot be verified, and require an explicit interactive `y` or `yes` before consumption.
 - The **tests folder** protects behavior, output stability, safety rules, and integration logic.
 - The **docs/photos folder** is only for visual assets used in documentation. Screenshots must never contain private tokens, account IDs, cookies, auth headers, or raw local files.
 
 ## Tech Stack
 
 ```text
-Runtime:
-- Bun
+Published runtime:
+- Node.js 20 or newer
+- Node-compatible package entry points
+- npm global install
+
+Development tooling:
+- Bun for dependency installation, scripts, tests, builds, and package validation
 
 Language:
 - TypeScript
-
-CLI:
-- Node-compatible package entry points
-- npm global install
 
 Terminal UI:
 - Ink / React-style terminal rendering
 
 Agent integrations:
-- OpenCode and pi currently supported
+- OpenCode
+- pi
+- GitHub Copilot CLI
 - Additional adapters can be added under src/agents
 
 Testing:
 - Bun test runner
+```
 
-Documentation:
-- README.md
-- CONTRIBUTING.md
-- CHANGELOG.md
-- AGENTS.md
+## Documentation Inventory
+
+```text
+README.md                                   → Product overview, setup, commands, and troubleshooting.
+CONTRIBUTING.md                             → Development workflow and contribution standards.
+CHANGELOG.md                                → Released and unreleased user-facing changes.
+SECURITY.md                                 → Data-access, command-safety, and disclosure policy.
+AGENTS.md                                   → Repository instructions for coding agents.
+docs/README.md                              → Task-oriented documentation hub.
+docs/readme/json-output.md                  → Public JSON contracts and automation guidance.
+docs/readme/compatibility.md                → Runtime, platform, data, terminal, and network support.
+docs/readme/agent-integrations.md           → Shared agent integration behavior and development.
+docs/readme/agents/{opencode,pi,copilot}.md → Agent-specific installation and usage guides.
+docs/schema/*.schema.json                   → JSON Schemas for complete, coupon, and doctor output.
+docs/examples/*.example.json                → Sanitized JSON documents validated against the schemas.
+docs/photos                                 → Sanitized screenshots and project identity assets.
 ```
 
 ### Rules
