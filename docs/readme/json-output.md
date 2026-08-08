@@ -234,14 +234,14 @@ For comparisons and stored data, prefer canonical fields such as `resetsAt` and 
 
 ### Coupon summary
 
-| Field                | Meaning                                                                              |
-| -------------------- | ------------------------------------------------------------------------------------ |
-| `available`          | Available reset-credit count as a non-negative integer, or `null` when not returned. |
-| `earnedThisPeriod`   | Total earned reset credits as a non-negative integer, or `null`.                     |
-| `nextExpirationDate` | Local calendar date for the next available coupon, or otherwise the soonest coupon.  |
-| `nextExpirationIn`   | Compact non-negative duration until that expiration.                                 |
-| `items`              | Valid coupon entries sorted by expiration time.                                      |
-| `warnings`           | Safe coupon-specific availability or payload warnings.                               |
+| Field                | Meaning                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| `available`          | Available reset-credit count as a non-negative safe integer, or `null` when invalid or absent. |
+| `earnedThisPeriod`   | Total earned reset credits as a non-negative safe integer, or `null`.                          |
+| `nextExpirationDate` | Local calendar date for the next available coupon, or otherwise the soonest coupon.            |
+| `nextExpirationIn`   | Compact non-negative duration until that expiration.                                           |
+| `items`              | Valid coupon entries sorted by expiration time.                                                |
+| `warnings`           | Safe coupon-specific availability or payload warnings.                                         |
 
 Coupon `index` values are one-based and assigned after sorting. `grantedAt` and `expiresAt` preserve bounded RFC 3339 timestamp strings from the service. `expirationDate` is rendered in the machine's local timezone as `Weekday D Month YYYY`; `expiresIn` is calculated at command execution time. Coupon entries with malformed or extra timestamp text are omitted and produce a warning.
 

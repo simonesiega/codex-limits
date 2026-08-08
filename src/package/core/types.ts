@@ -237,9 +237,9 @@ export interface CouponItem extends CouponSummaryItem {
 export interface CouponSummary {
   /** Whether live coupon data is complete, partial, or unavailable. */
   status: AvailabilityStatus;
-  /** Available reset-credit count, when returned by the endpoint. */
+  /** Available reset-credit count as a non-negative safe integer, when valid. */
   available: number | null;
-  /** Total earned reset-credit count, when returned by the endpoint. */
+  /** Total earned reset-credit count as a non-negative safe integer, when valid. */
   earnedThisPeriod: number | null;
   /** Local date for the next available or soonest expiring coupon. */
   nextExpirationDate: string | null;

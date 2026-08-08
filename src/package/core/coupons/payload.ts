@@ -218,7 +218,7 @@ function readNonNegativeInteger(
     }
     found = true;
     const field = value[key];
-    if (typeof field === "number" && Number.isInteger(field) && field >= 0) {
+    if (typeof field === "number" && Number.isSafeInteger(field) && field >= 0) {
       return {value: field, malformed: false};
     }
   }

@@ -39,22 +39,38 @@ test("readCodexState bounds malformed and oversized JSON files", async () => {
 });
 
 if (process.platform !== "win32") {
-  test("readCodexState supports a symbolic-link Codex home without escaping it", async () => {
+  test("local readers support a symbolic-link Codex home without escaping it", async () => {
     await withTempDirectory("codex-limits-linked-home-", async (root) => {
       const home = join(root, "home");
       const linkedHome = join(root, "linked-home");
-      await mkdir(home);
-      await writeFile(
-        join(home, "limits.json"),
-        JSON.stringify({fiveHour: {remainingPercent: 80}}),
-        "utf8"
-      );
+      await mkdir(join(home, "sessions"), {recursive: true});
+      await Promise.all([
+        writeFile(
+          join(home, "limits.json"),
+          JSON.stringify({fiveHour: {remainingPercent: 80}}),
+          "utf8"
+        ),
+        writeFile(
+          join(home, "sessions", "rollout-linked-home.jsonl"),
+          JSON.stringify({
+            type: "event_msg",
+            timestamp: "2026-07-05T10:00:00.000Z",
+            payload: {type: "token_count", rate_limits: {primary: {used_percent: 20}}},
+          }),
+          "utf8"
+        ),
+      ]);
       await symlink(home, linkedHome, "dir");
 
-      const state = await readCodexState(linkedHome);
+      const [state, sessions] = await Promise.all([
+        readCodexState(linkedHome),
+        readCodexSessions(linkedHome),
+      ]);
 
       expect(state.files.map((file) => file.relativePath)).toEqual(["limits.json"]);
-      expect(state.warnings).toEqual([]);
+      expect(state.warnings).toContain("Skipped a sensitive-looking local file.");
+      expect(sessions.latestSnapshot?.rateLimits.primary).toEqual({used_percent: 20});
+      expect(sessions.warnings).toEqual([]);
     });
   });
 

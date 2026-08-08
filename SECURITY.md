@@ -143,7 +143,7 @@ The project should:
 
 - Keep `bun.lock` committed and use frozen, script-disabled dependency installation in CI and publishing workflows.
 - Keep third-party GitHub Actions pinned to immutable revisions and review automated updates before merging.
-- Run `bun run check` before publishing; it rebuilds every bundle, validates generated declarations and notices, packs the npm artifact, and smoke-tests supported runtime surfaces.
+- Run `bun run audit` and `bun run check` before publishing. CI and publishing enforce the dependency audit; the project check rebuilds every bundle, validates generated declarations and notices, packs the npm artifact, and smoke-tests supported runtime surfaces.
 - Publish only from a validated release tag whose version matches `package.json` and `src/package/version.ts`.
 - Use npm Trusted Publishing with provenance rather than a long-lived npm token.
 - Keep agent host SDKs external where the host owns them, and keep bundled third-party license notices synchronized with production artifacts.

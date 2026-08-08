@@ -123,6 +123,7 @@ docs/photos                                 → Sanitized screenshots and projec
 - Keep agent-specific logic in `src/agents/<agent-name>`.
 - Keep tests in `tests` and update them when behavior changes.
 - Always run verification commands from the repository root:
+  - `bun run audit`
   - `bun test`
   - `bun run check`
   - `bun run build`

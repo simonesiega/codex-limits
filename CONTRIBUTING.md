@@ -110,6 +110,12 @@ bun run docs:link
 bun run docs:schema
 ```
 
+Audit the locked dependency graph:
+
+```bash
+bun run audit
+```
+
 Run tests only:
 
 ```bash
@@ -193,7 +199,7 @@ Then verify:
 
 - [ ] The PR title and description explain what changed and why.
 - [ ] The change is focused and does not include unrelated cleanup.
-- [ ] `bun run format` was run and `bun run check` passes locally.
+- [ ] `bun run format` was run and both `bun run audit` and `bun run check` pass locally.
 - [ ] Tests were added or updated for behavior changes.
 - [ ] Documentation was updated if commands, setup, output, or agent support changed.
 - [ ] No secrets, account data, tokens, cookies, or raw local files were committed.

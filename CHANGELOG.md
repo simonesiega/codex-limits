@@ -18,11 +18,14 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
+- Fixed malformed coupon counters outside JavaScript's safe-integer range to be reported as partial data instead of reaching public output.
+
 ### Removed
 
 ### Security
 
 - Kept agent removal scoped to recognized Codex Limits registrations, revalidating bounded mutation targets before changing them and refusing stale, malformed, symbolic-link, or unrecognized targets while preserving unrelated agent configuration.
+- Hardened local session discovery against sessions-directory replacement races, pinned affected development dependencies to patched `fast-uri` 3.1.5 and `undici` 8.10.0 releases, and added dependency audits to CI and publishing.
 
 ## [1.1.0] - 2026-07-31
 

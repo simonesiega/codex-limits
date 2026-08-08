@@ -45,12 +45,12 @@ interface SnapshotExtraction {
 export async function readCodexSessions(homePath: string): Promise<CodexSessionReadResult> {
   const sessionsRoot = join(homePath, "sessions");
   const warnings: string[] = [];
-  if (await isSymbolicLink(sessionsRoot)) {
-    warnings.push("Skipped the symbolic-link Codex sessions directory.");
+  const realSessionsRoot = await resolveSafeSessionsRoot(homePath, sessionsRoot, warnings);
+  if (!realSessionsRoot) {
     return {homePath, sessionsRoot, files: [], latestSnapshot: null, warnings};
   }
 
-  const candidates = await findSessionFiles(sessionsRoot, warnings);
+  const candidates = await findSessionFiles(sessionsRoot, realSessionsRoot, warnings);
   const files: CodexSessionFile[] = [];
   let latestSnapshot: CodexSessionSnapshot | null = null;
 
@@ -116,8 +116,44 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
   return {homePath, sessionsRoot, files, latestSnapshot, warnings};
 }
 
+async function resolveSafeSessionsRoot(
+  homePath: string,
+  sessionsRoot: string,
+  warnings: string[]
+): Promise<string | null> {
+  try {
+    const initialDetails = await lstat(sessionsRoot);
+    if (initialDetails.isSymbolicLink()) {
+      warnings.push("Skipped the symbolic-link Codex sessions directory.");
+      return null;
+    }
+    if (!initialDetails.isDirectory()) {
+      return null;
+    }
+
+    const [realHomePath, realSessionsRoot] = await Promise.all([
+      realpath(homePath),
+      realpath(sessionsRoot),
+    ]);
+    const currentDetails = await lstat(sessionsRoot);
+    if (
+      !isPathWithin(realHomePath, realSessionsRoot) ||
+      !currentDetails.isDirectory() ||
+      currentDetails.isSymbolicLink() ||
+      !isSameFile(initialDetails, currentDetails)
+    ) {
+      warnings.push("Could not inspect the local Codex sessions directory safely.");
+      return null;
+    }
+    return realSessionsRoot;
+  } catch {
+    return null;
+  }
+}
+
 async function findSessionFiles(
   sessionsRoot: string,
+  realSessionsRoot: string,
   warnings: string[]
 ): Promise<SessionCandidate[]> {
   const state: SessionWalkState = {
@@ -133,13 +169,6 @@ async function findSessionFiles(
   }
   if (state.skippedSymlink) {
     warnings.push("Skipped symbolic links while inspecting Codex sessions.");
-  }
-
-  let realSessionsRoot: string;
-  try {
-    realSessionsRoot = await realpath(sessionsRoot);
-  } catch {
-    return [];
   }
 
   const candidates: SessionCandidate[] = [];
@@ -437,14 +466,6 @@ function toSessionFile(
   error: string | null
 ): CodexSessionFile {
   return {path, relativePath, modifiedAtMs, hasSnapshot, error};
-}
-
-async function isSymbolicLink(path: string): Promise<boolean> {
-  try {
-    return (await lstat(path)).isSymbolicLink();
-  } catch {
-    return false;
-  }
 }
 
 class SessionTooLargeError extends Error {}

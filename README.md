@@ -312,6 +312,7 @@ Useful development commands:
 | `bun run docs:link`    | Checks local documentation links and heading anchors.                           |
 | `bun run docs:schema`  | Validates all JSON Schemas and their external and inline examples.              |
 | `bun run docs:check`   | Runs both documentation checks.                                                 |
+| `bun run audit`        | Checks the locked dependency graph for known vulnerabilities.                   |
 | `bun test`             | Runs the test suite.                                                            |
 | `bun run build`        | Builds the package.                                                             |
 | `bun run format`       | Formats the repository with Prettier.                                           |

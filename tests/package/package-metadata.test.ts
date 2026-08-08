@@ -15,6 +15,7 @@ interface PackageMetadata {
   scripts: Record<string, string>;
   keywords: string[];
   dependencies?: Record<string, string>;
+  overrides?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   peerDependenciesMeta?: Record<string, {optional?: boolean}>;
   devDependencies: Record<string, string>;
@@ -89,6 +90,7 @@ test("package metadata includes runtime documentation and excludes bundled runti
   expect(packageJson.files).toContain("CODE_OF_CONDUCT.md");
   expect(packageJson.files).toContain("SECURITY.md");
   expect(packageJson.dependencies ?? {}).toEqual({});
+  expect(packageJson.overrides).toMatchObject({"fast-uri": "3.1.5", undici: "8.10.0"});
   expect(packageJson.peerDependencies).toEqual({
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*",
@@ -118,6 +120,18 @@ test("manual publishing requires the matching version tag", async () => {
   expect(workflow).toContain('if [ "$REF_TYPE" != "tag" ]; then');
   expect(workflow).toContain('PUBLISH_TAG="$REF_NAME"');
   expect(workflow).toContain('if [ "$PUBLISH_TAG" != "v$PACKAGE_VERSION" ]; then');
+});
+
+test("CI and publishing audit the locked dependency graph", async () => {
+  const [checkWorkflow, publishWorkflow, packageJson] = await Promise.all([
+    readFile(resolve(import.meta.dir, "../../.github/workflows/check.yml"), "utf8"),
+    readFile(resolve(import.meta.dir, "../../.github/workflows/publish.yml"), "utf8"),
+    readPackageMetadata(),
+  ]);
+
+  expect(packageJson.scripts.audit).toBe("bun audit");
+  expect(checkWorkflow).toContain("run: bun run audit");
+  expect(publishWorkflow).toContain("run: bun run audit");
 });
 
 test("validation and prepack scripts do not recurse", async () => {

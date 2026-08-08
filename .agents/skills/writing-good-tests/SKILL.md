@@ -129,7 +129,7 @@ const result = getResult();
 async function waitFor<T>(
   condition: () => T | undefined | null | false,
   description: string,
-  timeoutMs = 5000,
+  timeoutMs = 5000
 ): Promise<T> {
   const startTime = Date.now();
 
@@ -138,9 +138,7 @@ async function waitFor<T>(
     if (result) return result;
 
     if (Date.now() - startTime > timeoutMs) {
-      throw new Error(
-        `Timeout waiting for ${description} after ${timeoutMs}ms`,
-      );
+      throw new Error(`Timeout waiting for ${description} after ${timeoutMs}ms`);
     }
 
     await new Promise((r) => setTimeout(r, 10)); // Poll every 10ms
@@ -253,15 +251,15 @@ Mock the COMPLETE data structure as it exists in reality:
 // BAD: Partial mock
 const mockResponse = {
   status: "success",
-  data: { userId: "123" },
+  data: {userId: "123"},
   // Missing: metadata that downstream code uses
 };
 
 // GOOD: Mirror real API
 const mockResponse = {
   status: "success",
-  data: { userId: "123", name: "Alice" },
-  metadata: { requestId: "req-789", timestamp: 1234567890 },
+  data: {userId: "123", name: "Alice"},
+  metadata: {requestId: "req-789", timestamp: 1234567890},
 };
 ```
 
@@ -346,7 +344,7 @@ The database should handle its own lifecycle. Tests that require pristine state 
 ```typescript
 // Use unique identifiers instead of depending on clean state
 const testId = `test-${Date.now()}-${Math.random()}`;
-const user = await createUser({ email: `${testId}@test.com` });
+const user = await createUser({email: `${testId}@test.com`});
 ```
 
 ## Quick Reference

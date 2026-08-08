@@ -278,25 +278,20 @@ function isExternalTarget(target: string): boolean {
 
 function isValidExternalTarget(target: string): boolean {
   if (target.startsWith("//")) {
-    try {
-      new URL(`https:${target}`);
-      return true;
-    } catch {
-      return false;
-    }
+    return isSafeHttpUrl(`https:${target}`);
   }
 
   const scheme = target.slice(0, target.indexOf(":")).toLowerCase();
   if (scheme === "mailto") {
     return /^mailto:[^@\s]+@[^@\s]+$/i.test(target);
   }
-  if (scheme !== "http" && scheme !== "https") {
-    return true;
-  }
+  return (scheme === "http" || scheme === "https") && isSafeHttpUrl(target);
+}
 
+function isSafeHttpUrl(target: string): boolean {
   try {
     const url = new URL(target);
-    return Boolean(url.hostname);
+    return Boolean(url.hostname) && !url.username && !url.password;
   } catch {
     return false;
   }
