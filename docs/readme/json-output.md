@@ -199,7 +199,7 @@ Sanitized example ([see the JSON example](../examples/codex-limits-doctor-output
 
 ```json
 {
-  "packageVersion": "1.1.0",
+  "packageVersion": "1.2.0",
   "nodeVersion": "22.0.0",
   "operatingSystem": "Windows",
   "codexHomeDetected": true,
