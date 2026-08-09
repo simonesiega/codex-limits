@@ -8,7 +8,10 @@ interface PackageMetadata {
   name: string;
   version: string;
   bin: Record<string, string>;
-  exports: Record<"." | "./opencode" | "./pi" | "./copilot", {import: string; types: string}>;
+  exports: Record<
+    "." | "./opencode" | "./tui" | "./pi" | "./copilot",
+    {import: string; types: string}
+  >;
   files: string[];
   types: string;
   engines: {node: string};
@@ -37,12 +40,13 @@ test("package metadata preserves the CLI and agent-host module contracts", async
   expect(packageJson.exports).toEqual({
     ".": {types: "./types/opencode.d.ts", import: "./dist/opencode.js"},
     "./opencode": {types: "./types/opencode.d.ts", import: "./dist/opencode.js"},
+    "./tui": {types: "./types/opencode.d.ts", import: "./dist/opencode.js"},
     "./pi": {types: "./types/pi.d.ts", import: "./dist/pi.js"},
     "./copilot": {types: "./types/copilot.d.ts", import: "./dist/copilot.mjs"},
   });
   expect(
     Object.keys(packageJson.exports)
-      .filter((subpath) => subpath !== ".")
+      .filter((subpath) => subpath !== "." && subpath !== "./tui")
       .sort()
   ).toEqual(AGENT_INTEGRATIONS.map((integration) => `./${integration.id}`).sort());
   expect(packageJson.types).toBe("./types/opencode.d.ts");
@@ -50,6 +54,17 @@ test("package metadata preserves the CLI and agent-host module contracts", async
   expect(packageJson.pi).toEqual({extensions: ["./dist/pi.js"]});
   expect(packageJson.keywords).toContain("pi-package");
   expect(packageJson.keywords).toContain("github-copilot-cli");
+});
+
+test("doctor documentation example uses the current package version", async () => {
+  const example = JSON.parse(
+    await readFile(
+      resolve(import.meta.dir, "../../docs/examples/codex-limits-doctor-output.example.json"),
+      "utf8"
+    )
+  ) as {packageVersion?: unknown};
+
+  expect(example.packageVersion).toBe(PACKAGE_VERSION);
 });
 
 test("generated declarations expose only the agent-host contracts", async () => {
@@ -140,6 +155,7 @@ test("validation and prepack scripts do not recurse", async () => {
   expect(packageJson.scripts["docs:link"]).toBe("bun run scripts/check-doc-links.ts");
   expect(packageJson.scripts["docs:schema"]).toBe("bun run scripts/check-doc-schema.ts");
   expect(packageJson.scripts["docs:check"]).toBe("bun run docs:link && bun run docs:schema");
+  expect(packageJson.scripts["agents:compat"]).toBe("bun run scripts/check-agent-compatibility.ts");
   expect(packageJson.scripts.check).toContain("format:check");
   expect(packageJson.scripts.check).toContain("docs:check");
   expect(packageJson.scripts.check).toContain("package:validate");

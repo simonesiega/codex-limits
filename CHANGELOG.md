@@ -11,6 +11,7 @@ All notable changes to codex-limits are documented in this file.
 - Added a project Code of Conduct with private reporting and enforcement guidance.
 - Added JSON Schemas and sanitized example documents for `codex-limits coupons --json` and `codex-limits doctor --json`.
 - Added `codex-limits agents uninstall` with interactive, named, multi-agent, and `--all` modes for removing recognized OpenCode, pi, and GitHub Copilot CLI integrations.
+- Added automated packed-package compatibility checks that install, load, dispatch, and uninstall `/codex-limits` integrations in real OpenCode, pi, and GitHub Copilot CLI releases.
 
 ### Changed
 
@@ -18,6 +19,7 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
+- Fixed OpenCode TUI plugin discovery in current hosts by exposing the loader-reserved `@simonesiega/codex-limits/tui` alias.
 - Fixed malformed coupon counters outside JavaScript's safe-integer range to be reported as partial data instead of reaching public output.
 
 ### Removed

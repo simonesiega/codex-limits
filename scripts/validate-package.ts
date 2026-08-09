@@ -37,7 +37,7 @@ assert(packageJson.bin?.["codex-limits"] === "dist/cli.js", "Unexpected binary t
 assert(
   Object.keys(packageJson.exports ?? {})
     .sort()
-    .join(",") === ".,./copilot,./opencode,./pi",
+    .join(",") === ".,./copilot,./opencode,./pi,./tui",
   "Unexpected package export surface."
 );
 assert(
@@ -49,6 +49,11 @@ assert(
   packageJson.exports?.["./opencode"]?.import === "./dist/opencode.js" &&
     packageJson.exports["./opencode"]?.types === "./types/opencode.d.ts",
   "Unexpected explicit OpenCode export."
+);
+assert(
+  packageJson.exports?.["./tui"]?.import === "./dist/opencode.js" &&
+    packageJson.exports["./tui"]?.types === "./types/opencode.d.ts",
+  "Unexpected OpenCode TUI loader export."
 );
 assert(
   packageJson.exports?.["./pi"]?.import === "./dist/pi.js" &&
@@ -247,7 +252,7 @@ try {
     [
       "--input-type=module",
       "--eval",
-      'const root=await import("@simonesiega/codex-limits"); const opencode=await import("@simonesiega/codex-limits/opencode"); const piUrl=import.meta.resolve("@simonesiega/codex-limits/pi"); const copilotUrl=import.meta.resolve("@simonesiega/codex-limits/copilot"); if (root.default !== opencode.default || root.tui !== opencode.tui || !piUrl.endsWith("/dist/pi.js") || !copilotUrl.endsWith("/dist/copilot.mjs")) process.exit(1);',
+      'const root=await import("@simonesiega/codex-limits"); const opencode=await import("@simonesiega/codex-limits/opencode"); const tui=await import("@simonesiega/codex-limits/tui"); const piUrl=import.meta.resolve("@simonesiega/codex-limits/pi"); const copilotUrl=import.meta.resolve("@simonesiega/codex-limits/copilot"); if (root.default !== opencode.default || root.tui !== opencode.tui || root.default !== tui.default || root.tui !== tui.tui || !piUrl.endsWith("/dist/pi.js") || !copilotUrl.endsWith("/dist/copilot.mjs")) process.exit(1);',
     ],
     packedRoot,
     process.env

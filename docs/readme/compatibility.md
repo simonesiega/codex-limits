@@ -16,7 +16,7 @@ This page describes the runtime, operating-system, Codex data, network, terminal
 
 Bun is used for dependency management, tests, development commands, and production builds. It is not required to run the published CLI. Runtime dependencies are bundled into `dist`, so the published package does not declare separate production dependencies.
 
-The root package module resolves to the agent-specific `dist/opencode.js` bundle for OpenCode plugin-loader compatibility. The explicit `@simonesiega/codex-limits/opencode` subpath resolves to the same module; both expose a default plugin and the named `tui` export. The host-only `@simonesiega/codex-limits/pi` subpath resolves to the separate `dist/pi.js` extension also declared in the package's `pi.extensions` manifest. The host-only `@simonesiega/codex-limits/copilot` subpath resolves to the executable `dist/copilot.mjs` extension, which the GitHub Copilot CLI installer also copies to its recognized user extension entry point.
+The root package module resolves to the agent-specific `dist/opencode.js` bundle for OpenCode plugin-loader compatibility. The explicit `@simonesiega/codex-limits/opencode` subpath and OpenCode's loader-reserved `@simonesiega/codex-limits/tui` subpath resolve to the same module; all three expose a default plugin and the named `tui` export. The host-only `@simonesiega/codex-limits/pi` subpath resolves to the separate `dist/pi.js` extension also declared in the package's `pi.extensions` manifest. The host-only `@simonesiega/codex-limits/copilot` subpath resolves to the executable `dist/copilot.mjs` extension, which the GitHub Copilot CLI installer also copies to its recognized user extension entry point.
 
 These agent-host exports are not a general-purpose JavaScript API and do not install an integration by themselves. The supported general interfaces are the CLI and its documented [JSON output](json-output.md). There is intentionally no `@simonesiega/codex-limits/core` export; internal core modules may change without a public API compatibility guarantee.
 
@@ -24,16 +24,16 @@ These agent-host exports are not a general-purpose JavaScript API and do not ins
 
 The following environments are covered by the repository's automated checks or latest recorded local validation. Other compatible environments may also work, but they are not tested for every release.
 
-| Area                             | Tested environments                                                                                                            |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Automated packaged CLI           | GitHub Actions on `ubuntu-latest` with Node.js 20 and 22, `windows-latest` with Node.js 20, and `macos-latest` with Node.js 22 |
-| Latest recorded local validation | Windows build `10.0.26200.8875` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-08-09)                                      |
-| Terminal rendering               | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix             |
-| OpenCode agent adapter           | Mocked current keymap and legacy command API shapes; no exact OpenCode host release is tested end-to-end                       |
-| pi agent adapter                 | Mocked command/UI APIs with real TUI components; package discovery validated in pi 0.81.1 print mode                           |
-| Copilot CLI adapter              | Mocked SDK command/timeline APIs and packed installation; typed against `@github/copilot-sdk` 1.0.8                            |
+| Area                             | Tested environments                                                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Automated packaged CLI           | GitHub Actions on `ubuntu-latest` with Node.js 20 and 22, `windows-latest` with Node.js 20, and `macos-latest` with Node.js 22              |
+| Latest recorded local validation | Windows build `10.0.26200.8875` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-08-09)                                                   |
+| Terminal rendering               | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix                          |
+| OpenCode agent adapter           | Mocked API coverage plus packed install, plugin loading, `/codex-limits` dispatch, and removal in real OpenCode 1.18.14 and latest hosts    |
+| pi agent adapter                 | Mocked UI coverage plus packed install, command discovery, dispatch, removal, and post-removal discovery in real pi 0.81.1 and latest hosts |
+| Copilot CLI adapter              | Mocked SDK coverage plus packed install, extension loading, `/codex-limits` dispatch, and removal in the latest real Copilot CLI host       |
 
-The supported runtime and operating-system ranges are broader than this test matrix. Automated checks sample each supported operating system but do not test every supported Node.js version on every platform.
+The supported runtime and operating-system ranges are broader than this test matrix. Automated checks sample each supported operating system but do not test every supported Node.js version on every platform. The real-agent matrix runs for normal repository checks and on a weekly schedule so moving `latest` host releases are exercised even when the project has no new commits.
 
 ## Operating systems
 
@@ -103,7 +103,7 @@ Use [`codex-limits --json`](json-output.md), `codex-limits coupons --json`, or `
 
 ## OpenCode compatibility
 
-The integration supports OpenCode hosts that expose either the current keymap layer registration API or the legacy command registration API. Compatibility is detected from the runtime API shape rather than an exact version list. Automated adapter tests cover both shapes; no named OpenCode release is currently tested end-to-end.
+The integration supports OpenCode hosts that expose either the current keymap layer registration API or the legacy command registration API. Compatibility is detected from the runtime API shape rather than an exact version list. Automated adapter tests cover both shapes, while the real-host compatibility matrix installs the packed package, dispatches `/codex-limits`, and verifies safe removal in OpenCode 1.18.14 and the latest npm release.
 
 See the [OpenCode integration guide](agents/opencode.md) for canonical installation, configuration, removal, and troubleshooting instructions.
 
@@ -111,7 +111,7 @@ See the [OpenCode integration guide](agents/opencode.md) for canonical installat
 
 The extension is developed against `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 0.81.x, which require Node.js 22.19 or newer. Those optional peers are supplied by the pi host and do not change the standalone CLI's Node.js 20 requirement.
 
-Local validation confirmed package discovery and command interception with pi 0.81.1 in print mode. Automated tests cover the interactive overlay with host mocks and real TUI components; the overlay is not terminal-tested against every pi release.
+Automated real-host checks install the packed package into pi 0.81.1 and the latest npm release, verify that the host discovers `/codex-limits` as an extension command, dispatch it through pi's RPC command path without creating a model-conversation message, uninstall it, and verify that a fresh pi host no longer discovers the command. Mocked tests continue to cover the interactive overlay with real TUI components; the overlay itself is not terminal-tested against every pi release.
 
 See the [pi integration guide](agents/pi.md) for canonical installation, configuration, removal, and troubleshooting instructions.
 
@@ -119,7 +119,7 @@ See the [pi integration guide](agents/pi.md) for canonical installation, configu
 
 The integration depends on Copilot CLI's experimental extension mechanism, which may change. npm installations of the current Copilot CLI require Node.js 22 or newer; other official installation methods package the host separately. The host must provide `@github/copilot-sdk/extension` to the extension process.
 
-The adapter is type-checked against `@github/copilot-sdk` 1.0.8. Automated tests cover registration, timeline output, safe failures, and packed installation, but no exact Copilot CLI release is currently tested end-to-end.
+The adapter is type-checked against `@github/copilot-sdk` 1.0.8. Automated tests cover registration, timeline output, and safe failures. The real-host compatibility matrix additionally installs the packed extension into the latest Copilot CLI npm release, dispatches `/codex-limits`, requires its local timeline summary to appear without model authentication, and verifies safe removal through packed diagnostics.
 
 See the [GitHub Copilot CLI integration guide](agents/copilot.md) for canonical installation, configuration, removal, and troubleshooting instructions.
 

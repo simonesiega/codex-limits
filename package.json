@@ -20,6 +20,10 @@
       "types": "./types/opencode.d.ts",
       "import": "./dist/opencode.js"
     },
+    "./tui": {
+      "types": "./types/opencode.d.ts",
+      "import": "./dist/opencode.js"
+    },
     "./pi": {
       "types": "./types/pi.d.ts",
       "import": "./dist/pi.js"
@@ -53,6 +57,7 @@
     "docs:check": "bun run docs:link && bun run docs:schema",
     "typecheck": "tsc --noEmit",
     "audit": "bun audit",
+    "agents:compat": "bun run scripts/check-agent-compatibility.ts",
     "test": "bun test",
     "package:validate": "bun run scripts/validate-package.ts",
     "check": "bun run format:check && bun run docs:check && bun run typecheck && bun test && bun run build && bun run package:validate",

@@ -247,6 +247,7 @@ The npm module exports are reserved for supported agent hosts:
 | ------------------------------------ | ----------------------------------------------------------------------------------------- |
 | `@simonesiega/codex-limits`          | OpenCode plugin entry point retained at the package root for plugin-loader compatibility. |
 | `@simonesiega/codex-limits/opencode` | Explicit alias for the same OpenCode plugin module.                                       |
+| `@simonesiega/codex-limits/tui`      | Loader-reserved alias for OpenCode TUI plugin discovery.                                  |
 | `@simonesiega/codex-limits/pi`       | Host-only entry point for the bundled pi extension.                                       |
 | `@simonesiega/codex-limits/copilot`  | Host-only entry point for the bundled GitHub Copilot CLI extension.                       |
 
@@ -305,18 +306,19 @@ bun run dev
 
 Useful development commands:
 
-| Command                | Description                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------- |
-| `bun run dev`          | Runs the CLI in development mode.                                               |
-| `bun run check`        | Runs formatting, documentation, types, tests, builds, and package smoke checks. |
-| `bun run docs:link`    | Checks local documentation links and heading anchors.                           |
-| `bun run docs:schema`  | Validates all JSON Schemas and their external and inline examples.              |
-| `bun run docs:check`   | Runs both documentation checks.                                                 |
-| `bun run audit`        | Checks the locked dependency graph for known vulnerabilities.                   |
-| `bun test`             | Runs the test suite.                                                            |
-| `bun run build`        | Builds the package.                                                             |
-| `bun run format`       | Formats the repository with Prettier.                                           |
-| `bun run format:check` | Checks formatting without changing files.                                       |
+| Command                 | Description                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| `bun run dev`           | Runs the CLI in development mode.                                               |
+| `bun run check`         | Runs formatting, documentation, types, tests, builds, and package smoke checks. |
+| `bun run docs:link`     | Checks local documentation links and heading anchors.                           |
+| `bun run docs:schema`   | Validates all JSON Schemas and their external and inline examples.              |
+| `bun run docs:check`    | Runs both documentation checks.                                                 |
+| `bun run audit`         | Checks the locked dependency graph for known vulnerabilities.                   |
+| `bun run agents:compat` | Runs one configured real-agent compatibility probe (used by CI).                |
+| `bun test`              | Runs the test suite.                                                            |
+| `bun run build`         | Builds the package.                                                             |
+| `bun run format`        | Formats the repository with Prettier.                                           |
+| `bun run format:check`  | Checks formatting without changing files.                                       |
 
 ## Security
 

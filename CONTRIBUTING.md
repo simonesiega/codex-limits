@@ -128,6 +128,8 @@ Build the package:
 bun run build
 ```
 
+The `Check` workflow also runs `bun run agents:compat` against packed artifacts in real OpenCode, pi, and GitHub Copilot CLI installations. These Linux-only probes intentionally live outside the normal local `bun run check` gate because they download and launch external host releases; see [Compatibility](docs/readme/compatibility.md#tested-environments) for the current version matrix.
+
 ## Code guidelines
 
 Keep changes small, readable, and easy to review.
