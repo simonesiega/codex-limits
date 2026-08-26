@@ -31,7 +31,7 @@ codex-limits agents --help
 codex-limits agents install --help
 ```
 
-Replace `<agent>` with an identifier from the [Agents](#agents) table. `--all` cannot be combined with agent names. Unknown or duplicate names and unknown options are rejected before any integration is installed.
+Replace `<agent>` with an identifier from the [Agents](#agents) table. `--all` cannot be combined with agent names. Unknown or duplicate names, unknown options, and extra positional arguments are rejected before any integration is installed. In a non-interactive terminal, provide at least one agent name or `--all`.
 
 The existing `codex-limits init`, `codex-limits init --<agent-name>`, and `codex-limits init --all` forms remain supported as compatibility syntax and use the same installation flow.
 
@@ -55,7 +55,9 @@ codex-limits agents uninstall --all
 codex-limits agents uninstall --help
 ```
 
-Named and `--all` forms work non-interactively. An absent integration reports `not installed` as a successful no-op. With multiple targets, each result is reported even when another adapter fails. Removal is conservative: each adapter changes only configuration it recognizes as Codex Limits-owned, refuses malformed or symbolic-link targets, and preserves unrelated plugins, packages, extension files, and settings. Restart affected agent terminals after removal.
+Named and `--all` forms work non-interactively; without either form, removal requires an interactive terminal. An empty interactive selection keeps every integration installed. As with installation, `--all` cannot be combined with names, and invalid names, options, or extra arguments are rejected before configuration changes begin.
+
+An absent integration reports `not installed` as a successful no-op. With multiple targets, each result is reported even when another integration fails. Removal is conservative: each integration changes only configuration it recognizes as Codex Limits-owned, refuses malformed or symbolic-link targets, and preserves unrelated plugins, packages, extension files, and settings. Restart affected agent terminals after removal.
 
 ## Agents
 
@@ -75,21 +77,7 @@ Agent adapters must reuse the shared core rather than independently reading Code
 
 ## Adding another agent
 
-Agent adapters live under `src/agents/<agent-name>` and use one consistent layout:
-
-```text
-src/agents/<agent-name>/
-├── format.ts       # Thin host-facing wrapper over shared presentation
-├── install.ts      # Bounded configuration install, uninstall, and inspection
-├── integration.ts  # Metadata plus lifecycle/inspection registration contract
-└── plugin.ts       # Host API adapter that loads the shared core
-```
-
-Register the exported descriptor once in `src/agents/index.ts`. Shared install and uninstall commands, generated compatibility help, and doctor diagnostics consume that registry automatically. Every registered agent must also use a matching `src/package/<agent-name>.ts` wrapper and expose `@simonesiega/codex-limits/<agent-name>` through the shared package-entry build and declaration flow. Put behavior used by multiple agents in `src/agents/shared` rather than duplicating it.
-
-New adapters should remain thin, reuse `src/package/core`, avoid sending the request or limit data to the LLM, and include installer, formatter, and host-behavior tests. Each supported integration should also have a dedicated guide under `docs/readme/agents/<agent-name>.md` and an entry in the [Agents](#agents) table.
-
-See [Contributing](../../CONTRIBUTING.md#adding-a-new-agent) for the complete contribution checklist.
+Agent integrations use thin host-specific adapters over the shared core and lifecycle infrastructure. Contributors should follow the complete [Adding a new agent](../../CONTRIBUTING.md#adding-a-new-agent) implementation checklist.
 
 ## Related documentation
 

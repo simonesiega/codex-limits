@@ -4,7 +4,7 @@
 
 The pi integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limit data to the LLM.
 
-## Overview
+## At a glance
 
 | Detail             | Value                              |
 | ------------------ | ---------------------------------- |
@@ -14,6 +14,10 @@ The pi integration adds a read-only `/codex-limits` extension command that loads
 | Install command    | `codex-limits agents install pi`   |
 | Uninstall command  | `codex-limits agents uninstall pi` |
 | Installation scope | Global for the current user        |
+
+## Requirements
+
+Install the published CLI and a compatible pi host. Current pi releases have their own Node.js and peer-dependency requirements; see [pi compatibility](../compatibility.md#pi-compatibility) for the canonical support details.
 
 ## Installation
 
@@ -59,7 +63,7 @@ pi install npm:@simonesiega/codex-limits
 
 Use either installation method rather than registering the package twice.
 
-## Using `/codex-limits`
+## Usage
 
 Restart pi or run `/reload`, then invoke:
 
@@ -67,7 +71,17 @@ Restart pi or run `/reload`, then invoke:
 /codex-limits
 ```
 
-The extension loads the shared core directly and opens a themed overlay containing:
+<p align="center">
+  <img
+    src="../../assets/agents/pi/pi_result.png"
+    alt="Codex Limits themed usage overlay running inside pi"
+    width="740"
+  />
+</p>
+
+This overlay is the expected result: Codex Limits appears inside pi and closes without adding a model-conversation message.
+
+The extension loads the shared core directly and displays:
 
 - remaining capacity and status for the weekly window;
 - the 5-hour window when supplied by Codex;
@@ -79,11 +93,7 @@ Press Enter, Escape, or Ctrl+C to close the overlay. While data loads, the exten
 
 The command is interactive-TUI-only. In pi RPC, print, and JSON modes, it performs no lookup and sends no message to the model.
 
-## Compatibility
-
-See [pi compatibility](../compatibility.md#pi-compatibility) for the canonical host version, Node.js, peer dependency, test coverage, operating-system, terminal, and network support requirements.
-
-## Re-running or removing the integration
+## Removal
 
 Running `codex-limits agents install pi` again is safe. It reports `already installed` when the matching local or npm package registration is already enabled.
 
@@ -118,7 +128,7 @@ Reinstall or rebuild `@simonesiega/codex-limits`, then run the installer again. 
 
 Run `codex-limits doctor` and `codex-limits status` outside pi. If data is also unavailable there, verify Codex authentication, local data discovery, and network access.
 
-## Data and privacy
+## Security and behavior notes
 
 See the [Security policy](../../../SECURITY.md#agent-integrations-and-installers) for the canonical agent, credential, local-data, installer, and output safety guarantees. Pi extensions execute with the current user's system permissions, so install only packages you trust.
 

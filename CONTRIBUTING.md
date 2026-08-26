@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/photos/logo/logo.png" alt="codex-limits logo" width="180" />
+  <img src="docs/assets/logo/logo.png" alt="codex-limits logo" width="180" />
 </p>
 
 <h1 align="center">
@@ -8,14 +8,6 @@
 
 <p align="center">
     Guidelines for contributing to <strong>codex-limits</strong>.
-</p>
-
-<p align="center">
-    <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="PRs welcome" />
-    <img src="https://img.shields.io/github/license/simonesiega/codex-limits" alt="License" />
-    <img src="https://img.shields.io/github/issues-pr/simonesiega/codex-limits" alt="Open pull requests" />
-    <img src="https://img.shields.io/github/issues/simonesiega/codex-limits" alt="Open issues" />
 </p>
 
 Read [`README.md`](README.md) first, follow the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) in every project interaction, then use the [documentation hub](docs/README.md) to find the canonical guide for the area you plan to change.
@@ -128,7 +120,14 @@ Build the package:
 bun run build
 ```
 
-The `Check` workflow also runs `bun run agents:compat` against packed artifacts in real OpenCode, pi, and GitHub Copilot CLI installations. These Linux-only probes intentionally live outside the normal local `bun run check` gate because they download and launch external host releases; see [Compatibility](docs/readme/compatibility.md#tested-environments) for the current version matrix.
+Format the repository or check formatting without changing files:
+
+```bash
+bun run format
+bun run format:check
+```
+
+The `Check` workflow also runs `bun run agents:compat` against packed artifacts in real OpenCode, pi, and GitHub Copilot CLI installations. These Linux-only probes intentionally live outside the normal local `bun run check` gate because they download and launch external host releases; see [Compatibility](docs/guides/compatibility.md#tested-environments) for the current version matrix.
 
 ## Code guidelines
 
@@ -152,7 +151,7 @@ Command handlers should let the router replace unexpected exceptions with their 
 
 ## Adding a new agent
 
-New agents should use the same small adapter shape as [`src/agents/opencode`](src/agents/opencode), [`src/agents/pi`](src/agents/pi), and [`src/agents/copilot`](src/agents/copilot): `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. Put reusable presentation and safe configuration behavior in `src/agents/shared`.
+New agents should use the same small adapter shape as [`src/agents/opencode`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/opencode), [`src/agents/pi`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/pi), and [`src/agents/copilot`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/copilot): `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. Put reusable presentation and safe configuration behavior in `src/agents/shared`.
 
 | Step | Action                                                                                                                              |
 | ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -161,8 +160,8 @@ New agents should use the same small adapter shape as [`src/agents/opencode`](sr
 | 3    | Keep `plugin.ts` focused on the target host API and load Codex data only through the shared package core.                           |
 | 4    | Register the integration descriptor once in `src/agents/index.ts`; shared lifecycle and doctor commands consume it automatically.   |
 | 5    | Add install, conservative uninstall, formatter, and host-behavior tests. Document manual validation when automation is impractical. |
-| 6    | Add `docs/readme/agents/<agent-name>.md`.                                                                                           |
-| 7    | Add the integration to [Agent Integrations](docs/readme/agent-integrations.md).                                                     |
+| 6    | Add `docs/guides/agents/<agent-name>.md`.                                                                                           |
+| 7    | Add the integration to [Agent Integrations](docs/guides/agent-integrations.md).                                                     |
 | 8    | Add `src/package/<agent-name>.ts`, its host-only `./<agent-name>` subpath, and the shared package-build metadata.                   |
 | 9    | Add or update screenshots when the visual output changes.                                                                           |
 | 10   | Run the documentation link and schema checks.                                                                                       |
@@ -171,16 +170,16 @@ The goal of every integration is the same: show Codex limit information quickly 
 
 ## Documentation changes
 
-Task-oriented guides live under [`docs/`](docs/README.md), and visual assets live under [`docs/photos/`](docs/photos/). Update the canonical guide whenever behavior, setup, compatibility, output, or safety guarantees change; avoid copying complete procedures into multiple files.
+Task-oriented guides live under [`docs/`](docs/README.md), and visual assets live under [`docs/assets/`](docs/assets/). Update the canonical guide whenever behavior, setup, compatibility, output, or safety guarantees change; avoid copying complete procedures into multiple files.
 
 Keep documentation changes consistent with these rules:
 
 - use relative links for files in this repository;
 - keep commands executable from their documented working directory;
 - keep heading anchors stable when another file links to them;
-- keep deep safety behavior in [`SECURITY.md`](SECURITY.md), support requirements in [Compatibility](docs/readme/compatibility.md), cross-surface diagnosis in [Troubleshooting](docs/readme/troubleshooting.md), and agent-specific setup, removal, and troubleshooting in the matching guide under [`docs/readme/agents`](docs/readme/agents);
+- keep deep safety behavior in [`SECURITY.md`](SECURITY.md), support requirements in [Compatibility](docs/guides/compatibility.md), cross-surface diagnosis in [Troubleshooting](docs/guides/troubleshooting.md), and agent-specific setup, removal, and troubleshooting in the matching guide under [`docs/guides/agents`](docs/guides/agents);
 - summarize and link to the canonical guide instead of copying its detailed procedures or guarantees;
-- synchronize every external and inline JSON example with its corresponding schema under `docs/schema`; `bun run docs:schema` enforces the linked examples in `docs/readme/json-output.md`;
+- synchronize every external and inline JSON example with its corresponding schema under `docs/schema`; `bun run docs:schema` enforces the linked examples in `docs/guides/json-output.md`;
 - use descriptive image alt text and sanitized screenshots;
 - never include tokens, account IDs, cookies, authorization headers, private paths, environment contents, or raw Codex files.
 
@@ -195,7 +194,7 @@ Documentation-only changes do not require unrelated runtime changes, but the com
 
 ## Pull request checklist
 
-Opening a Pull Request loads the repository's [Pull Request template](.github/pull_request_template.md). Complete its summary, related-issue, validation, and screenshot sections before requesting review.
+Opening a Pull Request loads the repository's [Pull Request template](https://github.com/simonesiega/codex-limits/blob/main/.github/pull_request_template.md). Complete its summary, related-issue, validation, and screenshot sections before requesting review.
 
 Then verify:
 

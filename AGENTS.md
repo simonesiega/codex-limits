@@ -34,7 +34,7 @@ src/package/commands  → CLI command layer. Owns the declarative registry, shar
 src/package/tui       → Ink terminal UI. Owns rendering only and consumes normalized display-ready data.
 src/agents            → Agent integration source. Owns supported agent adapters, lifecycle operations, and registration.
 tests                 → Behavior, output, safety, and integration tests.
-docs/photos           → README screenshots and visual documentation assets.
+docs/assets           → README screenshots and visual documentation assets.
 ```
 
 ### Runtime Model
@@ -62,13 +62,13 @@ user terminal → reset command → fresh coupon load → interactive confirmati
 - The **agents package** is an adapter layer for OpenCode, pi, and GitHub Copilot CLI. Each integration should use the shared descriptor contract for install, uninstall, and inspection, stay thin, reuse the shared core, and keep its host command read-only.
 - The **reset command** is the only remote-mutation surface. It must refresh coupon data, fail closed when selection cannot be verified, and require an explicit interactive `y` or `yes` before consumption.
 - The **tests folder** protects behavior, output stability, safety rules, and integration logic.
-- The **docs/photos folder** is only for visual assets used in documentation. Screenshots must never contain private tokens, account IDs, cookies, auth headers, or raw local files.
+- The **docs/assets folder** is only for visual assets used in documentation. Screenshots must never contain private tokens, account IDs, cookies, auth headers, or raw local files.
 
 ## Tech Stack
 
 ```text
 Published runtime:
-- Node.js, with supported versions defined in docs/readme/compatibility.md
+- Node.js, with supported versions defined in docs/guides/compatibility.md
 - Node-compatible package entry points
 - npm global install
 
@@ -101,14 +101,14 @@ CHANGELOG.md                                → Released and unreleased user-fac
 SECURITY.md                                 → Data-access, command-safety, and disclosure policy.
 AGENTS.md                                   → Repository instructions for coding agents.
 docs/README.md                              → Task-oriented documentation hub.
-docs/readme/json-output.md                  → Public JSON contracts and automation guidance.
-docs/readme/compatibility.md                → Runtime, platform, data, terminal, and network support.
-docs/readme/troubleshooting.md              → Cross-surface diagnosis and problem resolution.
-docs/readme/agent-integrations.md           → Shared agent integration behavior and development.
-docs/readme/agents/{opencode,pi,copilot}.md → Agent-specific setup, usage, removal, and troubleshooting.
+docs/guides/json-output.md                  → Public JSON contracts and automation guidance.
+docs/guides/compatibility.md                → Runtime, platform, data, terminal, and network support.
+docs/guides/troubleshooting.md              → Cross-surface diagnosis and problem resolution.
+docs/guides/agent-integrations.md           → Shared agent integration behavior and development.
+docs/guides/agents/{opencode,pi,copilot}.md → Agent-specific setup, usage, removal, and troubleshooting.
 docs/schema/*.schema.json                   → JSON Schemas for complete, coupon, and doctor output.
 docs/examples/*.example.json                → Sanitized JSON documents validated against the schemas.
-docs/photos                                 → Sanitized screenshots and project identity assets.
+docs/assets                                 → Sanitized screenshots and project identity assets.
 ```
 
 ### Rules
@@ -129,7 +129,7 @@ docs/photos                                 → Sanitized screenshots and projec
   - `bun run build`
 - Before editing a nested area, check whether that area contains its own `AGENTS.md`. If it exists, read and follow it in addition to this root file.
 - Read [`README.md`](README.md), [`CONTRIBUTING.md`](CONTRIBUTING.md), and [`CHANGELOG.md`](CHANGELOG.md) before making broad or release-relevant changes.
-- Keep deep safety behavior canonical in [`SECURITY.md`](SECURITY.md), support requirements canonical in [`docs/readme/compatibility.md`](docs/readme/compatibility.md), cross-surface diagnosis in [`docs/readme/troubleshooting.md`](docs/readme/troubleshooting.md), and agent-specific setup, removal, and troubleshooting in the matching guide under [`docs/readme/agents`](docs/readme/agents). Summarize and link instead of duplicating those details elsewhere.
+- Keep deep safety behavior canonical in [`SECURITY.md`](SECURITY.md), support requirements canonical in [`docs/guides/compatibility.md`](docs/guides/compatibility.md), cross-surface diagnosis in [`docs/guides/troubleshooting.md`](docs/guides/troubleshooting.md), and agent-specific setup, removal, and troubleshooting in the matching guide under [`docs/guides/agents`](docs/guides/agents). Summarize and link instead of duplicating those details elsewhere.
 
 ## Maintainability
 

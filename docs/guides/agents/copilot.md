@@ -4,7 +4,7 @@
 
 The GitHub Copilot CLI integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limit data to the LLM.
 
-## Overview
+## At a glance
 
 | Detail             | Value                                   |
 | ------------------ | --------------------------------------- |
@@ -15,6 +15,10 @@ The GitHub Copilot CLI integration adds a read-only `/codex-limits` extension co
 | Uninstall command  | `codex-limits agents uninstall copilot` |
 | Installation scope | Global for the current user             |
 | Host API           | Experimental Copilot CLI extensions     |
+
+## Requirements
+
+Install the published CLI and a compatible GitHub Copilot CLI host with extension support. See [GitHub Copilot CLI compatibility](../compatibility.md#github-copilot-cli-compatibility) for the canonical host, Node.js, SDK, operating-system, terminal, and network requirements.
 
 ## Installation
 
@@ -46,13 +50,23 @@ The installer creates the dedicated extension directory, updates older bundles m
 
 Installer identity checks, file-handling, size, symbolic-link, atomic-write, and path-redaction guarantees are canonical in the [Security policy](../../../SECURITY.md#agent-integrations-and-installers).
 
-## Using `/codex-limits`
+## Usage
 
 Start a new interactive Copilot CLI session, then invoke:
 
 ```text
 /codex-limits
 ```
+
+<p align="center">
+  <img
+    src="../../assets/agents/copilot/copilot_result.png"
+    alt="Codex Limits usage summary in the GitHub Copilot CLI session timeline"
+    width="740"
+  />
+</p>
+
+This timeline entry is the expected result: Codex Limits reports locally without creating a model prompt.
 
 > [!IMPORTANT]
 > Run the command only inside Copilot CLI's interactive interface. Do not use `copilot -p "/codex-limits"`; prompt mode can treat that text as an LLM prompt instead of dispatching the extension command.
@@ -67,11 +81,9 @@ The extension logs a compact limits summary directly to the Copilot CLI timeline
 
 The slash-command handler calls the shared local core directly. It does not call `session.send()`, create a user message, or ask the model to process the request. Loading and timeline failures are reduced to static safe messages instead of exposing raw filesystem, credential, or network details.
 
-## Compatibility
+Keep Copilot CLI current and consult the SDK's [extension documentation][copilot-extension-docs] for its evolving host contract.
 
-See [GitHub Copilot CLI compatibility](../compatibility.md#github-copilot-cli-compatibility) for the canonical experimental host, Node.js, SDK, test coverage, operating-system, terminal, and network support requirements. Keep Copilot CLI current and consult the SDK's [extension documentation][copilot-extension-docs] for its evolving host contract.
-
-## Re-running or removing the integration
+## Removal
 
 Running `codex-limits agents install copilot` again is safe. It reports `already installed` when the installed entry point matches the current package and replaces only a previously managed older bundle.
 
@@ -106,7 +118,7 @@ Reinstall or rebuild `@simonesiega/codex-limits`, then run the installer again. 
 
 Run `codex-limits doctor` and `codex-limits status` outside Copilot CLI. If data is also unavailable there, verify Codex authentication, local data discovery, and network access.
 
-## Data and privacy
+## Security and behavior notes
 
 See the [Security policy](../../../SECURITY.md#agent-integrations-and-installers) for the canonical agent, credential, local-data, installer, and output safety guarantees. Copilot CLI extensions execute as separate processes with the current user's system permissions, so install only extensions you trust.
 

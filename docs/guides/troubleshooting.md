@@ -2,14 +2,14 @@
 
 [← Documentation hub](../README.md) · [Project README](../../README.md)
 
-Use this guide when Codex data, live usage, reset-credit coupons, JSON output, the terminal dashboard, reset redemption, or an agent integration is unavailable.
+Use this guide when Codex data, live usage, reset credits, JSON output, the terminal dashboard, reset redemption, or an agent integration is unavailable.
 
 ## Contents
 
 - [Start with diagnostics](#start-with-diagnostics)
 - [No Codex data found](#no-codex-data-found)
 - [Usage information is unavailable](#usage-information-is-unavailable)
-- [Reset-credit coupons are unavailable](#reset-credit-coupons-are-unavailable)
+- [Reset credits are unavailable](#reset-credits-are-unavailable)
 - [Authentication overrides are incomplete](#authentication-overrides-are-incomplete)
 - [Permission errors](#permission-errors)
 - [The dashboard does not render correctly](#the-dashboard-does-not-render-correctly)
@@ -57,7 +57,7 @@ Current usage normally comes from the live Codex endpoint, with compatible local
 
 A missing 5-hour window is not necessarily an error. Codex may provide only a weekly usage window.
 
-## Reset-credit coupons are unavailable
+## Reset credits are unavailable
 
 Coupon information requires complete credentials and network access; it has no local-data fallback.
 
@@ -135,7 +135,7 @@ Do not remove unrelated plugins, packages, extensions, or configuration fields.
 Uninstallers intentionally fail closed on malformed, oversized, symbolic-link, unreadable, or unrecognized targets. They do not rewrite or delete the target merely because it occupies an expected path.
 
 1. Run `codex-limits doctor` to review the bounded installed status.
-2. Read the removal section for [OpenCode](agents/opencode.md#re-running-or-removing-the-integration), [pi](agents/pi.md#re-running-or-removing-the-integration), or [GitHub Copilot CLI](agents/copilot.md#re-running-or-removing-the-integration).
+2. Read the removal section for [OpenCode](agents/opencode.md#removal), [pi](agents/pi.md#removal), or [GitHub Copilot CLI](agents/copilot.md#removal).
 3. Correct malformed host configuration before retrying.
 4. For an unrecognized Copilot entry point, inspect the dedicated extension directory and remove it manually only if you can independently verify its ownership.
 

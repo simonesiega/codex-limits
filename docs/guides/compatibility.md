@@ -20,6 +20,23 @@ The root package module resolves to the agent-specific `dist/opencode.js` bundle
 
 These agent-host exports are not a general-purpose JavaScript API and do not install an integration by themselves. The supported general interfaces are the CLI and its documented [JSON output](json-output.md). There is intentionally no `@simonesiega/codex-limits/core` export; internal core modules may change without a public API compatibility guarantee.
 
+## Environment overrides
+
+Codex Limits discovers the required local data and credentials automatically for most users. These environment variables provide fallback or advanced configuration:
+
+| Variable                      | Purpose                                                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `CODEX_LIMITS_HOME`           | Overrides the local Codex data directory before all other candidates.                    |
+| `CODEX_HOME`                  | Uses Codex's native home override when `CODEX_LIMITS_HOME` is not set.                   |
+| `CODEX_LIMITS_ACCESS_TOKEN`   | Provides an access token for authenticated live usage and reset credit requests.         |
+| `CODEX_LIMITS_ACCOUNT_ID`     | Provides the account ID paired with `CODEX_LIMITS_ACCESS_TOKEN`.                         |
+| `CODEX_LIMITS_USAGE_ENDPOINT` | Overrides the live usage endpoint with HTTPS or loopback HTTP for advanced setups/tests. |
+| `CODEX_LIMITS_SKIP_INIT`      | Suppresses optional global-install setup guidance from the non-interactive postinstall.  |
+| `PI_CODING_AGENT_DIR`         | Overrides pi's global agent configuration directory for integration setup and checks.    |
+| `COPILOT_HOME`                | Overrides GitHub Copilot CLI's user configuration and extension directory.               |
+
+The credential overrides must be supplied together. Agent-specific directory behavior remains canonical in the [pi](agents/pi.md#configuration) and [GitHub Copilot CLI](agents/copilot.md#extension-file) guides.
+
 ## Tested environments
 
 The following environments are covered by the repository's automated checks or latest recorded local validation. Other compatible environments may also work, but they are not tested for every release.
@@ -74,11 +91,11 @@ Local state layouts can vary between Codex versions. The parser recognizes commo
 
 Live data uses these defaults:
 
-| Data                 | Endpoint                                                                | Offline behavior                    |
-| -------------------- | ----------------------------------------------------------------------- | ----------------------------------- |
-| Usage windows        | `https://chatgpt.com/backend-api/codex/usage`                           | Falls back to recognized local data |
-| Reset-credit coupons | `https://chatgpt.com/backend-api/wham/rate-limit-reset-credits`         | Reported as unavailable             |
-| Coupon redemption    | `https://chatgpt.com/backend-api/wham/rate-limit-reset-credits/consume` | Never attempted automatically       |
+| Data              | Endpoint                                                                | Offline behavior                    |
+| ----------------- | ----------------------------------------------------------------------- | ----------------------------------- |
+| Usage windows     | `https://chatgpt.com/backend-api/codex/usage`                           | Falls back to recognized local data |
+| Reset credits     | `https://chatgpt.com/backend-api/wham/rate-limit-reset-credits`         | Reported as unavailable             |
+| Credit redemption | `https://chatgpt.com/backend-api/wham/rate-limit-reset-credits/consume` | Never attempted automatically       |
 
 These endpoints are implementation details rather than a public API contract and may change when Codex changes its service behavior. A response containing only a recognized weekly window is treated as valid live usage; local discovery is used only when the live response contains no recognized usage window.
 

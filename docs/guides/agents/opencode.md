@@ -4,7 +4,7 @@
 
 The OpenCode integration adds a read-only `/codex-limits` command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limit data to the LLM.
 
-## Overview
+## At a glance
 
 | Detail             | Value                                    |
 | ------------------ | ---------------------------------------- |
@@ -14,6 +14,10 @@ The OpenCode integration adds a read-only `/codex-limits` command that loads the
 | Install command    | `codex-limits agents install opencode`   |
 | Uninstall command  | `codex-limits agents uninstall opencode` |
 | Installation scope | Global for the current user              |
+
+## Requirements
+
+Install the published CLI and use a compatible OpenCode host. See [OpenCode compatibility](../compatibility.md#opencode-compatibility) for the canonical host API, runtime, operating-system, terminal, and network requirements.
 
 ## Installation
 
@@ -47,7 +51,7 @@ Both files are updated because compatible OpenCode versions discover TUI plugins
 
 Installer file-handling, size, symbolic-link, atomic-write, and path-redaction guarantees are canonical in the [Security policy](../../../SECURITY.md#agent-integrations-and-installers).
 
-## Using `/codex-limits`
+## Usage
 
 Restart OpenCode after installation, then run:
 
@@ -57,13 +61,15 @@ Restart OpenCode after installation, then run:
 
 <p align="center">
   <img
-    src="../../photos/agents/opencode/opencode_result.png"
+    src="../../assets/agents/opencode/opencode_result.png"
     alt="Codex Limits modal running inside OpenCode"
     width="740"
   />
 </p>
 
-OpenCode opens a modal dialog, loads the shared core directly, and displays:
+This modal is the expected result: Codex Limits appears over the OpenCode session and closes without adding a conversation message.
+
+OpenCode loads the shared core directly and displays:
 
 - remaining capacity and status for the weekly window;
 - the 5-hour window when it is supplied by the usage service;
@@ -73,11 +79,7 @@ OpenCode opens a modal dialog, loads the shared core directly, and displays:
 
 Loading failures are reduced to a static safe error instead of exposing raw filesystem, credential, or network details.
 
-## Compatibility
-
-See [OpenCode compatibility](../compatibility.md#opencode-compatibility) for the canonical host API, test coverage, runtime, operating-system, terminal, and network support requirements.
-
-## Re-running or removing the integration
+## Removal
 
 Running `codex-limits agents install opencode` again is safe. It reports `already installed` when both configuration files already contain the package.
 
@@ -106,7 +108,7 @@ Correct the affected OpenCode configuration before running the installer again. 
 
 Run `codex-limits status` outside OpenCode. If data is also unavailable there, verify Codex authentication, local data discovery, and network access.
 
-## Data and privacy
+## Security and behavior notes
 
 See the [Security policy](../../../SECURITY.md#agent-integrations-and-installers) for the canonical agent, credential, local-data, installer, and output safety guarantees.
 

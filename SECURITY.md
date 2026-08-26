@@ -6,13 +6,6 @@
   Responsible disclosure guidelines for <strong>codex-limits</strong>.
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Security-private%20reporting-red" alt="Private security reporting" />
-  <img src="https://img.shields.io/badge/Local%20data-read--only-blue" alt="Read-only local data access" />
-  <img src="https://img.shields.io/badge/Supported-latest%20release%20%7C%20main-brightgreen" alt="Supported versions: latest release and main" />
-  <img src="https://img.shields.io/github/license/simonesiega/codex-limits" alt="License" />
-</p>
-
 ## Contents
 
 - [Supported versions](#supported-versions)
@@ -80,7 +73,7 @@ This section is the canonical reference for deep data-access, network, redaction
 
 ### Local data
 
-`codex-limits` keeps raw local Codex files out of public output and uses discovered credentials only for authenticated requests to recognized ChatGPT Codex endpoints. It sends a reset-credit consume request only after the user invokes and confirms `codex-limits reset`.
+`codex-limits` keeps raw local Codex files out of public output and uses discovered credentials only for authenticated requests to recognized ChatGPT Codex endpoints. It sends a reset credit redemption request only after the user invokes and confirms `codex-limits reset`.
 
 The CLI performs bounded, read-only inspection of recognized Codex home candidates. It reads small non-sensitive JSON state files, bounded `sessions/**/rollout-*.jsonl` logs, and `auth.json` only for credential resolution. Traversal depth, directory entries, file counts, file sizes, JSONL line sizes, and response sizes are limited; nested symbolic links are skipped, and resolved state files must remain inside the detected Codex home. Filesystem diagnostics are path-free, and fallback reset-duration text is accepted only in a compact normalized form. Raw local files, private paths, and credentials are never returned by the public CLI or JSON contracts.
 
@@ -110,7 +103,7 @@ The existing `codex-limits init` compatibility command and the preferred `codex-
 
 ## What to report
 
-Please report any issue that could expose private data, write local Codex data, or consume a reset coupon without the documented confirmation flow.
+Please report any issue that could expose private data, write local Codex data, or redeem a reset credit without the documented confirmation flow.
 
 Relevant examples include:
 
@@ -120,8 +113,8 @@ Relevant examples include:
 - raw local Codex files being printed, logged, snapshotted, or committed;
 - agent integrations exposing private Codex data inside the agent UI;
 - unexpected writes to local Codex data;
-- a reset coupon consumed without a positive interactive answer;
-- duplicate coupon consumption after one confirmed action;
+- a reset credit redeemed without a positive interactive answer;
+- duplicate reset credit redemption after one confirmed action;
 - unexpected network behavior related to usage, coupon discovery, or coupon redemption;
 - unsafe handling of `CODEX_LIMITS_HOME`, `CODEX_LIMITS_ACCESS_TOKEN`, `CODEX_LIMITS_ACCOUNT_ID`, `CODEX_LIMITS_USAGE_ENDPOINT`, `PI_CODING_AGENT_DIR`, or `COPILOT_HOME`.
 
@@ -152,8 +145,8 @@ The project should:
 ## Related documentation
 
 - [Documentation hub](docs/README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
-- [Compatibility](docs/readme/compatibility.md) — Supported runtimes, operating systems, Codex data, networks, terminals, and agent hosts.
-- [JSON output](docs/readme/json-output.md) — Public machine-readable fields and deliberately omitted sensitive data.
-- [Troubleshooting](docs/readme/troubleshooting.md) — Safe diagnosis for data, network, terminal, reset, and integration problems.
-- [Agent integrations](docs/readme/agent-integrations.md) — Supported-agent index, shared lifecycle modes, and adapter architecture.
+- [Compatibility](docs/guides/compatibility.md) — Supported runtimes, operating systems, Codex data, networks, terminals, and agent hosts.
+- [JSON output](docs/guides/json-output.md) — Public machine-readable fields and deliberately omitted sensitive data.
+- [Troubleshooting](docs/guides/troubleshooting.md) — Safe diagnosis for data, network, terminal, reset, and integration problems.
+- [Agent integrations](docs/guides/agent-integrations.md) — Supported-agent index, shared lifecycle modes, and adapter architecture.
 - [Contributing](CONTRIBUTING.md) — Development workflow, safety rules, and review expectations.

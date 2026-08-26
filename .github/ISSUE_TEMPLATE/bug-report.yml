@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a problem. Search [existing issues](https://github.com/simonesiega/codex-limits/issues) and review the [troubleshooting guide](https://github.com/simonesiega/codex-limits/blob/main/docs/readme/troubleshooting.md) before continuing.
+        Thanks for reporting a problem. Search [existing issues](https://github.com/simonesiega/codex-limits/issues) and review the [troubleshooting guide](https://github.com/simonesiega/codex-limits/blob/main/docs/guides/troubleshooting.md) before continuing.
 
         Do not include access tokens, account IDs, cookies, authorization headers, private paths, raw Codex files, or unredacted environment values. Report security vulnerabilities privately through the [security policy](https://github.com/simonesiega/codex-limits/blob/main/SECURITY.md#reporting-a-vulnerability).
 

@@ -5,7 +5,7 @@ import Ajv2020 from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 
 const root = resolve(import.meta.dir, "..");
-const jsonOutputPath = resolve(root, "docs", "readme", "json-output.md");
+const jsonOutputPath = resolve(root, "docs", "guides", "json-output.md");
 const documents = [
   {
     command: "codex-limits --json",

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/photos/logo/logo.png" alt="codex-limits logo" width="180" />
+  <img src="docs/assets/logo/logo.png" alt="codex-limits logo" width="180" />
 </p>
 
 <h1 align="center">
@@ -8,11 +8,6 @@
 
 <p align="center">
   Community standards for a respectful, inclusive, and constructive project.
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa" alt="Contributor Covenant version 2.1" />
-  <img src="https://img.shields.io/badge/Community-respectful-brightgreen" alt="Respectful community" />
 </p>
 
 ## Contents

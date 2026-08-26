@@ -10,6 +10,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Changed
 
+- Moved published documentation guides and visual assets into the clearer `docs/guides` and `docs/assets` directories.
+
 ### Fixed
 
 ### Removed
