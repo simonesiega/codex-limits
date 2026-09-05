@@ -11,6 +11,7 @@ All notable changes to codex-limits are documented in this file.
 ### Changed
 
 - Moved published documentation guides and visual assets into the clearer `docs/guides` and `docs/assets` directories.
+- Split the real-agent compatibility harness into focused host probes and shared process utilities to keep CI compatibility coverage maintainable.
 
 ### Fixed
 

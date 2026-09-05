@@ -50,7 +50,7 @@ The following environments are covered by the repository's automated checks or l
 | pi agent adapter                 | Mocked UI coverage plus packed install, command discovery, dispatch, removal, and post-removal discovery in real pi 0.81.1 and latest hosts |
 | Copilot CLI adapter              | Mocked SDK coverage plus packed install, extension loading, `/codex-limits` dispatch, and removal in the latest real Copilot CLI host       |
 
-The supported runtime and operating-system ranges are broader than this test matrix. Automated checks sample each supported operating system but do not test every supported Node.js version on every platform. The real-agent matrix runs for normal repository checks and on a weekly schedule so moving `latest` host releases are exercised even when the project has no new commits.
+The supported runtime and operating-system ranges are broader than this test matrix. Automated checks sample each supported operating system but do not test every supported Node.js version on every platform. The real-agent matrix runs on `ubuntu-latest` for normal repository checks and on a weekly schedule so moving `latest` host releases are exercised even when the project has no new commits.
 
 ## Operating systems
 

@@ -127,7 +127,20 @@ bun run format
 bun run format:check
 ```
 
-The `Check` workflow also runs `bun run agents:compat` against packed artifacts in real OpenCode, pi, and GitHub Copilot CLI installations. These Linux-only probes intentionally live outside the normal local `bun run check` gate because they download and launch external host releases; see [Compatibility](docs/guides/compatibility.md#tested-environments) for the current version matrix.
+The `Check` workflow also runs `bun run agents:compat` against packed artifacts in real OpenCode, pi, and GitHub Copilot CLI installations. These external-host probes run outside the normal local `bun run check` gate because they download and launch host releases. The workflow executes the complete matrix in isolated Linux jobs; see [Compatibility](docs/guides/compatibility.md#tested-environments) for the current versions.
+
+The compatibility entry point, [`scripts/check-agent-compatibility.ts`](scripts/check-agent-compatibility.ts), owns isolated package setup plus the shared install and uninstall lifecycle. It delegates host behavior to focused modules under [`scripts/agent-compatibility`](scripts/agent-compatibility): each `*-host.ts` file owns one host probe, `interactive-host.ts` owns shared pseudo-terminal dispatch, and `harness.ts` owns bounded subprocess lifecycle and diagnostics. Keep host-specific behavior in the matching probe instead of adding it to the entry point.
+
+The workflow supplies all required command options. For a deliberate local run, set `AGENT` to `opencode`, `pi`, or `copilot`, then set `HOST_ROOT` and `PACKAGE_TARBALL` to the isolated host installation and packed artifact:
+
+```bash
+bun run agents:compat \
+  --agent "$AGENT" \
+  --host-root "$HOST_ROOT" \
+  --package-tarball "$PACKAGE_TARBALL"
+```
+
+The host root must contain the selected npm host installation under `node_modules`, and the tarball must contain a built Codex Limits package. OpenCode and Copilot probes require the Linux `script` pseudo-terminal utility; the Copilot probe also requires `tmux`. The pi probe uses the host's RPC mode and does not require those terminal tools.
 
 ## Code guidelines
 
@@ -165,6 +178,8 @@ New agents should use the same small adapter shape as [`src/agents/opencode`](ht
 | 8    | Add `src/package/<agent-name>.ts`, its host-only `./<agent-name>` subpath, and the shared package-build metadata.                   |
 | 9    | Add or update screenshots when the visual output changes.                                                                           |
 | 10   | Run the documentation link and schema checks.                                                                                       |
+
+When real-host automation is practical, add a focused `scripts/agent-compatibility/*-host.ts` probe and matching workflow matrix entry. Otherwise, document the manual host validation performed.
 
 The goal of every integration is the same: show Codex limit information quickly and safely without sending the request or limit data to the LLM.
 
