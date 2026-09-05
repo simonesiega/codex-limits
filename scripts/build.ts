@@ -31,6 +31,10 @@ if (!cliBundle.success) {
   }
   throw new Error("CLI bundle failed.");
 }
+const cliMetafile = cliBundle.metafile;
+if (!cliMetafile) {
+  throw new Error("CLI bundle metadata is missing.");
+}
 
 interface AgentBundleDefinition {
   id: "opencode" | "pi" | "copilot";
@@ -57,7 +61,7 @@ const agentBundleDefinitions: readonly AgentBundleDefinition[] = [
   },
 ];
 
-const agentBundles = await Promise.all(
+const agentBundleInputPaths = await Promise.all(
   agentBundleDefinitions.map(async (definition) => {
     const bundle = await Bun.build({
       entrypoints: [join(root, "src", "package", `${definition.id}.ts`)],
@@ -80,14 +84,14 @@ const agentBundles = await Promise.all(
       }
       throw new Error(`${definition.displayName} extension bundle failed.`);
     }
-    return bundle;
+    if (!bundle.metafile) {
+      throw new Error(`${definition.displayName} extension bundle metadata is missing.`);
+    }
+    return Object.keys(bundle.metafile.inputs);
   })
 );
 
-await writeThirdPartyNotices([
-  ...Object.keys(cliBundle.metafile.inputs),
-  ...agentBundles.flatMap((bundle) => Object.keys(bundle.metafile.inputs)),
-]);
+await writeThirdPartyNotices([...Object.keys(cliMetafile.inputs), ...agentBundleInputPaths.flat()]);
 
 try {
   const declarationBuild = Bun.spawn(

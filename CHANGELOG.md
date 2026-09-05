@@ -15,6 +15,7 @@ All notable changes to codex-limits are documented in this file.
 ### Fixed
 
 - Fixed development type checks to use Node.js 20 definitions, matching the published CLI's minimum supported runtime.
+- Fixed type checking to cover every TypeScript build, documentation, package-validation, and compatibility script.
 
 ### Removed
 

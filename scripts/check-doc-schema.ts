@@ -1,6 +1,7 @@
 import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import {isDeepStrictEqual} from "node:util";
+import type {AnySchema} from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import addFormats from "ajv-formats";
 
@@ -30,7 +31,7 @@ try {
   const jsonOutputDocumentation = await readFile(jsonOutputPath, "utf8");
 
   for (const document of documents) {
-    const schema = await readJson(resolve(root, "docs", "schema", document.schema));
+    const schema = await readSchema(resolve(root, "docs", "schema", document.schema));
     const example = await readJson(resolve(root, "docs", "examples", document.example));
     const validate = validator.compile(schema);
 
@@ -52,6 +53,17 @@ try {
   const message = error instanceof Error ? error.message : "Unknown schema validation error.";
   console.error(`Documentation schema check failed: ${message}`);
   process.exitCode = 1;
+}
+
+async function readSchema(path: string): Promise<AnySchema> {
+  const schema = await readJson(path);
+  if (
+    typeof schema !== "boolean" &&
+    (typeof schema !== "object" || schema === null || Array.isArray(schema))
+  ) {
+    throw new Error(`${path} must contain a JSON Schema object or boolean.`);
+  }
+  return schema as AnySchema;
 }
 
 async function readJson(path: string): Promise<unknown> {
