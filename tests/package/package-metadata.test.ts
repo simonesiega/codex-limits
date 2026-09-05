@@ -105,7 +105,11 @@ test("package metadata includes runtime documentation and excludes bundled runti
   expect(packageJson.files).toContain("CODE_OF_CONDUCT.md");
   expect(packageJson.files).toContain("SECURITY.md");
   expect(packageJson.dependencies ?? {}).toEqual({});
-  expect(packageJson.overrides).toMatchObject({"fast-uri": "3.1.5", undici: "8.10.0"});
+  expect(packageJson.overrides).toMatchObject({
+    "fast-uri": "3.1.7",
+    toml: "4.3.0",
+    undici: "8.10.0",
+  });
   expect(packageJson.peerDependencies).toEqual({
     "@earendil-works/pi-coding-agent": "*",
     "@earendil-works/pi-tui": "*",

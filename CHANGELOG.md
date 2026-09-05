@@ -22,6 +22,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Security
 
+- Updated locked `fast-uri` and `toml` development dependencies to patched releases.
+
 ## [1.2.0] - 2026-08-09
 
 ### Added
