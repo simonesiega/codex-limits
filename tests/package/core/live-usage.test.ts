@@ -56,7 +56,7 @@ test("getLiveUsage fetches current usage with Codex credentials", async () => {
   expect(JSON.stringify(result)).not.toContain("fake-account-id");
 });
 
-test("getLiveUsage retries with native request when fetch is rejected", async () => {
+test("getLiveUsage retries with native request after a fetch HTTP error", async () => {
   await withLoopbackServer(
     (request, response) => {
       expect(request.headers.authorization).toBe("Bearer fake-access-token");
@@ -158,6 +158,31 @@ test("mapLiveUsagePayload recognizes direct named usage windows", () => {
   expect(result.status).toBe("available");
   expect(result.windows.fiveHour).toBeNull();
   expect(result.windows.weekly?.remainingPercent).toBe(79);
+});
+
+test("mapLiveUsagePayload recognizes arrays of duration-labeled windows", () => {
+  const result = mapLiveUsagePayload(
+    {
+      windows: [
+        {
+          used_percent: 20,
+          limit_window_seconds: 18_000,
+          reset_at: 1_767_229_200,
+        },
+        {
+          used_percent: 30,
+          limit_window_seconds: 604_800,
+          reset_at: 1_767_830_400,
+        },
+      ],
+    },
+    "https://example.test/usage",
+    new Date("2026-01-01T00:00:00.000Z")
+  );
+
+  expect(result.status).toBe("available");
+  expect(result.windows.fiveHour?.remainingPercent).toBe(80);
+  expect(result.windows.weekly?.remainingPercent).toBe(70);
 });
 
 test("mapLiveUsagePayload bounds traversal of unusually wide payloads", () => {

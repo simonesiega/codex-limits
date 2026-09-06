@@ -69,7 +69,7 @@ test("uninstallCopilotIntegration removes only a recognized managed entry", asyn
       configPaths: [extensionPath],
     });
     expect(await inspectCopilotIntegration({extensionPath})).toBe("not-installed");
-    await expect(lstat(dirname(extensionPath))).rejects.toThrow();
+    await expect(lstat(dirname(extensionPath))).rejects.toMatchObject({code: "ENOENT"});
     expect(await uninstallCopilotIntegration({extensionPath})).toEqual({
       changed: false,
       configPaths: [extensionPath],

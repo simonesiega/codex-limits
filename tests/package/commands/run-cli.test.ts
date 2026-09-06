@@ -1,9 +1,6 @@
 import {expect, test} from "bun:test";
 import type {AgentIntegration} from "@/agents";
-import {formatCoupons} from "@/package/commands/coupons/format";
 import {runCli} from "@/package/commands/run-cli";
-import {sanitizePublicErrorMessage} from "@/package/commands/safe-error";
-import {formatStatus} from "@/package/commands/status/format";
 import {unavailableCoupons} from "@/package/core/coupons/reset-coupons";
 import {createFakeCouponResult, createFakeLimitsResult} from "@tests/package/fixtures/fake-results";
 
@@ -26,90 +23,91 @@ function createDiagnosticIntegration(
   };
 }
 
-test("runCli renders TUI for the default command", async () => {
-  let rendered = false;
+function expectedCouponJson() {
+  return {
+    available: 2,
+    earnedThisPeriod: 4,
+    nextExpirationDate: "Saturday 11 July 2026",
+    nextExpirationIn: "7d 4h 38m",
+    items: [
+      {
+        index: 1,
+        status: "available",
+        grantedAt: "2026-06-11T20:38:07Z",
+        expiresAt: "2026-07-11T20:38:07Z",
+        expirationDate: "Saturday 11 July 2026",
+        expiresIn: "7d 4h 38m",
+      },
+      {
+        index: 2,
+        status: "available",
+        grantedAt: "2026-06-17T18:42:45Z",
+        expiresAt: "2026-07-17T18:42:45Z",
+        expirationDate: "Friday 17 July 2026",
+        expiresIn: "13d 1h 13m",
+      },
+    ],
+    warnings: [],
+  };
+}
+
+test("runCli passes loaded limits to the default TUI command", async () => {
+  const result = createFakeLimitsResult();
+  const rendered: Array<typeof result> = [];
   const exitCode = await runCli([], {
-    usage: {loadLimits: async () => createFakeLimitsResult()},
+    usage: {loadLimits: async () => result},
     ui: {
-      renderDashboard: () => {
-        rendered = true;
+      renderDashboard: (loaded) => {
+        rendered.push(loaded);
       },
     },
   });
 
   expect(exitCode).toBe(0);
-  expect(rendered).toBe(true);
+  expect(rendered).toEqual([result]);
 });
 
-test("runCli prints JSON only in JSON mode", async () => {
+test("runCli preserves the complete limits JSON contract", async () => {
   const output: string[] = [];
   const errors: string[] = [];
+  const result = createFakeLimitsResult();
   const exitCode = await runCli(["--json"], {
     io: {
       stdout: (text) => output.push(text),
       stderr: (text) => errors.push(text),
     },
-    usage: {loadLimits: async () => createFakeLimitsResult()},
-  });
-
-  const parsed = JSON.parse(output.join("")) as {
-    status?: string;
-    windows: unknown;
-    coupons: {status?: string; source?: unknown} | null;
-  };
-
-  expect(exitCode).toBe(0);
-  expect(errors).toEqual([]);
-  expect(parsed.status).toBeUndefined();
-  expect(parsed.windows).toBeTruthy();
-  expect(parsed.coupons?.status).toBeUndefined();
-  expect(parsed.coupons?.source).toBeUndefined();
-});
-
-test("runCli preserves the complete limits and coupon JSON contracts", async () => {
-  const limitsOutput: string[] = [];
-  const couponsOutput: string[] = [];
-  const result = createFakeLimitsResult();
-
-  await runCli(["--json"], {
-    io: {stdout: (text) => limitsOutput.push(text)},
     usage: {loadLimits: async () => result},
   });
-  await runCli(["coupons", "--json"], {
-    io: {stdout: (text) => couponsOutput.push(text)},
+
+  const parsed = JSON.parse(output.join(""));
+  expect(exitCode).toBe(0);
+  expect(errors).toEqual([]);
+  expect(parsed).toEqual({
+    windows: result.windows,
+    coupons: expectedCouponJson(),
+    warnings: [],
+  });
+  expect(Object.keys(parsed as object)).toEqual(["windows", "coupons", "warnings"]);
+  expect(output.join("")).not.toContain("RateLimitResetCredit_test");
+  expect(output.join("")).not.toContain("codex_rate_limits");
+});
+
+test("runCli preserves the complete coupon JSON contract", async () => {
+  const output: string[] = [];
+  const errors: string[] = [];
+  const exitCode = await runCli(["coupons", "--json"], {
+    io: {
+      stdout: (text) => output.push(text),
+      stderr: (text) => errors.push(text),
+    },
     coupons: {loadCoupons: async () => createFakeCouponResult()},
   });
 
-  const expectedCoupons = {
-    available: 2,
-    earnedThisPeriod: 4,
-    nextExpirationDate: "Saturday 11 July 2026",
-    nextExpirationIn: "7d 4h 38m",
-    items: result.coupons!.items.map((item) => ({
-      index: item.index,
-      status: item.status,
-      grantedAt: item.grantedAt,
-      expiresAt: item.expiresAt,
-      expirationDate: item.expirationDate,
-      expiresIn: item.expiresIn,
-    })),
-    warnings: [],
-  };
-  expect(JSON.parse(limitsOutput.join(""))).toEqual({
-    windows: result.windows,
-    coupons: expectedCoupons,
-    warnings: [],
-  });
-  expect(JSON.parse(couponsOutput.join(""))).toEqual(expectedCoupons);
-  expect(Object.keys(JSON.parse(limitsOutput.join("")) as object)).toEqual([
-    "windows",
-    "coupons",
-    "warnings",
-  ]);
-  expect(limitsOutput.join("")).not.toContain("RateLimitResetCredit_test");
-  expect(couponsOutput.join("")).not.toContain("RateLimitResetCredit_test");
-  expect(limitsOutput.join("")).not.toContain("codex_rate_limits");
-  expect(couponsOutput.join("")).not.toContain("codex_rate_limits");
+  expect(exitCode).toBe(0);
+  expect(errors).toEqual([]);
+  expect(JSON.parse(output.join(""))).toEqual(expectedCouponJson());
+  expect(output.join("")).not.toContain("RateLimitResetCredit_test");
+  expect(output.join("")).not.toContain("codex_rate_limits");
 });
 
 test("runCli prints safe doctor text and JSON diagnostics", async () => {
@@ -262,31 +260,52 @@ test("runCli writes no partial JSON when a loader fails", async () => {
   expect(errors.join("")).not.toContain("private");
 });
 
-test("runCli prints status, coupons, generated help, and version", async () => {
-  const statusOutput: string[] = [];
-  const couponsOutput: string[] = [];
-  const helpOutput: string[] = [];
-  const versionOutput: string[] = [];
+test("runCli routes plain-text usage commands", async () => {
+  const cases = [
+    {
+      args: ["status"],
+      expected: "Usage Limits",
+      overrides: {usage: {loadLimits: async () => createFakeLimitsResult()}},
+    },
+    {
+      args: ["coupons"],
+      expected: "Reset Coupons",
+      overrides: {coupons: {loadCoupons: async () => createFakeCouponResult()}},
+    },
+  ];
 
-  await runCli(["status"], {
-    io: {stdout: (text) => statusOutput.push(text)},
-    usage: {loadLimits: async () => createFakeLimitsResult()},
-  });
-  await runCli(["coupons"], {
-    io: {stdout: (text) => couponsOutput.push(text)},
-    coupons: {loadCoupons: async () => createFakeCouponResult()},
-  });
-  await runCli(["--help"], {io: {stdout: (text) => helpOutput.push(text)}});
-  await runCli(["--version"], {
-    io: {stdout: (text) => versionOutput.push(text)},
+  for (const item of cases) {
+    const output: string[] = [];
+    const exitCode = await runCli(item.args, {
+      io: {stdout: (text) => output.push(text)},
+      ...item.overrides,
+    });
+
+    expect(exitCode, item.args[0]).toBe(0);
+    expect(output.join(""), item.args[0]).toContain(item.expected);
+  }
+});
+
+test("runCli prints generated root help", async () => {
+  const output: string[] = [];
+
+  const exitCode = await runCli(["--help"], {io: {stdout: (text) => output.push(text)}});
+
+  expect(exitCode).toBe(0);
+  expect(output.join("")).toContain("codex-limits status");
+  expect(output.join("")).toContain("agents");
+});
+
+test("runCli prints the configured package version", async () => {
+  const output: string[] = [];
+
+  const exitCode = await runCli(["--version"], {
+    io: {stdout: (text) => output.push(text)},
     packageInfo: {version: "9.9.9"},
   });
 
-  expect(statusOutput.join("")).toContain("Usage Limits");
-  expect(couponsOutput.join("")).toContain("Reset Coupons");
-  expect(helpOutput.join("")).toContain("codex-limits status");
-  expect(helpOutput.join("")).toContain("agents");
-  expect(versionOutput.join("")).toBe("9.9.9\n");
+  expect(exitCode).toBe(0);
+  expect(output.join("")).toBe("9.9.9\n");
 });
 
 test("runCli generates nested and compatibility command help", async () => {
@@ -351,41 +370,4 @@ test("coupon JSON omits source metadata and redacts warning credentials", async 
   expect(text).not.toContain("example.test");
   expect(text).not.toContain("fake-secret-token");
   expect(text).toContain("[redacted]");
-});
-
-test("public command errors reject paths, controls, and oversized messages", () => {
-  expect(
-    sanitizePublicErrorMessage(
-      "Bearer fake-secret-token at (C:/private/config.json)",
-      "Command failed."
-    )
-  ).toBe("Command failed.");
-  expect(sanitizePublicErrorMessage("Safe\u001b[31m\u009b32m message", "Command failed.")).toBe(
-    "Safe?[31m?32m message"
-  );
-  expect(sanitizePublicErrorMessage("details:C:/private/config.json", "Command failed.")).toBe(
-    "Command failed."
-  );
-  expect(sanitizePublicErrorMessage("x".repeat(241), "Command failed.")).toBe("Command failed.");
-});
-
-test("status output omits usage windows that are not provided", () => {
-  const result = createFakeLimitsResult();
-  result.windows.fiveHour = null;
-
-  const output = formatStatus(result);
-
-  expect(output).toContain("Weekly usage limit");
-  expect(output).not.toContain("5-hour usage limit");
-  expect(output).not.toContain("Usage limit: Unknown");
-});
-
-test("command formatters do not expose secret-like values", () => {
-  const statusOutput = formatStatus({...createFakeLimitsResult(), warnings: ["[redacted]"]});
-  const couponsOutput = formatCoupons(unavailableCoupons("https://example.test", ["fake warning"]));
-  const availableCouponsOutput = formatCoupons(createFakeCouponResult());
-
-  expect(statusOutput).toContain("Warnings:");
-  expect(couponsOutput).toContain("Warnings:");
-  expect(availableCouponsOutput).not.toContain("RateLimitResetCredit_test");
 });

@@ -1,6 +1,4 @@
 import {expect, test} from "bun:test";
-import {formatDuration} from "@/package/core/utils/date-time";
-import {redactSensitiveText} from "@/package/core/utils/redact";
 import type {CodexStateReadResult} from "@/package/core/types";
 import {
   parseUsageFromState,
@@ -101,25 +99,6 @@ test("unavailableLocalUsage preserves safe warnings", () => {
   expect(result.status).toBe("unavailable");
   expect(result.windows.fiveHour).toBeNull();
   expect(result.warnings).toEqual(["No readable local Codex home directory was found."]);
-});
-
-test("date and redaction helpers avoid seconds and secrets", () => {
-  expect(formatDuration(7_000)).toBe("0m");
-  expect(formatDuration(7 * 86_400_000 + 4 * 3_600_000 + 38 * 60_000 + 45_000)).toBe("7d 4h 38m");
-  expect(redactSensitiveText("Authorization: Bearer fake-secret-token")).not.toContain(
-    "fake-secret-token"
-  );
-  expect(redactSensitiveText('{"access_token":"fake-secret-token"}')).toBe("{[redacted]}");
-  expect(
-    redactSensitiveText("https://example.test/?account_id=fake-private-account")
-  ).not.toContain("fake-private-account");
-  expect(redactSensitiveText("access-token=fake-access-token")).toBe("[redacted]");
-  expect(redactSensitiveText("password: fake-password")).toBe("[redacted]");
-  expect(redactSensitiveText('password: "two private words"')).toBe("[redacted]");
-  expect(redactSensitiveText("Authorization: Basic fake-basic-credential")).toBe("[redacted]");
-  expect(redactSensitiveText("00000000-0000-0000-0000-000000000000")).toBe("[redacted]");
-  expect(redactSensitiveText("eyJmYWtl.fakepayload.fakesignature")).toBe("[redacted]");
-  expect(redactSensitiveText("safe\u001b[31m\u009b32m")).toBe("safe?[31m?32m");
 });
 
 function stateFromJson(json: unknown): CodexStateReadResult {

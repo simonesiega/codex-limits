@@ -10,6 +10,64 @@ function parse(args: readonly string[]): CliParseResult {
   return parseCliArguments(registry, args);
 }
 
+function createConfigurableRegistry(): CommandRegistry {
+  const configurable: CommandDefinition = {
+    id: "config.set",
+    path: ["config", "set"],
+    aliases: [["cfg", "set"]],
+    description: "Set a test value",
+    usage: ["codex-limits config set <name> --file <path>"],
+    options: [
+      {
+        key: "file",
+        long: "--file",
+        short: "-f",
+        description: "Input file",
+        kind: "value",
+        valueName: "path",
+      },
+      {
+        key: "tag",
+        long: "--tag",
+        description: "Tag",
+        kind: "value",
+        valueName: "name",
+        repeatable: true,
+      },
+      {
+        key: "force",
+        long: "--force",
+        description: "Force",
+        kind: "boolean",
+        conflicts: ["safe"],
+      },
+      {
+        key: "safe",
+        long: "--safe",
+        description: "Safe",
+        kind: "boolean",
+        conflicts: ["force"],
+      },
+    ],
+    positionals: [{name: "name", description: "Setting name", required: true}],
+    safety: "local-write",
+    safetyNote: "Test only.",
+    failureMessage: "Test failed.",
+    async execute() {
+      return 0;
+    },
+  };
+
+  return {
+    ...registry,
+    groups: [
+      ...registry.groups,
+      {id: "config", path: ["config"], aliases: [["cfg"]], description: "Configure values"},
+    ],
+    commands: [...registry.commands, configurable],
+  };
+}
+
 test("parser accepts root, nested, compatibility, and order-independent options", () => {
   const cases: Array<{
     args: string[];
@@ -194,63 +252,8 @@ test("parser rejects malformed combinations with structured sanitized errors", (
   }
 });
 
-test("parser supports required values, repeatable options, aliases, conflicts, and --", () => {
-  const configurable: CommandDefinition = {
-    id: "config.set",
-    path: ["config", "set"],
-    aliases: [["cfg", "set"]],
-    description: "Set a test value",
-    usage: ["codex-limits config set <name> --file <path>"],
-    options: [
-      {
-        key: "file",
-        long: "--file",
-        short: "-f",
-        description: "Input file",
-        kind: "value",
-        valueName: "path",
-      },
-      {
-        key: "tag",
-        long: "--tag",
-        description: "Tag",
-        kind: "value",
-        valueName: "name",
-        repeatable: true,
-      },
-      {
-        key: "force",
-        long: "--force",
-        description: "Force",
-        kind: "boolean",
-        conflicts: ["safe"],
-      },
-      {
-        key: "safe",
-        long: "--safe",
-        description: "Safe",
-        kind: "boolean",
-        conflicts: ["force"],
-      },
-    ],
-    positionals: [{name: "name", description: "Setting name", required: true}],
-    safety: "local-write",
-    safetyNote: "Test only.",
-    failureMessage: "Test failed.",
-    async execute() {
-      return 0;
-    },
-  };
-  const customRegistry: CommandRegistry = {
-    ...registry,
-    groups: [
-      ...registry.groups,
-      {id: "config", path: ["config"], aliases: [["cfg"]], description: "Configure values"},
-    ],
-    commands: [...registry.commands, configurable],
-  };
-
-  const parsed = parseCliArguments(customRegistry, [
+test("parser resolves command aliases and repeatable value options", () => {
+  const parsed = parseCliArguments(createConfigurableRegistry(), [
     "--file",
     "settings.json",
     "cfg",
@@ -260,41 +263,55 @@ test("parser supports required values, repeatable options, aliases, conflicts, a
     "--tag",
     "two",
   ]);
+
   expect(parsed.kind).toBe("command");
   if (parsed.kind === "command") {
     expect(parsed.command.id).toBe("config.set");
     expect(parsed.values.positionals).toEqual(["theme"]);
-    expect(parsed.values.options).toEqual({
-      file: "settings.json",
-      tag: ["one", "two"],
-    });
+    expect(parsed.values.options).toEqual({file: "settings.json", tag: ["one", "two"]});
   }
+});
 
-  const missingValue = parseCliArguments(customRegistry, ["config", "set", "name", "--file"]);
-  expect(missingValue.kind).toBe("error");
-  if (missingValue.kind === "error") {
-    expect(missingValue.error.code).toBe("missing-option-value");
-    expect(missingValue.subject?.id).toBe("config.set");
+test("parser reports a missing value against the selected command", () => {
+  const result = parseCliArguments(createConfigurableRegistry(), [
+    "config",
+    "set",
+    "name",
+    "--file",
+  ]);
+
+  expect(result.kind).toBe("error");
+  if (result.kind === "error") {
+    expect(result.error.code).toBe("missing-option-value");
+    expect(result.subject?.id).toBe("config.set");
   }
+});
 
-  const conflict = parseCliArguments(customRegistry, [
+test("parser enforces declared option conflicts", () => {
+  const result = parseCliArguments(createConfigurableRegistry(), [
     "config",
     "set",
     "name",
     "--safe",
     "--force",
   ]);
-  expect(conflict.kind).toBe("error");
-  if (conflict.kind === "error") {
-    expect(conflict.error.code).toBe("conflicting-options");
-  }
 
-  const positionalOption = parseCliArguments(customRegistry, ["config", "set", "--", "--name"]);
-  expect(positionalOption.kind).toBe("command");
-  if (positionalOption.kind === "command") {
-    expect(positionalOption.values.positionals).toEqual(["--name"]);
+  expect(result.kind).toBe("error");
+  if (result.kind === "error") {
+    expect(result.error.code).toBe("conflicting-options");
   }
+});
 
+test("parser treats values after -- as positionals", () => {
+  const result = parseCliArguments(createConfigurableRegistry(), ["config", "set", "--", "--name"]);
+
+  expect(result.kind).toBe("command");
+  if (result.kind === "command") {
+    expect(result.values.positionals).toEqual(["--name"]);
+  }
+});
+
+test("parser falls back to positionals declared by the default command", () => {
   const defaultCommand = registry.commands.find((command) => command.path.length === 0)!;
   const defaultWithPositional: CommandRegistry = {
     ...registry,
@@ -308,10 +325,12 @@ test("parser supports required values, repeatable options, aliases, conflicts, a
         : command
     ),
   };
-  const rootPositional = parseCliArguments(defaultWithPositional, ["report.txt"]);
-  expect(rootPositional.kind).toBe("command");
-  if (rootPositional.kind === "command") {
-    expect(rootPositional.command.id).toBe("dashboard");
-    expect(rootPositional.values.positionals).toEqual(["report.txt"]);
+
+  const result = parseCliArguments(defaultWithPositional, ["report.txt"]);
+
+  expect(result.kind).toBe("command");
+  if (result.kind === "command") {
+    expect(result.command.id).toBe("dashboard");
+    expect(result.values.positionals).toEqual(["report.txt"]);
   }
 });

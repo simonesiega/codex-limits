@@ -8,6 +8,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added built-in Bun coverage reporting with baseline-derived per-file regression floors enforced by local validation and CI.
+
 ### Changed
 
 - Moved published documentation guides and visual assets into the clearer `docs/guides` and `docs/assets` directories.

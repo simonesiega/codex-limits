@@ -1,6 +1,6 @@
 import {expect, test} from "bun:test";
 import {type Component, visibleWidth} from "@earendil-works/pi-tui";
-import plugin, {createPiPlugin} from "@/agents/pi/plugin";
+import {createPiPlugin} from "@/agents/pi/plugin";
 import {createFakeLimitsResult} from "@tests/package/fixtures/fake-results";
 
 interface RegisteredCommand {
@@ -80,7 +80,6 @@ test("pi plugin registers /codex-limits and loads the shared core without an LLM
     },
   } as never);
 
-  expect(typeof plugin).toBe("function");
   expect(registered.commandName).toBe("codex-limits");
   expect(registered.command.description).toContain("Codex limits");
   expect(statuses).toEqual(["Loading Codex limits...", undefined]);

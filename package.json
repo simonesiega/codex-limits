@@ -59,8 +59,9 @@
     "audit": "bun audit",
     "agents:compat": "bun run scripts/check-agent-compatibility.ts",
     "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "package:validate": "bun run scripts/validate-package.ts",
-    "check": "bun run format:check && bun run docs:check && bun run typecheck && bun test && bun run build && bun run package:validate",
+    "check": "bun run format:check && bun run docs:check && bun run typecheck && bun run test:coverage && bun run build && bun run package:validate",
     "prepack": "bun run build",
     "postinstall": "node ./scripts/postinstall.cjs"
   },

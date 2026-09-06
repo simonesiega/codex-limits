@@ -15,7 +15,7 @@
   <a href="https://www.npmjs.com/package/@simonesiega/codex-limits"><img src="https://img.shields.io/npm/dt/@simonesiega/codex-limits?label=total%20downloads" alt="Total npm downloads" /></a>
   <a href="https://github.com/simonesiega/codex-limits/actions/workflows/check.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/simonesiega/codex-limits/check.yml?branch=main&amp;label=tests" alt="Automated test status" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/simonesiega/codex-limits" alt="License" /></a>
-  <a href="https://github.com/simonesiega/codex-limits/stargazers"><img src="https://img.shields.io/github/stars/simonesiega/codex-limits" alt="GitHub stars" /></a>
+  <a href="CONTRIBUTING.md#local-development"><img src="https://img.shields.io/badge/coverage-97.75%25-brightgreen" alt="Test coverage: 97.75% lines" /></a>
 </p>
 
 <p align="center">

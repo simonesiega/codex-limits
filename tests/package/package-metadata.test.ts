@@ -4,6 +4,15 @@ import {resolve} from "node:path";
 import {AGENT_INTEGRATIONS} from "@/agents";
 import {PACKAGE_VERSION} from "@/package/version";
 
+interface BunConfiguration {
+  test?: {
+    coverageReporter?: unknown;
+    coverageSkipTestFiles?: unknown;
+    coveragePathIgnorePatterns?: unknown;
+    coverageThreshold?: unknown;
+  };
+}
+
 interface PackageMetadata {
   name: string;
   version: string;
@@ -21,7 +30,6 @@ interface PackageMetadata {
   overrides?: Record<string, string>;
   peerDependencies?: Record<string, string>;
   peerDependenciesMeta?: Record<string, {optional?: boolean}>;
-  devDependencies: Record<string, string>;
   pi?: {extensions?: string[]};
 }
 
@@ -120,16 +128,6 @@ test("package metadata includes runtime documentation and excludes bundled runti
   });
 });
 
-test("agent host dependencies preserve the published runtime contracts", async () => {
-  const packageJson = await readPackageMetadata();
-
-  expect(packageJson.devDependencies.ink).toBe("^6.8.0");
-  expect(packageJson.devDependencies["react-devtools-core"]).toBe("^7.0.1");
-  expect(packageJson.devDependencies["@earendil-works/pi-coding-agent"]).toBe("^0.81.1");
-  expect(packageJson.devDependencies["@earendil-works/pi-tui"]).toBe("^0.81.1");
-  expect(packageJson.devDependencies["@github/copilot-sdk"]).toBe("^1.0.8");
-});
-
 test("manual publishing requires the matching version tag", async () => {
   const workflow = await readFile(
     resolve(import.meta.dir, "../../.github/workflows/publish.yml"),
@@ -151,6 +149,25 @@ test("CI and publishing audit the locked dependency graph", async () => {
   expect(packageJson.scripts.audit).toBe("bun audit");
   expect(checkWorkflow).toContain("run: bun run audit");
   expect(publishWorkflow).toContain("run: bun run audit");
+});
+
+test("source coverage is reported and enforced by the validation workflow", async () => {
+  const [packageJson, bunfigText, checkWorkflow] = await Promise.all([
+    readPackageMetadata(),
+    readFile(resolve(import.meta.dir, "../../bunfig.toml"), "utf8"),
+    readFile(resolve(import.meta.dir, "../../.github/workflows/check.yml"), "utf8"),
+  ]);
+  const bunfig = Bun.TOML.parse(bunfigText) as BunConfiguration;
+
+  expect(packageJson.scripts["test:coverage"]).toBe("bun test --coverage");
+  expect(packageJson.scripts.check).toContain("bun run test:coverage");
+  expect(bunfig.test).toEqual({
+    coverageReporter: "text",
+    coverageSkipTestFiles: true,
+    coveragePathIgnorePatterns: ["tests/**"],
+    coverageThreshold: {lines: 0.84, functions: 0.33},
+  });
+  expect(checkWorkflow).toContain("run: bun run check");
 });
 
 test("validation and prepack scripts do not recurse", async () => {

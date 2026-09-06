@@ -4,7 +4,7 @@ import {
   LIVE_RESET_COUPONS_CONSUME_ENDPOINT,
 } from "@/package/core/coupons/reset-coupons";
 import {selectResetCoupon} from "@/package/core/coupons/selection";
-import type {AuthenticatedJsonRequest, FetchLike} from "@/package/core/types";
+import type {AuthenticatedJsonRequest, CouponResult, FetchLike} from "@/package/core/types";
 import {createFakeCouponResult} from "@tests/package/fixtures/fake-results";
 
 const ENV = {
@@ -93,7 +93,24 @@ test("consumeResetCoupon normalizes every safe service outcome", async () => {
   }
 });
 
-test("consumeResetCoupon never sends invalid IDs or requests without credentials", async () => {
+test("consumeResetCoupon ignores malformed reset-window counters", async () => {
+  for (const windowsReset of [-1, 1.5, Number.MAX_SAFE_INTEGER + 1, "2"]) {
+    const result = await consumeResetCoupon("coupon-1", {
+      env: ENV,
+      redeemRequestId: REDEEM_REQUEST_ID,
+      transport: async () => ({
+        ok: true,
+        status: 200,
+        transport: "fetch",
+        payload: {code: "reset", windows_reset: windowsReset},
+      }),
+    });
+
+    expect(result, String(windowsReset)).toEqual({outcome: "reset", windowsReset: null});
+  }
+});
+
+test("consumeResetCoupon rejects unverifiable requests before transport", async () => {
   let requests = 0;
   const transport = async () => {
     requests += 1;
@@ -104,92 +121,205 @@ test("consumeResetCoupon never sends invalid IDs or requests without credentials
       payload: {code: "reset"},
     };
   };
-
-  expect(
-    await consumeResetCoupon("invalid id", {
+  const cases = [
+    {
+      name: "invalid coupon ID",
+      couponId: "invalid id",
       env: ENV,
       redeemRequestId: REDEEM_REQUEST_ID,
-      transport,
-    })
-  ).toEqual({outcome: "unconfirmed", windowsReset: null});
-  expect(
-    await consumeResetCoupon("coupon-1", {
+    },
+    {
+      name: "invalid idempotency key",
+      couponId: "coupon-1",
+      env: ENV,
+      redeemRequestId: "not-a-uuid",
+    },
+    {
+      name: "missing credentials",
+      couponId: "coupon-1",
       env: {},
-      homeDirectory: "Z:/missing-codex-home",
       redeemRequestId: REDEEM_REQUEST_ID,
+      homeDirectory: "Z:/missing-codex-home",
+    },
+  ];
+
+  for (const item of cases) {
+    const result = await consumeResetCoupon(item.couponId, {
+      env: item.env,
+      ...(item.homeDirectory ? {homeDirectory: item.homeDirectory} : {}),
+      redeemRequestId: item.redeemRequestId,
       transport,
-    })
-  ).toEqual({outcome: "unconfirmed", windowsReset: null});
+    });
+
+    expect(result, item.name).toEqual({outcome: "unconfirmed", windowsReset: null});
+  }
   expect(requests).toBe(0);
 });
 
-test("selectResetCoupon matches display indexes and the earliest available expiration", () => {
+test("consumeResetCoupon returns unconfirmed when the service result cannot be verified", async () => {
+  const cases = [
+    {
+      name: "transport failure",
+      transport: async () => ({
+        ok: false as const,
+        code: "network-error" as const,
+        status: null,
+      }),
+    },
+    {
+      name: "transport exception",
+      transport: async () => {
+        throw new Error("private transport detail");
+      },
+    },
+    {
+      name: "malformed payload",
+      transport: async () => ({
+        ok: true as const,
+        status: 200,
+        transport: "fetch" as const,
+        payload: null,
+      }),
+    },
+  ];
+
+  for (const item of cases) {
+    const result = await consumeResetCoupon("coupon-1", {
+      env: ENV,
+      redeemRequestId: REDEEM_REQUEST_ID,
+      transport: item.transport,
+    });
+
+    expect(result, item.name).toEqual({outcome: "unconfirmed", windowsReset: null});
+  }
+});
+
+test("selectResetCoupon selects an available coupon by display index", () => {
   const coupons = createFakeCouponResult();
 
-  expect(selectResetCoupon(coupons, {kind: "soonest"})).toEqual({
-    kind: "selected",
-    coupon: coupons.items[0]!,
-  });
   expect(selectResetCoupon(coupons, {kind: "index", couponIndex: 2})).toEqual({
     kind: "selected",
     coupon: coupons.items[1]!,
   });
-  expect(selectResetCoupon(coupons, {kind: "index", couponIndex: 3})).toEqual({
-    kind: "not-found",
-  });
+});
 
-  const unidentifiedSoonest = createFakeCouponResult();
-  unidentifiedSoonest.items[0]!.id = null;
-  expect(selectResetCoupon(unidentifiedSoonest, {kind: "soonest"})).toEqual({
-    kind: "details-unavailable",
-  });
+test("selectResetCoupon classifies unsafe indexed selections", () => {
+  const cases: Array<{
+    name: string;
+    couponIndex: number;
+    configure: (coupons: CouponResult) => void;
+    expectedKind: "details-unavailable" | "not-available" | "not-found";
+  }> = [
+    {
+      name: "missing index",
+      couponIndex: 3,
+      configure: () => undefined,
+      expectedKind: "not-found",
+    },
+    {
+      name: "redeemed coupon",
+      couponIndex: 1,
+      configure: (coupons) => {
+        coupons.items[0]!.status = "redeemed";
+      },
+      expectedKind: "not-available",
+    },
+    {
+      name: "missing coupon ID",
+      couponIndex: 1,
+      configure: (coupons) => {
+        coupons.items[0]!.id = null;
+      },
+      expectedKind: "details-unavailable",
+    },
+    {
+      name: "unsupported reset type",
+      couponIndex: 1,
+      configure: (coupons) => {
+        coupons.items[0]!.resetType = "future_reset_type";
+      },
+      expectedKind: "details-unavailable",
+    },
+  ];
 
-  const undatedSoonest = createFakeCouponResult();
-  undatedSoonest.items[0]!.expiresAt = null;
-  expect(selectResetCoupon(undatedSoonest, {kind: "soonest"})).toEqual({
-    kind: "details-unavailable",
-  });
+  for (const item of cases) {
+    const coupons = createFakeCouponResult();
+    item.configure(coupons);
 
-  const inconsistentCount = createFakeCouponResult();
-  inconsistentCount.items[0]!.status = "redeemed";
-  expect(selectResetCoupon(inconsistentCount, {kind: "soonest"})).toEqual({
-    kind: "details-unavailable",
-  });
+    expect(
+      selectResetCoupon(coupons, {kind: "index", couponIndex: item.couponIndex}).kind,
+      item.name
+    ).toBe(item.expectedKind);
+  }
+});
 
-  const partialList = createFakeCouponResult();
-  partialList.status = "partial";
-  expect(selectResetCoupon(partialList, {kind: "soonest"})).toEqual({
-    kind: "details-unavailable",
-  });
+test("selectResetCoupon chooses the earliest verified expiration", () => {
+  const coupons = createFakeCouponResult();
+  coupons.items = [coupons.items[1]!, coupons.items[0]!];
 
-  const unsupportedType = createFakeCouponResult();
-  unsupportedType.items[0]!.resetType = "future_reset_type";
-  expect(selectResetCoupon(unsupportedType, {kind: "index", couponIndex: 1})).toEqual({
-    kind: "details-unavailable",
-  });
-  expect(selectResetCoupon(unsupportedType, {kind: "soonest"})).toEqual({
-    kind: "details-unavailable",
-  });
-
-  coupons.items[0]!.status = "redeemed";
-  expect(selectResetCoupon(coupons, {kind: "index", couponIndex: 1})).toEqual({
-    kind: "not-available",
-  });
-
-  coupons.items[1]!.id = null;
-  coupons.items[1]!.status = "available";
-  coupons.available = 1;
-  expect(selectResetCoupon(coupons, {kind: "index", couponIndex: 2})).toEqual({
-    kind: "details-unavailable",
-  });
   expect(selectResetCoupon(coupons, {kind: "soonest"})).toEqual({
-    kind: "details-unavailable",
+    kind: "selected",
+    coupon: coupons.items[1]!,
   });
+});
 
-  coupons.items = [];
-  coupons.available = null;
-  coupons.status = "partial";
-  expect(selectResetCoupon(coupons, {kind: "soonest"})).toEqual({
+test("selectResetCoupon fails closed when the soonest coupon cannot be verified", () => {
+  const cases: Array<{name: string; configure: (coupons: CouponResult) => void}> = [
+    {
+      name: "partial response",
+      configure: (coupons) => {
+        coupons.status = "partial";
+      },
+    },
+    {
+      name: "inconsistent available count",
+      configure: (coupons) => {
+        coupons.available = 1;
+      },
+    },
+    {
+      name: "missing coupon ID",
+      configure: (coupons) => {
+        coupons.items[0]!.id = null;
+      },
+    },
+    {
+      name: "missing expiration",
+      configure: (coupons) => {
+        coupons.items[0]!.expiresAt = null;
+      },
+    },
+    {
+      name: "unsupported reset type",
+      configure: (coupons) => {
+        coupons.items[0]!.resetType = "future_reset_type";
+      },
+    },
+  ];
+
+  for (const item of cases) {
+    const coupons = createFakeCouponResult();
+    item.configure(coupons);
+
+    expect(selectResetCoupon(coupons, {kind: "soonest"}), item.name).toEqual({
+      kind: "details-unavailable",
+    });
+  }
+});
+
+test("selectResetCoupon distinguishes no coupons from missing coupon details", () => {
+  const noneAvailable = createFakeCouponResult();
+  noneAvailable.available = 0;
+  noneAvailable.items = [];
+
+  const missingDetails = createFakeCouponResult();
+  missingDetails.available = 1;
+  missingDetails.items = [];
+
+  expect(selectResetCoupon(noneAvailable, {kind: "soonest"})).toEqual({
+    kind: "none-available",
+  });
+  expect(selectResetCoupon(missingDetails, {kind: "soonest"})).toEqual({
     kind: "details-unavailable",
   });
 });

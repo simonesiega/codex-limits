@@ -83,7 +83,7 @@ Run the CLI locally:
 bun run dev
 ```
 
-Run the full validation pipeline (format verification, documentation checks, types, tests, production builds, and packed-artifact smoke checks):
+Run the full validation pipeline (format verification, documentation checks, types, coverage-enforced tests, production builds, and packed-artifact smoke checks):
 
 ```bash
 bun run check
@@ -113,6 +113,16 @@ Run tests only:
 ```bash
 bun test
 ```
+
+Run tests with source coverage reporting and the enforced regression floors:
+
+```bash
+bun run test:coverage
+```
+
+Coverage excludes test files and test support code under `tests`. The reviewed Bun 1.3.14 baseline measures 97.75% aggregate line coverage and 97.88% aggregate function coverage; the minimum loaded-source-file results are 84.17% for lines and 33.33% for functions. Because Bun applies configured thresholds per file, the validation floors round those per-file baselines down to 84% for lines and 33% for functions. `bun run check` uses the same coverage command and fails when a loaded source file drops below either floor.
+
+Treat coverage as a regression signal rather than a target. Tests should protect observable behavior, safety boundaries, or supported integration contracts; do not add assertions solely to execute uncovered lines.
 
 Build the package:
 

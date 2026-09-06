@@ -1,9 +1,6 @@
 import {expect, test} from "bun:test";
 import type {JoinSessionConfig} from "@github/copilot-sdk/extension";
-import startCopilotExtension, {
-  COPILOT_EXTENSION_MARKER,
-  startCopilotExtension as startExtension,
-} from "@/agents/copilot/plugin";
+import {startCopilotExtension} from "@/agents/copilot/plugin";
 import {createFakeLimitsResult} from "@tests/package/fixtures/fake-results";
 
 type RegisteredCommand = NonNullable<JoinSessionConfig["commands"]>[number];
@@ -32,7 +29,7 @@ async function register(
     settings?: {level?: string; ephemeral?: boolean};
   }> = [];
 
-  await startExtension({
+  await startCopilotExtension({
     getLimits: options.getLimits ?? (async () => createFakeLimitsResult()),
     joinSession: async (configuration) => {
       command = configuration.commands[0];
@@ -66,8 +63,6 @@ test("Copilot extension registers /codex-limits and logs shared limits without a
 
   await registered.command.handler(COMMAND_CONTEXT);
 
-  expect(startCopilotExtension).toBe(startExtension);
-  expect(COPILOT_EXTENSION_MARKER).toBe("codex-limits-copilot-extension-v1");
   expect(registered.command.name).toBe("codex-limits");
   expect(registered.command.description).toContain("Codex limits");
   expect(registered.logs).toHaveLength(1);

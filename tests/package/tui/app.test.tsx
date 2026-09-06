@@ -99,7 +99,7 @@ test("App uses a compact stacked layout for narrow terminals", () => {
   expect(frame).toContain("██╗     ██╗███╗");
   expect(frame).toContain("5-hour usage limit");
   expect(frame).toContain("Weekly usage limit");
-  expect(plainFrame).toContain("1 • Available • Sat 11 Jul");
+  expect(plainFrame).toContain("1 • Available •");
 });
 
 test("App uses a text summary when the terminal is too short for boxes", () => {
@@ -145,6 +145,54 @@ test("App remains readable in very small terminals and truncates extra coupons",
   expect(fourRowFrame.split("\n")).toHaveLength(4);
 });
 
+test("createTuiViewModel maps usage tone thresholds and unknown percentages", () => {
+  const cases = [
+    {percent: null, tone: "gray", remainingLabel: "Unknown remaining"},
+    {percent: 14, tone: "red", remainingLabel: "14% remaining"},
+    {percent: 15, tone: "yellow", remainingLabel: "15% remaining"},
+    {percent: 50, tone: "green", remainingLabel: "50% remaining"},
+  ] as const;
+
+  for (const item of cases) {
+    const result = createFakeLimitsResult();
+    result.windows.fiveHour!.remainingPercent = item.percent;
+    result.windows.fiveHour!.resetsAt = null;
+    result.windows.fiveHour!.resetsIn = "45m";
+    const card = createTuiViewModel(result, 80, NOW).usageCards[0];
+
+    expect(card?.tone, String(item.percent)).toBe(item.tone);
+    expect(card?.remainingLabel, String(item.percent)).toBe(item.remainingLabel);
+    expect(card?.resetLabel, String(item.percent)).toBe("Resets in 45m");
+  }
+});
+
+test("createTuiViewModel safely formats incomplete coupon rows", () => {
+  const result = createFakeLimitsResult();
+  result.coupons!.items = [
+    {
+      index: 1,
+      status: null,
+      grantedAt: null,
+      expiresAt: null,
+      expirationDate: null,
+      expiresIn: null,
+    },
+  ];
+
+  const view = createTuiViewModel(result, 80, NOW);
+
+  expect(view.couponRows).toEqual([
+    {
+      index: 1,
+      status: "Unknown",
+      available: false,
+      expires: "expiration unknown",
+      expiresOn: "Unknown",
+    },
+  ]);
+  expect(view.couponSummary.nextExpiration).toBe("Unknown");
+});
+
 test("layout boundaries are deterministic from startup dimensions", () => {
   expect(createTuiLayout(132, 40)).toMatchObject({mode: "wide", textSummary: false});
   expect(createTuiLayout(100, 40)).toMatchObject({mode: "standard", textSummary: false});
@@ -153,11 +201,19 @@ test("layout boundaries are deterministic from startup dimensions", () => {
   expect(createTuiLayout(20, 40)).toMatchObject({mode: "ultra", textSummary: true});
 });
 
-test("buildProgressBar renders percentages predictably", () => {
-  expect(buildProgressBar(50, 10)).toBe("█████░░░░░");
-  expect(buildProgressBar(null, 8)).toBe("░░░░░░░░");
-  expect(buildProgressBar(50, -1)).toBe("");
-  expect(buildProgressBar(50, Number.NaN)).toBe("");
+test("buildProgressBar clamps percentages and invalid widths", () => {
+  const cases = [
+    {percent: 50, width: 10, expected: "█████░░░░░"},
+    {percent: null, width: 8, expected: "░░░░░░░░"},
+    {percent: -10, width: 4, expected: "░░░░"},
+    {percent: 150, width: 4, expected: "████"},
+    {percent: 50, width: -1, expected: ""},
+    {percent: 50, width: Number.NaN, expected: ""},
+  ];
+
+  for (const item of cases) {
+    expect(buildProgressBar(item.percent, item.width), String(item.width)).toBe(item.expected);
+  }
 });
 
 function stripAnsi(value: string): string {

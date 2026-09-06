@@ -64,10 +64,95 @@ test("authenticatedJsonGet returns bounded fetch JSON without exposing headers",
   expect(JSON.stringify(result)).not.toContain("fake-account-id");
 });
 
+test("authenticatedJsonGet parses bounded streamed fetch JSON", async () => {
+  const chunks = [new TextEncoder().encode('{"value":'), new TextEncoder().encode("42}")];
+  let readIndex = 0;
+  const result = await authenticatedJsonGet(
+    request(async () => ({
+      ok: true,
+      status: 200,
+      body: {
+        getReader: () => ({
+          read: async () => {
+            const chunk = chunks[readIndex];
+            if (!chunk) {
+              return {done: true};
+            }
+            readIndex += 1;
+            return {done: false, value: chunk};
+          },
+        }),
+      },
+    }))
+  );
+
+  expect(result).toEqual({ok: true, status: 200, payload: {value: 42}, transport: "fetch"});
+  expect(readIndex).toBe(2);
+});
+
 test("authenticatedJsonGet rejects a fetch response without a readable bounded body", async () => {
   const result = await authenticatedJsonGet(request(async () => ({ok: true, status: 200})));
 
   expect(result).toEqual({ok: false, code: "invalid-json", status: null});
+});
+
+test("authenticatedJsonGet cancels a streamed fetch body that exceeds its byte limit", async () => {
+  const chunks = [new TextEncoder().encode('{"value":"'), new TextEncoder().encode("too-large")];
+  let readIndex = 0;
+  let cancellations = 0;
+  const result = await authenticatedJsonGet(
+    request(
+      async () => ({
+        ok: true,
+        status: 200,
+        body: {
+          getReader: () => ({
+            read: async () => {
+              const chunk = chunks[readIndex];
+              if (!chunk) {
+                return {done: true};
+              }
+              readIndex += 1;
+              return {done: false, value: chunk};
+            },
+            cancel: async () => {
+              cancellations += 1;
+            },
+          }),
+        },
+      }),
+      {maxResponseBytes: 12}
+    )
+  );
+
+  expect(result).toEqual({ok: false, code: "response-too-large", status: null});
+  expect(cancellations).toBe(1);
+});
+
+test("authenticatedJsonGet cancels non-successful fetch bodies without reading them", async () => {
+  let reads = 0;
+  let cancellations = 0;
+  const result = await authenticatedJsonGet(
+    request(async () => ({
+      ok: false,
+      status: 429,
+      body: {
+        getReader: () => ({
+          read: async () => {
+            reads += 1;
+            return {done: true};
+          },
+          cancel: async () => {
+            cancellations += 1;
+          },
+        }),
+      },
+    }))
+  );
+
+  expect(result).toEqual({ok: false, code: "http-error", status: 429});
+  expect(reads).toBe(0);
+  expect(cancellations).toBe(1);
 });
 
 test("authenticatedJsonGet classifies HTTP, malformed, oversized, timeout, and abort failures", async () => {
@@ -273,6 +358,28 @@ test("authenticatedJsonGet closes native HTTP error bodies without draining them
       expect(result).toEqual({ok: false, code: "http-error", status: 503});
       await responseClosed;
       expect(chunksSent).toBeLessThan(totalChunks);
+    }
+  );
+});
+
+test("authenticatedJsonGet bounds streamed native response bodies", async () => {
+  await withLoopbackServer(
+    (_request, response) => {
+      response.setHeader("content-type", "application/json");
+      response.write('{"value":"');
+      response.end(`${"x".repeat(64)}"}`);
+    },
+    async (origin) => {
+      const result = await authenticatedJsonGet(
+        request(
+          async () => {
+            throw new Error("fetch failed");
+          },
+          {endpoint: `${origin}/usage`, maxResponseBytes: 16, timeoutMs: 1_000}
+        )
+      );
+
+      expect(result).toEqual({ok: false, code: "response-too-large", status: null});
     }
   );
 });

@@ -43,7 +43,7 @@ jobs:
       - name: Audit dependencies
         run: bun run audit
 
-      - name: Run project checks
+      - name: Run project checks and enforce coverage
         run: bun run check
 
       - name: Archive validated build

@@ -1,5 +1,5 @@
 import {expect, test} from "bun:test";
-import {mkdir, symlink, utimes, writeFile} from "node:fs/promises";
+import {mkdir, symlink, truncate, utimes, writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {readCodexSessions} from "@/package/core/codex/session-reader";
 import {readCodexState} from "@/package/core/codex/state-reader";
@@ -35,6 +35,42 @@ test("readCodexState bounds malformed and oversized JSON files", async () => {
       "Skipped a local Codex state file because it is too large to inspect safely."
     );
     expect(state.warnings.join("\n")).not.toContain(home);
+  });
+});
+
+test("readCodexState parses at most 25 discovered files", async () => {
+  await withTempDirectory("codex-limits-state-file-limit-", async (home) => {
+    await Promise.all(
+      Array.from({length: 27}, (_, index) =>
+        writeFile(join(home, `limits-${String(index).padStart(2, "0")}.json`), "{}", "utf8")
+      )
+    );
+
+    const state = await readCodexState(home);
+
+    expect(state.files).toHaveLength(25);
+    expect(state.files.map((file) => file.relativePath)).toEqual(
+      Array.from({length: 25}, (_, index) => `limits-${String(index).padStart(2, "0")}.json`)
+    );
+    expect(state.warnings).toContain("Skipped 2 extra files to keep inspection small.");
+  });
+});
+
+test("readCodexState does not inspect JSON below its traversal-depth limit", async () => {
+  await withTempDirectory("codex-limits-state-depth-limit-", async (home) => {
+    const acceptedDirectory = join(home, "nested", "one");
+    const rejectedDirectory = join(acceptedDirectory, "two");
+    await mkdir(rejectedDirectory, {recursive: true});
+    await Promise.all([
+      writeFile(join(acceptedDirectory, "accepted.json"), "{}", "utf8"),
+      writeFile(join(rejectedDirectory, "rejected.json"), "{}", "utf8"),
+    ]);
+
+    const state = await readCodexState(home);
+
+    expect(state.files.map((file) => file.relativePath)).toEqual([
+      join("nested", "one", "accepted.json"),
+    ]);
   });
 });
 
@@ -235,7 +271,27 @@ test("readCodexSessions skips an oversized JSONL line without losing later snaps
   });
 });
 
-test("readCodexSessions sorts all rollout files before parsing", async () => {
+test("readCodexSessions rejects files above its inspection-size limit", async () => {
+  await withTempDirectory("codex-limits-session-file-limit-", async (home) => {
+    const sessionDir = join(home, "sessions");
+    const sessionPath = join(sessionDir, "rollout-oversized.jsonl");
+    await mkdir(sessionDir, {recursive: true});
+    await writeFile(sessionPath, "{}", "utf8");
+    await truncate(sessionPath, 25_000_001);
+
+    const sessions = await readCodexSessions(home);
+
+    expect(sessions.files).toEqual([
+      expect.objectContaining({path: sessionPath, hasSnapshot: false, error: "too-large"}),
+    ]);
+    expect(sessions.latestSnapshot).toBeNull();
+    expect(sessions.warnings).toContain(
+      "Skipped a local Codex session file because it is too large to inspect safely."
+    );
+  });
+});
+
+test("readCodexSessions sorts candidates before applying its 20-file parse limit", async () => {
   await withTempDirectory("codex-limits-many-sessions-", async (home) => {
     const sessionDir = join(home, "sessions", "2026", "07", "05");
     await mkdir(sessionDir, {recursive: true});
@@ -275,7 +331,9 @@ test("readCodexSessions sorts all rollout files before parsing", async () => {
 
     const sessions = await readCodexSessions(home);
     const usage = parseUsageFromSessions(sessions, new Date("2026-01-01T00:00:00.000Z"));
+    expect(sessions.files).toHaveLength(20);
     expect(sessions.latestSnapshot?.sessionFile).toBe(newestPath);
+    expect(sessions.warnings).toContain("Skipped 41 older session files to keep inspection small.");
     expect(usage.windows.fiveHour?.remainingPercent).toBe(92);
     expect(usage.windows.weekly?.remainingPercent).toBe(91);
   });

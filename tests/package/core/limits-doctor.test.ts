@@ -120,6 +120,7 @@ test("getCodexLimits starts independent live requests concurrently", async () =>
     },
   });
 
+  // Fail boundedly if a regression serializes the requests and leaves the condition unresolved.
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const startResult = await Promise.race([
     bothStarted.then(() => "started" as const),

@@ -214,6 +214,81 @@ test("/codex-limits loads shared core data directly without an LLM prompt", asyn
   expect(messages[1]).toContain("Reset credits");
 });
 
+test("/codex-limits keeps the newest result when requests finish out of order", async () => {
+  let command: {run?: () => Promise<void>} | undefined;
+  const messages: string[] = [];
+  const firstResult = createFakeLimitsResult();
+  const secondResult = createFakeLimitsResult();
+  secondResult.windows.fiveHour!.remainingPercent = 55;
+  secondResult.windows.fiveHour!.usedPercent = 45;
+  let resolveFirst: (result: typeof firstResult) => void = () => undefined;
+  let resolveSecond: (result: typeof secondResult) => void = () => undefined;
+  let markFirstStarted: () => void = () => undefined;
+  let markSecondStarted: () => void = () => undefined;
+  const firstStarted = new Promise<void>((resolve) => {
+    markFirstStarted = resolve;
+  });
+  const secondStarted = new Promise<void>((resolve) => {
+    markSecondStarted = resolve;
+  });
+  const firstPending = new Promise<typeof firstResult>((resolve) => {
+    resolveFirst = resolve;
+  });
+  const secondPending = new Promise<typeof secondResult>((resolve) => {
+    resolveSecond = resolve;
+  });
+  let loads = 0;
+  const localPlugin = createOpencodePlugin({
+    getLimits: () => {
+      loads += 1;
+      if (loads === 1) {
+        markFirstStarted();
+        return firstPending;
+      }
+      markSecondStarted();
+      return secondPending;
+    },
+    nextFrame: async () => undefined,
+  });
+  const api = {
+    keymap: {
+      registerLayer: (layer: {commands: Array<typeof command>}) => {
+        command = layer.commands[0];
+        return () => undefined;
+      },
+    },
+    lifecycle: {onDispose: keepPluginActive},
+    ui: {
+      DialogAlert: ({message}: {message: string}) => ({message}),
+      dialog: {
+        clear: () => undefined,
+        setSize: () => undefined,
+        replace: (render: () => {message: string}) => messages.push(render().message),
+      },
+      toast: () => undefined,
+    },
+  };
+
+  await initialize(localPlugin, api);
+  const runCommand = command?.run;
+  if (!runCommand) {
+    throw new Error("OpenCode command was not registered.");
+  }
+  const firstRun = runCommand();
+  await firstStarted;
+  const secondRun = runCommand();
+  await secondStarted;
+  resolveSecond(secondResult);
+  await secondRun;
+  resolveFirst(firstResult);
+  await firstRun;
+
+  const renderedResults = messages.filter((message) => message !== "Loading Codex limits...");
+  expect(renderedResults).toHaveLength(1);
+  expect(renderedResults[0]).toContain("55% remaining");
+  expect(renderedResults[0]).not.toContain("93% remaining");
+});
+
 test("/codex-limits presents a safe static error", async () => {
   let command: {onSelect?: () => Promise<void>} | undefined;
   const messages: string[] = [];

@@ -1,13 +1,16 @@
 import {expect, test} from "bun:test";
 import {runCli} from "@/package/commands/run-cli";
 import type {Prompt} from "@/package/commands/runtime";
-import type {ResetCouponResult} from "@/package/core/types";
+import type {CouponResult, ResetCouponResult} from "@/package/core/types";
 import {createFakeCouponResult} from "@tests/package/fixtures/fake-results";
 
 interface ResetRunOptions {
   args: string[];
   answer?: string;
+  closeFailure?: boolean;
+  coupons?: CouponResult;
   interactive?: boolean;
+  promptFailure?: "answer" | "creation";
   result?: ResetCouponResult;
 }
 
@@ -21,11 +24,17 @@ async function runReset(options: ResetRunOptions) {
   const prompt = Object.assign(
     async (question: string) => {
       questions.push(question);
+      if (options.promptFailure === "answer") {
+        throw new Error("Bearer fake-secret-token at C:/private/auth.json");
+      }
       return options.answer ?? "y";
     },
     {
       close: () => {
         closed = true;
+        if (options.closeFailure) {
+          throw new Error("private prompt close failure");
+        }
       },
     }
   ) satisfies Prompt;
@@ -35,12 +44,17 @@ async function runReset(options: ResetRunOptions) {
       stdout: (text) => output.push(text),
       stderr: (text) => errors.push(text),
       interactive: options.interactive ?? true,
-      createPrompt: () => prompt,
+      createPrompt: () => {
+        if (options.promptFailure === "creation") {
+          throw new Error("Bearer fake-secret-token at C:/private/auth.json");
+        }
+        return prompt;
+      },
     },
     reset: {
       loadCoupons: async () => {
         loads += 1;
-        return createFakeCouponResult();
+        return options.coupons ?? createFakeCouponResult();
       },
       consumeCoupon: async (couponId) => {
         consumed.push(couponId);
@@ -93,88 +107,103 @@ test("reset requires an interactive terminal", async () => {
   );
 });
 
-test("reset reports missing and unavailable coupon selections without prompting", async () => {
-  const output: string[] = [];
-  const errors: string[] = [];
-  let prompts = 0;
-  let consumes = 0;
+test("reset rejects unavailable or unverifiable selections without prompting", async () => {
+  const unavailable = createFakeCouponResult();
+  unavailable.status = "unavailable";
   const noCoupons = createFakeCouponResult();
   noCoupons.available = 0;
   noCoupons.items = [];
+  const redeemed = createFakeCouponResult();
+  redeemed.items[0]!.status = "redeemed";
+  const partial = createFakeCouponResult();
+  partial.status = "partial";
+  const missingIdentifier = createFakeCouponResult();
+  missingIdentifier.items[0]!.id = null;
 
-  const noCouponExit = await runCli(["reset", "--soonest"], {
-    io: {
-      stdout: (text) => output.push(text),
-      stderr: (text) => errors.push(text),
-      interactive: true,
-      createPrompt: () => {
-        prompts += 1;
-        return async () => "y";
-      },
+  const cases: Array<{
+    name: string;
+    args: string[];
+    coupons: CouponResult;
+    exitCode: number;
+    stdout?: string;
+    stderr?: string;
+  }> = [
+    {
+      name: "coupon data unavailable",
+      args: ["reset", "--soonest"],
+      coupons: unavailable,
+      exitCode: 1,
+      stderr: "Reset coupon data is unavailable. Run `codex-limits coupons` for details.\n",
     },
-    reset: {
-      loadCoupons: async () => noCoupons,
-      consumeCoupon: async () => {
-        consumes += 1;
-        return {outcome: "reset", windowsReset: 2};
-      },
+    {
+      name: "no available coupons",
+      args: ["reset", "--soonest"],
+      coupons: noCoupons,
+      exitCode: 0,
+      stdout: "No reset coupons are available. No coupon was used.\n",
     },
-  });
-  expect(noCouponExit).toBe(0);
-  expect(output.join("")).toBe("No reset coupons are available. No coupon was used.\n");
+    {
+      name: "missing index",
+      args: ["reset", "6"],
+      coupons: createFakeCouponResult(),
+      exitCode: 1,
+      stderr: "The coupon index was not found in the current reset coupon list.\n",
+    },
+    {
+      name: "redeemed coupon",
+      args: ["reset", "1"],
+      coupons: redeemed,
+      exitCode: 0,
+      stdout: "The selected reset coupon is not available. No coupon was used.\n",
+    },
+    {
+      name: "partial coupon details",
+      args: ["reset", "--soonest"],
+      coupons: partial,
+      exitCode: 1,
+      stderr: "Available reset coupon details could not be verified. No coupon was used.\n",
+    },
+    {
+      name: "missing coupon identifier",
+      args: ["reset", "1"],
+      coupons: missingIdentifier,
+      exitCode: 1,
+      stderr: "Available reset coupon details could not be verified. No coupon was used.\n",
+    },
+  ];
 
-  output.length = 0;
-  const missingIndexExit = await runCli(["reset", "6"], {
-    io: {
-      stdout: (text) => output.push(text),
-      stderr: (text) => errors.push(text),
-      interactive: true,
-      createPrompt: () => {
-        prompts += 1;
-        return async () => "y";
-      },
-    },
-    reset: {
-      loadCoupons: async () => createFakeCouponResult(),
-      consumeCoupon: async () => {
-        consumes += 1;
-        return {outcome: "reset", windowsReset: 2};
-      },
-    },
-  });
-  expect(missingIndexExit).toBe(1);
-  expect(errors.join("")).toContain("coupon index was not found");
-  expect(prompts).toBe(0);
-  expect(consumes).toBe(0);
+  for (const item of cases) {
+    const run = await runReset({args: item.args, coupons: item.coupons});
+
+    expect(run.exitCode, item.name).toBe(item.exitCode);
+    expect(run.output.join(""), item.name).toBe(item.stdout ?? "");
+    expect(run.errors.join(""), item.name).toBe(item.stderr ?? "");
+    expect(run.questions, item.name).toEqual([]);
+    expect(run.consumed, item.name).toEqual([]);
+  }
 });
 
 test("reset never consumes a coupon when interactive confirmation fails", async () => {
-  const errors: string[] = [];
-  let consumes = 0;
-  const exitCode = await runCli(["reset", "--soonest"], {
-    io: {
-      stdout: () => undefined,
-      stderr: (text) => errors.push(text),
-      interactive: true,
-      createPrompt: () => {
-        throw new Error("Bearer fake-secret-token at C:/private/auth.json");
-      },
-    },
-    reset: {
-      loadCoupons: async () => createFakeCouponResult(),
-      consumeCoupon: async () => {
-        consumes += 1;
-        return {outcome: "reset", windowsReset: 2};
-      },
-    },
-  });
+  for (const promptFailure of ["creation", "answer"] as const) {
+    const run = await runReset({args: ["reset", "--soonest"], promptFailure});
 
-  expect(exitCode).toBe(1);
-  expect(consumes).toBe(0);
-  expect(errors.join("")).toBe(
-    "codex-limits reset: Interactive confirmation failed. No coupon was used.\n"
-  );
-  expect(errors.join("")).not.toContain("fake-secret-token");
+    expect(run.exitCode, promptFailure).toBe(1);
+    expect(run.consumed, promptFailure).toEqual([]);
+    expect(run.errors.join(""), promptFailure).toBe(
+      "codex-limits reset: Interactive confirmation failed. No coupon was used.\n"
+    );
+    expect(run.errors.join(""), promptFailure).not.toContain("fake-secret-token");
+    expect(run.closed, promptFailure).toBe(promptFailure === "answer");
+  }
+});
+
+test("reset keeps a confirmed redemption when prompt cleanup fails", async () => {
+  const run = await runReset({args: ["reset", "--soonest"], closeFailure: true});
+
+  expect(run.exitCode).toBe(0);
+  expect(run.closed).toBe(true);
+  expect(run.consumed).toEqual(["RateLimitResetCredit_test-1"]);
+  expect(run.errors).toEqual([]);
 });
 
 test("reset reports non-consuming service outcomes and ambiguous results honestly", async () => {

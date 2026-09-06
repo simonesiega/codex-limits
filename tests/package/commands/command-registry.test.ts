@@ -10,17 +10,20 @@ import {createCliRuntime} from "@/package/commands/runtime";
 
 const registry = createCommandRegistry(createCliRuntime());
 
-test("every command has generated usage, help-visible options, and a safety category", () => {
+test("generated command help includes registered usage, options, and safety notes", () => {
   for (const command of registry.commands) {
     const help = formatHelp(registry, command.path.length === 0 ? null : command);
 
-    expect(command.description.length).toBeGreaterThan(0);
-    expect(command.usage.length).toBeGreaterThan(0);
-    expect(command.safetyNote.length).toBeGreaterThan(0);
-    expect(["read-only", "local-write", "remote-mutation"]).toContain(command.safety);
+    for (const usage of command.usage) {
+      expect(help, `${command.id} help`).toContain(usage);
+    }
     for (const option of command.options ?? []) {
       expect(help, `${command.id} help`).toContain(option.long);
-      expect(option.description.length).toBeGreaterThan(0);
+    }
+    const safetyNotes =
+      command.path.length === 0 ? registry.program.safetyNotes : [command.safetyNote];
+    for (const safetyNote of safetyNotes) {
+      expect(help, `${command.id} help`).toContain(safetyNote);
     }
   }
 });
@@ -42,7 +45,7 @@ test("registry formally separates read-only, local-write, and remote-mutation co
   });
 });
 
-test("registry validation rejects ambiguous paths and unsafe remote mutations", () => {
+test("registry validation rejects unsafe defaults and duplicate paths", () => {
   const dashboard = registry.commands.find((command) => command.id === "dashboard")!;
   const unsafeDefault: CommandDefinition = {...dashboard, safety: "local-write"};
   expect(() =>
@@ -64,8 +67,10 @@ test("registry validation rejects ambiguous paths and unsafe remote mutations", 
       commands: [...registry.commands, duplicatePath],
     })
   ).toThrow("Duplicate command path");
+});
 
-  const unsafeMutation: CommandDefinition = {
+test("registry validation requires a boolean confirmation option for remote mutations", () => {
+  const mutation: CommandDefinition = {
     id: "redeem",
     path: ["redeem"],
     description: "Redeem a coupon",
@@ -78,14 +83,85 @@ test("registry validation rejects ambiguous paths and unsafe remote mutations", 
       return 0;
     },
   };
-  const unsafeRegistry: CommandRegistry = {
-    ...registry,
-    commands: [...registry.commands, unsafeMutation],
-  };
 
-  expect(() => assertValidCommandRegistry(unsafeRegistry)).toThrow(
-    "must declare its confirmation option"
+  expect(() =>
+    assertValidCommandRegistry({...registry, commands: [...registry.commands, mutation]})
+  ).toThrow("must declare its confirmation option");
+  expect(() =>
+    assertValidCommandRegistry({
+      ...registry,
+      commands: [
+        ...registry.commands,
+        {
+          ...mutation,
+          options: [
+            {
+              key: "confirm",
+              long: "--confirm",
+              description: "Confirm redemption",
+              kind: "value",
+              valueName: "answer",
+            },
+          ],
+        },
+      ],
+    })
+  ).toThrow("confirmation must be boolean");
+});
+
+test("registry validation rejects command shapes that make parsing ambiguous", () => {
+  const status = registry.commands.find((command) => command.id === "status")!;
+  const coupons = registry.commands.find((command) => command.id === "coupons")!;
+  const incompatibleOptions: CommandRegistry = {
+    ...registry,
+    commands: registry.commands.map((command) => {
+      if (command.id === status.id) {
+        return {
+          ...status,
+          options: [
+            {
+              key: "status.shared",
+              long: "--shared",
+              description: "Shared option",
+              kind: "boolean" as const,
+            },
+          ],
+        };
+      }
+      if (command.id === coupons.id) {
+        return {
+          ...coupons,
+          options: [
+            ...(coupons.options ?? []),
+            {
+              key: "coupons.shared",
+              long: "--shared",
+              description: "Shared option",
+              kind: "value" as const,
+              valueName: "value",
+            },
+          ],
+        };
+      }
+      return command;
+    }),
+  };
+  expect(() => assertValidCommandRegistry(incompatibleOptions)).toThrow(
+    "Option --shared has incompatible definitions"
   );
+
+  const orphanedNestedCommand: CommandDefinition = {
+    ...status,
+    id: "missing.show",
+    path: ["missing", "show"],
+    usage: ["codex-limits missing show"],
+  };
+  expect(() =>
+    assertValidCommandRegistry({
+      ...registry,
+      commands: [...registry.commands, orphanedNestedCommand],
+    })
+  ).toThrow("has no registered parent command group");
 });
 
 test("registry validation rejects unsafe or drifting contributor metadata", () => {

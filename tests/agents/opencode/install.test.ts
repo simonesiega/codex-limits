@@ -70,8 +70,8 @@ test("uninstallOpencodePlugin does not create missing configurations", async () 
       changed: false,
       configPaths: [configPath, tuiConfigPath],
     });
-    await expect(lstat(configPath)).rejects.toThrow();
-    await expect(lstat(tuiConfigPath)).rejects.toThrow();
+    await expect(lstat(configPath)).rejects.toMatchObject({code: "ENOENT"});
+    await expect(lstat(tuiConfigPath)).rejects.toMatchObject({code: "ENOENT"});
   });
 });
 

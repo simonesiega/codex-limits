@@ -57,6 +57,21 @@ test("agent file batches validate every snapshot before replacing any target", a
   });
 });
 
+test("agent file batches reject duplicate targets before writing", async () => {
+  await withTempDirectory("codex-limits-agent-duplicate-", async (directory) => {
+    const path = join(directory, "settings.json");
+
+    await expect(
+      writeAgentFilesAtomically([
+        {path, content: "first\n", expectedContent: null},
+        {path, content: "second\n", expectedContent: null},
+      ])
+    ).rejects.toThrow("changed during the operation");
+
+    expect(await readdir(directory)).toEqual([]);
+  });
+});
+
 test("agent file removal refuses content changed after inspection", async () => {
   await withTempDirectory("codex-limits-agent-remove-", async (directory) => {
     const path = join(directory, "extension.mjs");
@@ -68,6 +83,6 @@ test("agent file removal refuses content changed after inspection", async () => 
     expect(await readFile(path, "utf8")).toBe("managed-current\n");
 
     await removeAgentFileIfUnchanged(path, "managed-current\n");
-    await expect(readFile(path, "utf8")).rejects.toThrow();
+    await expect(readFile(path, "utf8")).rejects.toMatchObject({code: "ENOENT"});
   });
 });

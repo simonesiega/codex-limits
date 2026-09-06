@@ -27,14 +27,14 @@ test("getResetCoupons fetches live coupons with explicit env credentials", async
               reset_type: "codex_rate_limits",
               status: "available",
               granted_at: "2026-06-11T20:38:07Z",
-              expires_at: "2026-07-11T20:38:07Z",
+              expires_at: "2026-07-17T18:42:45Z",
             },
             {
               id: "RateLimitResetCredit_test-2",
               reset_type: "codex_rate_limits",
               status: "available",
               granted_at: "2026-06-17T18:42:45Z",
-              expires_at: "2026-07-17T18:42:45Z",
+              expires_at: "2026-07-11T20:38:07Z",
             },
           ],
         }),
@@ -54,8 +54,8 @@ test("getResetCoupons fetches live coupons with explicit env credentials", async
   expect(result.available).toBe(2);
   expect(result.nextExpirationIn).toBe("1d");
   expect(result.items.map((item) => item.id)).toEqual([
-    "RateLimitResetCredit_test-1",
     "RateLimitResetCredit_test-2",
+    "RateLimitResetCredit_test-1",
   ]);
   expect(result.items.map((item) => item.resetType)).toEqual([
     "codex_rate_limits",
