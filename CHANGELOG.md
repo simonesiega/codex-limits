@@ -25,6 +25,7 @@ All notable changes to codex-limits are documented in this file.
 
 ### Security
 
+- Added CodeQL scanning with GitHub's default JavaScript and TypeScript security queries for pull requests, main-branch changes, and weekly analysis.
 - Updated locked `fast-uri` and `toml` development dependencies to patched releases.
 
 ## [1.2.0] - 2026-08-09
