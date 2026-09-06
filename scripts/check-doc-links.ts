@@ -1,5 +1,6 @@
 import {readdir, readFile, stat} from "node:fs/promises";
 import {dirname, extname, relative, resolve, sep} from "node:path";
+import {stripHtmlTags} from "./documentation-heading";
 
 const ROOT_DOCUMENTS = [
   "README.md",
@@ -262,8 +263,7 @@ async function anchorsFor(file: string): Promise<Set<string>> {
 }
 
 function githubHeadingSlug(heading: string): string {
-  return heading
-    .replace(/<[^>]*>/g, "")
+  return stripHtmlTags(heading)
     .replace(/!?(?:\[([^\]]*)\])\([^)]*\)/g, "$1")
     .replace(/[`*_~]/g, "")
     .trim()
