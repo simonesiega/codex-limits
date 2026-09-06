@@ -151,3 +151,11 @@ Inspection commands are read-only. Agent lifecycle commands write only recognize
 ## License
 
 Codex Limits is licensed under the [MIT License](LICENSE).
+
+## Contributors
+
+<p align="center">
+  <a href="https://github.com/simonesiega/codex-limits/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=simonesiega/codex-limits&amp;max=24&amp;columns=12" alt="Contributors" />
+  </a>
+</p>
