@@ -132,6 +132,21 @@ test("parser accepts root, nested, compatibility, and order-independent options"
       options: {"output.json": true},
     },
     {
+      args: ["--threshold", "five-hour=20", "--threshold=weekly=10", "--json"],
+      kind: "command",
+      commandId: "dashboard",
+      options: {
+        "usage.threshold": ["five-hour=20", "weekly=10"],
+        "output.json": true,
+      },
+    },
+    {
+      args: ["status", "--threshold", "weekly=25.5"],
+      kind: "command",
+      commandId: "status",
+      options: {"usage.threshold": ["weekly=25.5"]},
+    },
+    {
       args: ["agents", "install", "opencode"],
       kind: "command",
       commandId: "agents.install",
@@ -203,6 +218,14 @@ test("parser rejects malformed combinations with structured sanitized errors", (
     {args: ["agents", "uninstall", "opencode", "opencode"], code: "invalid-positional"},
     {args: ["agents", "uninstall", "opencode", "--all"], code: "conflicting-options"},
     {args: ["agents", "unknown"], code: "unknown-command"},
+    {args: ["--threshold", "weekly=10"], code: "conflicting-options"},
+    {args: ["--threshold", "monthly=10"], code: "invalid-option-value"},
+    {args: ["--threshold=weekly=-1"], code: "invalid-option-value"},
+    {args: ["--threshold", "weekly=101"], code: "invalid-option-value"},
+    {
+      args: ["--threshold", "weekly=10", "--threshold", "weekly=20"],
+      code: "invalid-option-value",
+    },
     {args: ["unknown"], code: "unknown-command"},
   ] as const;
 

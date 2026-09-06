@@ -118,7 +118,7 @@ An internet connection is therefore recommended for current usage and required f
 | Interactive agent lifecycle | Both standard input and standard output must be TTYs       |
 | Explicit agent lifecycle    | Install and uninstall work with agent names or `--all`     |
 
-Use [`codex-limits --json`](json-output.md), `codex-limits coupons --json`, or `codex-limits doctor --json` in scripts. Errors use a non-zero exit code and are written to standard error; successful machine-readable output is written to standard output. `codex-limits reset` is intentionally interactive and has no JSON or unattended confirmation mode.
+Use [`codex-limits --json`](json-output.md), `codex-limits coupons --json`, or `codex-limits doctor --json` in scripts. Errors use a non-zero exit code and are written to standard error; successful machine-readable output is written to standard output. Usage thresholds can also return documented non-zero condition codes while preserving complete standard output and leaving standard error empty. `codex-limits reset` is intentionally interactive and has no JSON or unattended confirmation mode.
 
 `codex-limits completions <shell>` generates a script for Bash, Zsh, Fish, PowerShell, or Nushell from the current command registry. Follow the [shell completion guide](shell-completions.md) for installation and implementation details.
 

@@ -15,15 +15,18 @@ codex-limits coupons --json
 
 # Safe environment and connectivity diagnostics
 codex-limits doctor --json
+
+# Require at least 20% of the weekly window to remain
+codex-limits --json --threshold weekly=20
 ```
 
-`status --json` is not part of the CLI grammar. Use the root `--json` option for usage data.
+`status --json` is not part of the CLI grammar. Use the root `--json` option for usage data. The plain-text `status` command also accepts usage thresholds.
 
-Successful commands write one pretty-printed JSON value, followed by a newline, to standard output and exit with code `0`. Loading or serialization failures write a safe message to standard error, write no partial JSON to standard output, and exit with code `1`.
+Without a threshold, successful commands write one pretty-printed JSON value, followed by a newline, to standard output and exit with code `0`. Loading or serialization failures write a safe message to standard error, write no partial JSON to standard output, and exit with code `1`.
 
 The doctor document reports only versions, a generic operating-system name, booleans, and bounded status values. It never includes credentials, private paths, endpoint URLs, configuration contents, or raw Codex files.
 
-Warnings and unavailable live data do not cause a non-zero exit code when the command can still produce a valid JSON document. Consumers should inspect the `warnings` arrays and nullable fields when determining data availability.
+Warnings and unavailable live data do not cause a non-zero exit code when no threshold is configured and the command can still produce a valid JSON document. Consumers should inspect the `warnings` arrays and nullable fields when determining data availability.
 
 ## Complete limits document
 
@@ -285,6 +288,26 @@ The public JSON contract does not expose internal availability statuses or sourc
 
 Warnings pass through the shared redaction layer before serialization. Raw exceptions are replaced with fixed operation errors.
 
+## Usage thresholds and exit codes
+
+Add one or both repeatable threshold conditions to `codex-limits status` or `codex-limits --json`:
+
+```bash
+codex-limits status --threshold five-hour=10
+codex-limits --json --threshold five-hour=10 --threshold weekly=20
+```
+
+Each condition requires that window's `remainingPercent` to be greater than or equal to the percentage from `0` through `100`. Equality satisfies the condition. Each window can appear only once. The root command requires `--json` when a threshold is present; use `status` for plain text. Invalid window names, percentages outside the range, malformed values, and duplicate windows are rejected before usage data is loaded.
+
+| Exit code | Meaning                                                                          |
+| --------- | -------------------------------------------------------------------------------- |
+| `0`       | Every configured threshold is satisfied, or no threshold was provided.           |
+| `1`       | The command input is invalid, or loading or output generation failed.            |
+| `2`       | At least one available `remainingPercent` value is below its configured minimum. |
+| `3`       | At least one configured window or its `remainingPercent` value is unavailable.   |
+
+Exit code `3` takes precedence over `2` when separate configured windows are both unavailable and below threshold, because the complete condition set cannot be evaluated. Threshold outcomes do not write an extra message to standard error: `status` retains its normal text, and `--json` retains the exact documented JSON contract even when it exits with `2` or `3`. This lets scripts parse the complete output before handling the exit code. Threshold checks are read-only and never redeem reset credits.
+
 ## Script examples
 
 Read the weekly remaining percentage with `jq`:
@@ -303,6 +326,22 @@ Check whether the live usage endpoint is reachable:
 
 ```bash
 codex-limits doctor --json | jq -e '.liveEndpoint == "reachable"'
+```
+
+Capture JSON while distinguishing a breached threshold from unavailable data:
+
+```bash
+set +e
+limits_json="$(codex-limits --json --threshold weekly=20)"
+limits_exit=$?
+set -e
+
+case "$limits_exit" in
+  0) printf '%s\n' "$limits_json" | jq '.windows.weekly' ;;
+  2) echo "Weekly Codex capacity is below 20%" >&2 ;;
+  3) echo "Weekly Codex capacity is unavailable" >&2 ;;
+  *) echo "Could not read Codex limits" >&2 ;;
+esac
 ```
 
 Fail a shell script when the CLI fails, while keeping standard output machine-readable:

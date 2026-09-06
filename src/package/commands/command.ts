@@ -29,7 +29,7 @@ export interface ParsedCommandValues {
 }
 
 export interface CommandValidationIssue {
-  code: "conflicting-options" | "invalid-positional";
+  code: "conflicting-options" | "invalid-option-value" | "invalid-positional";
   message: string;
 }
 

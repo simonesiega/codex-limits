@@ -92,6 +92,109 @@ test("runCli preserves the complete limits JSON contract", async () => {
   expect(output.join("")).not.toContain("codex_rate_limits");
 });
 
+test("runCli returns deterministic usage-threshold exit codes at boundaries", async () => {
+  const cases = [
+    {name: "equal boundary", threshold: "five-hour=93", expectedExitCode: 0},
+    {name: "below boundary", threshold: "five-hour=93.1", expectedExitCode: 2},
+  ];
+
+  for (const item of cases) {
+    const output: string[] = [];
+    const errors: string[] = [];
+    const exitCode = await runCli(["status", "--threshold", item.threshold], {
+      io: {
+        stdout: (text) => output.push(text),
+        stderr: (text) => errors.push(text),
+      },
+      usage: {loadLimits: async () => createFakeLimitsResult()},
+    });
+
+    expect(exitCode, item.name).toBe(item.expectedExitCode);
+    expect(output.join(""), item.name).toContain("Usage Limits");
+    expect(errors, item.name).toEqual([]);
+  }
+});
+
+test("runCli preserves JSON when a configured usage threshold is unavailable", async () => {
+  const output: string[] = [];
+  const errors: string[] = [];
+  const result = createFakeLimitsResult();
+  result.windows.weekly = null;
+
+  const exitCode = await runCli(["--json", "--threshold", "weekly=0"], {
+    io: {
+      stdout: (text) => output.push(text),
+      stderr: (text) => errors.push(text),
+    },
+    usage: {loadLimits: async () => result},
+  });
+
+  expect(exitCode).toBe(3);
+  expect(errors).toEqual([]);
+  expect(JSON.parse(output.join(""))).toEqual({
+    windows: result.windows,
+    coupons: expectedCouponJson(),
+    warnings: [],
+  });
+});
+
+test("runCli keeps threshold JSON machine-readable when the condition is breached", async () => {
+  const output: string[] = [];
+  const errors: string[] = [];
+  const result = createFakeLimitsResult();
+
+  const exitCode = await runCli(
+    ["--json", "--threshold", "five-hour=50", "--threshold", "weekly=12"],
+    {
+      io: {
+        stdout: (text) => output.push(text),
+        stderr: (text) => errors.push(text),
+      },
+      usage: {loadLimits: async () => result},
+    }
+  );
+
+  expect(exitCode).toBe(2);
+  expect(errors).toEqual([]);
+  expect(JSON.parse(output.join(""))).toEqual({
+    windows: result.windows,
+    coupons: expectedCouponJson(),
+    warnings: [],
+  });
+});
+
+test("runCli rejects invalid thresholds before loading usage data", async () => {
+  const cases = [
+    ["status", "--threshold", "weekly=101"],
+    ["--json", "--threshold", "private=fake-secret-token"],
+    ["status", "--threshold", "weekly=10", "--threshold", "weekly=20"],
+  ];
+
+  for (const args of cases) {
+    const output: string[] = [];
+    const errors: string[] = [];
+    let loads = 0;
+    const exitCode = await runCli(args, {
+      io: {
+        stdout: (text) => output.push(text),
+        stderr: (text) => errors.push(text),
+      },
+      usage: {
+        loadLimits: async () => {
+          loads += 1;
+          return createFakeLimitsResult();
+        },
+      },
+    });
+
+    expect(exitCode, args.join(" ")).toBe(1);
+    expect(loads, args.join(" ")).toBe(0);
+    expect(output, args.join(" ")).toEqual([]);
+    expect(errors.join(""), args.join(" ")).toContain("--threshold");
+    expect(errors.join(""), args.join(" ")).not.toContain("fake-secret-token");
+  }
+});
+
 test("runCli preserves the complete coupon JSON contract", async () => {
   const output: string[] = [];
   const errors: string[] = [];

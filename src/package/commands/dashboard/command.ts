@@ -6,6 +6,11 @@ import {
 import {formatJson} from "@/package/commands/format-json";
 import {toCodexLimitsDto} from "@/package/commands/public-dto";
 import type {CliIo, UiServices, UsageServices} from "@/package/commands/runtime";
+import {
+  getUsageThresholdExitCode,
+  USAGE_THRESHOLD_OPTION,
+  validateUsageThresholds,
+} from "@/package/commands/usage-threshold";
 
 interface DashboardCommandDependencies {
   io: Pick<CliIo, "stdout">;
@@ -21,8 +26,25 @@ export function createDashboardCommand(
     id: "dashboard",
     path: [],
     description: "Open the interactive terminal dashboard",
-    usage: ["codex-limits", "codex-limits --json"],
-    options: [JSON_OPTION],
+    usage: [
+      "codex-limits",
+      "codex-limits --json",
+      "codex-limits --json --threshold <window=percent>",
+    ],
+    options: [JSON_OPTION, USAGE_THRESHOLD_OPTION],
+    validate(values) {
+      const thresholdIssue = validateUsageThresholds(values);
+      if (thresholdIssue) {
+        return thresholdIssue;
+      }
+      return values.options[USAGE_THRESHOLD_OPTION.key] !== undefined &&
+        getOutputFormat(values) !== "json"
+        ? {
+            code: "conflicting-options",
+            message: "Option --threshold requires --json on the root command.",
+          }
+        : null;
+    },
     safety: "read-only",
     safetyNote: "Reads recognized Codex data without modifying local files or the account.",
     failureMessage: (values) =>
@@ -36,7 +58,7 @@ export function createDashboardCommand(
       } else {
         await dependencies.ui.renderDashboard(result);
       }
-      return 0;
+      return getUsageThresholdExitCode(result.windows, values);
     },
   };
 }

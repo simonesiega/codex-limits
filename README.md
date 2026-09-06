@@ -56,24 +56,25 @@ See [Compatibility](docs/guides/compatibility.md) for the canonical runtime, ins
 
 ## Usage
 
-| Command                                    | Description                                           |
-| ------------------------------------------ | ----------------------------------------------------- |
-| `codex-limits`                             | Opens the interactive terminal dashboard.             |
-| `codex-limits status`                      | Prints a plain usage summary.                         |
-| `codex-limits coupons`                     | Prints available reset credits.                       |
-| `codex-limits coupons --json`              | Prints machine-readable reset-credit data.            |
-| `codex-limits reset <coupon-index>`        | Reviews and redeems the selected reset credit.        |
-| `codex-limits reset --soonest`             | Reviews and redeems the credit that expires first.    |
-| `codex-limits --json`                      | Prints machine-readable usage and reset-credit data.  |
-| `codex-limits doctor`                      | Prints safe environment and connectivity diagnostics. |
-| `codex-limits doctor --json`               | Prints machine-readable diagnostics.                  |
-| `codex-limits completions <shell>`         | Generates completions for five supported shells.      |
-| `codex-limits agents`                      | Shows agent integration management commands.          |
-| `codex-limits agents install <agent...>`   | Installs one or more named agent integrations.        |
-| `codex-limits agents install --all`        | Installs every supported agent integration.           |
-| `codex-limits agents uninstall <agent...>` | Removes one or more recognized agent integrations.    |
-| `codex-limits agents uninstall --all`      | Removes every recognized agent integration.           |
-| `codex-limits init`                        | Runs the compatible integration installation flow.    |
+| Command                                       | Description                                           |
+| --------------------------------------------- | ----------------------------------------------------- |
+| `codex-limits`                                | Opens the interactive terminal dashboard.             |
+| `codex-limits status`                         | Prints a plain usage summary.                         |
+| `codex-limits status --threshold <condition>` | Checks a remaining-usage threshold for automation.    |
+| `codex-limits coupons`                        | Prints available reset credits.                       |
+| `codex-limits coupons --json`                 | Prints machine-readable reset-credit data.            |
+| `codex-limits reset <coupon-index>`           | Reviews and redeems the selected reset credit.        |
+| `codex-limits reset --soonest`                | Reviews and redeems the credit that expires first.    |
+| `codex-limits --json`                         | Prints machine-readable usage and reset-credit data.  |
+| `codex-limits doctor`                         | Prints safe environment and connectivity diagnostics. |
+| `codex-limits doctor --json`                  | Prints machine-readable diagnostics.                  |
+| `codex-limits completions <shell>`            | Generates completions for five supported shells.      |
+| `codex-limits agents`                         | Shows agent integration management commands.          |
+| `codex-limits agents install <agent...>`      | Installs one or more named agent integrations.        |
+| `codex-limits agents install --all`           | Installs every supported agent integration.           |
+| `codex-limits agents uninstall <agent...>`    | Removes one or more recognized agent integrations.    |
+| `codex-limits agents uninstall --all`         | Removes every recognized agent integration.           |
+| `codex-limits init`                           | Runs the compatible integration installation flow.    |
 
 Run `codex-limits --help` or a command-specific `--help` option for generated CLI help.
 
@@ -89,7 +90,7 @@ Start troubleshooting with the read-only diagnostic command:
 codex-limits doctor
 ```
 
-For automation, use `codex-limits --json`, `codex-limits coupons --json`, or `codex-limits doctor --json`. Their contracts, schemas, and sanitized examples are documented in [JSON output](docs/guides/json-output.md).
+For automation, use `codex-limits --json`, `codex-limits coupons --json`, or `codex-limits doctor --json`. Usage checks can repeat `--threshold five-hour=<percent>` or `--threshold weekly=<percent>` on `status` or the root JSON command to receive deterministic exit codes without changing output. Their contracts, threshold exit codes, schemas, and sanitized examples are documented in [JSON output](docs/guides/json-output.md).
 
 ### Shell completions
 

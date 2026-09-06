@@ -97,6 +97,8 @@ codex-limits doctor --json
 
 `status --json` is not supported. Successful JSON is written to standard output; command failures are written to standard error and return a non-zero exit code. Warnings and unavailable nullable fields can still appear in a successful document.
 
+When `status` or the root JSON command uses `--threshold`, exit code `2` means available usage is below a configured minimum and exit code `3` means a configured usage value is unavailable. Both outcomes preserve normal output and leave standard error empty. See [usage thresholds and exit codes](json-output.md#usage-thresholds-and-exit-codes) for the complete contract and shell example.
+
 Validate consumers against the schemas and examples linked from [JSON output](json-output.md). Parse JSON fields rather than terminal text or pretty-print whitespace.
 
 ## Reset redemption does not proceed
