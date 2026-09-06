@@ -1,5 +1,6 @@
 name: Check
 
+# Validate changes before merge and recheck moving external hosts every week.
 on:
   push:
     branches: [main]
@@ -9,46 +10,84 @@ on:
     - cron: "23 6 * * 1"
   workflow_dispatch:
 
+# Validation only needs read access to repository contents.
 permissions:
   contents: read
 
+# Keep only the newest run for the same branch or pull request.
 concurrency:
   group: check-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # Run the canonical source gate once and share its accepted build with downstream jobs.
   check:
     name: Source checks and build (Node 24)
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
+      # Use immutable action revisions and do not retain repository credentials.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      # Build with the newest Node.js version sampled by this workflow.
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           package-manager-cache: false
 
+      # Bun owns dependency installation, scripts, tests, and builds in this repository.
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
 
+      # Make every supported completion parser available to the source test suite.
+      - name: Install completion shell parsers
+        env:
+          NUSHELL_VERSION: 0.115.1
+          NUSHELL_SHA256: d11d825241f6504a3617c535fa725a9dd6d009c86d7b19fb3168b47635b9d8b0
+        run: |
+          set -euo pipefail
+          # ubuntu-latest already provides Bash and PowerShell; add the missing packaged parsers.
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes fish zsh
+
+          # Nushell is not available from the runner's default packages, so install a checksum-pinned release.
+          NUSHELL_ARCHIVE="$RUNNER_TEMP/nushell.tar.gz"
+          curl \
+            --fail \
+            --location \
+            --output "$NUSHELL_ARCHIVE" \
+            "https://github.com/nushell/nushell/releases/download/$NUSHELL_VERSION/nu-$NUSHELL_VERSION-x86_64-unknown-linux-gnu.tar.gz"
+          echo "$NUSHELL_SHA256  $NUSHELL_ARCHIVE" | sha256sum --check
+          tar -xzf "$NUSHELL_ARCHIVE" -C "$RUNNER_TEMP"
+          sudo install \
+            "$RUNNER_TEMP/nu-$NUSHELL_VERSION-x86_64-unknown-linux-gnu/nu" \
+            /usr/local/bin/nu
+
+      # Reproduce the lockfile without executing dependency lifecycle scripts.
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
 
+      # Reject known vulnerabilities before running project code.
       - name: Audit dependencies
         run: bun run audit
 
+      # Run formatting, docs, types, coverage, build, and package validation.
       - name: Run project checks and enforce coverage
+        env:
+          # Fail instead of skipping syntax validation when any supported shell parser is unavailable.
+          CODEX_LIMITS_REQUIRE_COMPLETION_SHELLS: "true"
         run: bun run check
 
+      # Reuse exactly the build accepted above in every packed-runtime job.
       - name: Archive validated build
         run: tar -czf package-build.tar.gz dist types
 
+      # Keep the intermediate artifact only long enough for dependent jobs.
       - name: Upload validated build
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -57,12 +96,14 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # Exercise the packed npm artifact across supported operating systems and Node.js releases.
   packed-runtime:
     name: Packed runtime (${{ matrix.os }}, Node ${{ matrix.node-version }})
     needs: check
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
+      # Report every platform result even when one matrix entry fails.
       fail-fast: false
       matrix:
         include:
@@ -76,37 +117,45 @@ jobs:
             node-version: 22
 
     steps:
+      # Package validation still needs repository metadata and validation scripts.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      # Select the published runtime represented by this matrix entry.
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node-version }}
           package-manager-cache: false
 
+      # Package validation scripts continue to run through repository-standard Bun tooling.
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
 
+      # Restore the source job's build instead of rebuilding independently.
       - name: Download validated build
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: package-build
 
+      # Restore dist and generated declarations at their repository paths.
       - name: Extract validated build
         run: tar -xzf package-build.tar.gz
 
+      # Pack, extract, and smoke-test the package as an npm consumer receives it.
       - name: Validate packed runtime
         run: bun run package:validate
 
+  # Test packed integrations against pinned and moving real agent-host releases.
   agent-compatibility:
     name: Agent compatibility (${{ matrix.label }})
     needs: check
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
+      # A failure in one host must not hide compatibility results for the others.
       fail-fast: false
       matrix:
         include:
@@ -132,34 +181,41 @@ jobs:
             host_version: latest
 
     steps:
+      # The compatibility harness and package metadata come from this checkout.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
+      # Real agent hosts in this matrix use the current Node.js validation runtime.
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           package-manager-cache: false
 
+      # The compatibility harness is implemented as Bun scripts.
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
 
+      # Copilot's interactive probe needs a pseudo-terminal and bounded tmux session.
       - name: Install Copilot terminal tools
         if: matrix.agent == 'copilot'
         run: |
           sudo apt-get update
           sudo apt-get install --no-install-recommends --yes tmux util-linux
 
+      # Use the same validated build consumed by the packed-runtime matrix.
       - name: Download validated build
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: package-build
 
+      # Restore dist and generated declarations before packing the project.
       - name: Extract validated build
         run: tar -xzf package-build.tar.gz
 
+      # Isolate each real host installation from the repository dependency graph.
       - name: Install real agent host
         env:
           HOST_PACKAGE: ${{ matrix.host_package }}
@@ -175,6 +231,7 @@ jobs:
             "$HOST_PACKAGE@$HOST_VERSION"
           echo "HOST_ROOT=$HOST_ROOT" >> "$GITHUB_ENV"
 
+      # Produce the same tarball shape users install from npm.
       - name: Pack Codex Limits
         id: package
         run: |
@@ -183,6 +240,7 @@ jobs:
           PACKAGE_FILENAME="$(node -e 'const chunks=[]; process.stdin.on("data", c => chunks.push(c)); process.stdin.on("end", () => process.stdout.write(JSON.parse(Buffer.concat(chunks))[0].filename));' <<< "$PACK_OUTPUT")"
           echo "tarball=$RUNNER_TEMP/$PACKAGE_FILENAME" >> "$GITHUB_OUTPUT"
 
+      # Verify installation, discovery, dispatch, and conservative removal in the selected host.
       - name: Exercise packed integration in real host
         env:
           AGENT: ${{ matrix.agent }}

@@ -46,6 +46,7 @@ The following environments are covered by the repository's automated checks or l
 | Automated packaged CLI           | GitHub Actions on `ubuntu-latest` with Node.js 20 and 22, `windows-latest` with Node.js 20, and `macos-latest` with Node.js 22              |
 | Latest recorded local validation | Windows build `10.0.26200.8875` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-08-09)                                                   |
 | Terminal rendering               | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix                          |
+| Shell completion generation      | Native syntax validation for Bash, Zsh, Fish, PowerShell, and Nushell on `ubuntu-latest`                                                    |
 | OpenCode agent adapter           | Mocked API coverage plus packed install, plugin loading, `/codex-limits` dispatch, and removal in real OpenCode 1.18.14 and latest hosts    |
 | pi agent adapter                 | Mocked UI coverage plus packed install, command discovery, dispatch, removal, and post-removal discovery in real pi 0.81.1 and latest hosts |
 | Copilot CLI adapter              | Mocked SDK coverage plus packed install, extension loading, `/codex-limits` dispatch, and removal in the latest real Copilot CLI host       |
@@ -112,11 +113,28 @@ An internet connection is therefore recommended for current usage and required f
 | Interactive dashboard       | A terminal capable of running the Ink UI                   |
 | `status` and `coupons`      | Any environment that can capture standard output           |
 | JSON output                 | Any environment that can capture and parse standard output |
+| Generated shell completion  | Bash, Zsh, Fish, PowerShell, or Nushell                    |
 | Reset coupon redemption     | Both standard input and standard output must be TTYs       |
 | Interactive agent lifecycle | Both standard input and standard output must be TTYs       |
 | Explicit agent lifecycle    | Install and uninstall work with agent names or `--all`     |
 
 Use [`codex-limits --json`](json-output.md), `codex-limits coupons --json`, or `codex-limits doctor --json` in scripts. Errors use a non-zero exit code and are written to standard error; successful machine-readable output is written to standard output. `codex-limits reset` is intentionally interactive and has no JSON or unattended confirmation mode.
+
+`codex-limits completions <shell>` generates a script for Bash, Zsh, Fish, PowerShell, or Nushell from the current command registry. Follow the [shell completion guide](shell-completions.md) for installation and implementation details.
+
+### Tested shell completion generation
+
+The source-check job generates scripts from registry metadata containing quotes, spaces, shell metacharacters, and Unicode, then passes each script to its native parser.
+
+| Shell      | CI environment                                                | Validation                     |
+| ---------- | ------------------------------------------------------------- | ------------------------------ |
+| Bash       | Runner-provided Bash on `ubuntu-latest`                       | `bash --noprofile --norc -n`   |
+| Zsh        | Ubuntu package on `ubuntu-latest`                             | `zsh -f -n`                    |
+| Fish       | Ubuntu package on `ubuntu-latest`                             | `fish --no-execute`            |
+| PowerShell | Runner-provided PowerShell (`pwsh`) on `ubuntu-latest`        | PowerShell language parser API |
+| Nushell    | Nushell 0.115.1 pinned by release archive digest in the build | `nu -n`                        |
+
+Bash, Zsh, Fish, and PowerShell versions follow the `ubuntu-latest` runner or its package repositories rather than defining minimum supported versions. Nushell is pinned because it is downloaded separately for syntax validation. Local tests perform the same validation for whichever native parsers are installed; CI requires all five.
 
 ## OpenCode compatibility
 
@@ -147,6 +165,7 @@ The latest npm release is supported. The current `main` branch is supported for 
 ## Related documentation
 
 - [JSON output](json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
+- [Shell completions](shell-completions.md) — Setup and registry-driven generation for every supported shell.
 - [Agent integrations](agent-integrations.md) — Supported-agent index, shared lifecycle modes, and adapter architecture.
 - [Security policy](../../SECURITY.md) — Data-access safeguards, network behavior, and vulnerability reporting.
 - [Troubleshooting](troubleshooting.md) — Diagnosis for Codex data, network, terminal, reset, and agent problems.

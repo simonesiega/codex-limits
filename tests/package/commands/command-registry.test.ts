@@ -39,6 +39,7 @@ test("registry formally separates read-only, local-write, and remote-mutation co
     coupons: "read-only",
     reset: "remote-mutation",
     doctor: "read-only",
+    completions: "read-only",
     "agents.install": "local-write",
     "agents.uninstall": "local-write",
     init: "local-write",
@@ -295,11 +296,14 @@ test("root and nested help are generated from registry metadata", () => {
   const installHelp = formatHelp(registry, install);
   const uninstallHelp = formatHelp(registry, uninstall);
 
-  expect(rootHelp).toContain("status   Print a non-interactive usage summary");
-  expect(rootHelp).toContain("reset    Consume one coupon to reset current Codex usage limits");
-  expect(rootHelp).toContain("doctor   Run safe environment and connectivity diagnostics");
-  expect(rootHelp).toContain("agents   Manage optional coding-agent integrations");
-  expect(rootHelp.indexOf("agents   Manage")).toBeLessThan(rootHelp.indexOf("init     Install"));
+  expect(rootHelp).toContain("status       Print a non-interactive usage summary");
+  expect(rootHelp).toContain("reset        Consume one coupon to reset current Codex usage limits");
+  expect(rootHelp).toContain("doctor       Run safe environment and connectivity diagnostics");
+  expect(rootHelp).toContain("completions  Generate a shell completion script");
+  expect(rootHelp).toContain("agents       Manage optional coding-agent integrations");
+  expect(rootHelp.indexOf("agents       Manage")).toBeLessThan(
+    rootHelp.indexOf("init         Install")
+  );
   expect(rootHelp).toContain("CODEX_LIMITS_HOME");
   expect(rootHelp).toContain("Access token for live usage and reset coupons");
   expect(rootHelp).toContain("Account ID for live usage and reset coupons");

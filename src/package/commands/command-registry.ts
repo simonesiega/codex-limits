@@ -6,6 +6,8 @@ import type {
   CommandRegistry,
   OptionDefinition,
 } from "@/package/commands/command";
+import {createCompletionsCommand} from "@/package/commands/completions/command";
+import {formatShellCompletions} from "@/package/commands/completions/format";
 import {createCouponsCommand} from "@/package/commands/coupons/command";
 import {createDashboardCommand} from "@/package/commands/dashboard/command";
 import {createDoctorCommand} from "@/package/commands/doctor/command";
@@ -46,6 +48,11 @@ const AGENTS_GROUP: CommandGroupDefinition = {
 export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
   assertValidIntegrations(runtime.agents.integrations);
 
+  // The deferred formatter shares this exact registry instance after construction.
+  const completionsCommand = createCompletionsCommand({
+    io: runtime.io,
+    generate: (shell) => formatShellCompletions(registry, shell),
+  });
   const registry: CommandRegistry = {
     program: {
       name: "codex-limits",
@@ -69,7 +76,7 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
         ...runtime.agents.integrations.flatMap((integration) => integration.environment ?? []),
       ],
       safetyNotes: [
-        "Dashboard, status, coupon, and doctor commands are read-only.",
+        "Dashboard, status, coupon, doctor, and completion commands are read-only.",
         "Reset requires an interactive recap and an explicit y or yes confirmation.",
         "Agent install and uninstall write only to explicitly selected agent configurations.",
         "Output never includes tokens, account IDs, auth headers, cookies, or raw local files.",
@@ -87,6 +94,7 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
         doctor: runtime.doctor,
         packageInfo: runtime.packageInfo,
       }),
+      completionsCommand,
       createAgentsInstallCommand({
         io: runtime.io,
         integrations: runtime.agents.integrations,

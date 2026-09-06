@@ -8,19 +8,21 @@ This documentation is organized by task. The root README is the product overview
 
 - **Installing or using the CLI?** Begin with the [quick start](../README.md#quick-start), then use the [command reference](../README.md#usage).
 - **Writing a script or integration?** Read [JSON output](guides/json-output.md) and use the schema for [complete limits](schema/codex-limits.schema.json), [coupons](schema/codex-limits-coupons.schema.json), or [doctor diagnostics](schema/codex-limits-doctor.schema.json).
+- **Enabling command completion?** Follow the [Bash, Zsh, Fish, PowerShell, or Nushell setup](guides/shell-completions.md).
 - **Installing or removing an agent command?** Open the [agent integrations guide](guides/agent-integrations.md), then choose [OpenCode](guides/agents/opencode.md), [pi](guides/agents/pi.md), or [GitHub Copilot CLI](guides/agents/copilot.md).
 - **Diagnosing an environment?** Run `codex-limits doctor`, then use [Troubleshooting](guides/troubleshooting.md) and check the relevant [compatibility requirements](guides/compatibility.md).
 - **Contributing?** Start with [`CONTRIBUTING.md`](../CONTRIBUTING.md), follow the [Code of Conduct](../CODE_OF_CONDUCT.md), use the [issue chooser](https://github.com/simonesiega/codex-limits/issues/new/choose) for bug reports or feature requests, and review the [security policy](../SECURITY.md).
 
 ## CLI and automation
 
-| Guide                                        | Use it when                                                                                      |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [Quick start](../README.md#quick-start)      | Installing the published package and opening the dashboard for the first time.                   |
-| [Command reference](../README.md#usage)      | Using `status`, `coupons`, `reset`, `doctor`, `agents`, or the compatible `init` command.        |
-| [JSON output](guides/json-output.md)         | Consuming stable machine-readable limits, coupon, or doctor documents.                           |
-| [Compatibility](guides/compatibility.md)     | Checking Node.js, operating-system, terminal, Codex-data, network, or agent requirements.        |
-| [Troubleshooting](guides/troubleshooting.md) | Resolving Codex data, authentication, network, coupon, terminal, JSON, reset, or agent problems. |
+| Guide                                            | Use it when                                                                                      |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| [Quick start](../README.md#quick-start)          | Installing the published package and opening the dashboard for the first time.                   |
+| [Command reference](../README.md#usage)          | Using `status`, `coupons`, `reset`, `doctor`, `completions`, `agents`, or compatible `init`.     |
+| [JSON output](guides/json-output.md)             | Consuming stable machine-readable limits, coupon, or doctor documents.                           |
+| [Shell completions](guides/shell-completions.md) | Installing generated completions and understanding registry-driven generation.                   |
+| [Compatibility](guides/compatibility.md)         | Checking Node.js, operating-system, terminal, Codex-data, network, or agent requirements.        |
+| [Troubleshooting](guides/troubleshooting.md)     | Resolving Codex data, authentication, network, coupon, terminal, JSON, reset, or agent problems. |
 
 ## Agent integrations
 

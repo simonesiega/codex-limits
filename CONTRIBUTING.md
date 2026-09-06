@@ -124,6 +124,8 @@ Coverage excludes test files and test support code under `tests`. The reviewed B
 
 Treat coverage as a regression signal rather than a target. Tests should protect observable behavior, safety boundaries, or supported integration contracts; do not add assertions solely to execute uncovered lines.
 
+Shell-completion tests pass generated scripts to any locally installed Bash, Zsh, Fish, PowerShell, and Nushell parsers. CI installs all five and sets `CODEX_LIMITS_REQUIRE_COMPLETION_SHELLS=true`, so every supported renderer is required there. See [Shell completions](docs/guides/shell-completions.md#how-it-works) and the [tested shell environments](docs/guides/compatibility.md#tested-shell-completion-generation).
+
 Build the package:
 
 ```bash

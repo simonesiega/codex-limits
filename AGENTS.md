@@ -102,6 +102,7 @@ SECURITY.md                                 → Data-access, command-safety, and
 AGENTS.md                                   → Repository instructions for coding agents.
 docs/README.md                              → Task-oriented documentation hub.
 docs/guides/json-output.md                  → Public JSON contracts and automation guidance.
+docs/guides/shell-completions.md            → Shell setup and registry-driven completion generation.
 docs/guides/compatibility.md                → Runtime, platform, data, terminal, and network support.
 docs/guides/troubleshooting.md              → Cross-surface diagnosis and problem resolution.
 docs/guides/agent-integrations.md           → Shared agent integration behavior and development.

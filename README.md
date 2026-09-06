@@ -67,6 +67,7 @@ See [Compatibility](docs/guides/compatibility.md) for the canonical runtime, ins
 | `codex-limits --json`                      | Prints machine-readable usage and reset-credit data.  |
 | `codex-limits doctor`                      | Prints safe environment and connectivity diagnostics. |
 | `codex-limits doctor --json`               | Prints machine-readable diagnostics.                  |
+| `codex-limits completions <shell>`         | Generates completions for five supported shells.      |
 | `codex-limits agents`                      | Shows agent integration management commands.          |
 | `codex-limits agents install <agent...>`   | Installs one or more named agent integrations.        |
 | `codex-limits agents install --all`        | Installs every supported agent integration.           |
@@ -89,6 +90,16 @@ codex-limits doctor
 ```
 
 For automation, use `codex-limits --json`, `codex-limits coupons --json`, or `codex-limits doctor --json`. Their contracts, schemas, and sanitized examples are documented in [JSON output](docs/guides/json-output.md).
+
+### Shell completions
+
+Generate a completion script for Bash, Zsh, Fish, PowerShell, or Nushell:
+
+```bash
+codex-limits completions bash
+```
+
+See [Shell completions](docs/guides/shell-completions.md) for installation steps and an explanation of how registry-driven generation works.
 
 ## Agent integrations
 
@@ -126,6 +137,7 @@ The [documentation hub](docs/README.md) routes users and contributors to the can
 | Runtime and support | [Compatibility](docs/guides/compatibility.md)                                                                                                                                         |
 | Troubleshooting     | [Troubleshooting](docs/guides/troubleshooting.md)                                                                                                                                     |
 | JSON contracts      | [JSON output](docs/guides/json-output.md) · [Schemas](docs/schema/) · [Examples](docs/examples/)                                                                                      |
+| Shell completions   | [Bash, Zsh, Fish, PowerShell, and Nushell setup](docs/guides/shell-completions.md)                                                                                                    |
 | Agent integrations  | [Shared guide](docs/guides/agent-integrations.md) · [OpenCode](docs/guides/agents/opencode.md) · [pi](docs/guides/agents/pi.md) · [GitHub Copilot CLI](docs/guides/agents/copilot.md) |
 | Security            | [Security policy](SECURITY.md)                                                                                                                                                        |
 | Contributing        | [Contribution guide](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Contributors](https://github.com/simonesiega/codex-limits/graphs/contributors)                       |

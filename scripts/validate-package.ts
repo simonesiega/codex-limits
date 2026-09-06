@@ -173,6 +173,7 @@ try {
     "docs/guides/agents/pi.md",
     "docs/guides/compatibility.md",
     "docs/guides/json-output.md",
+    "docs/guides/shell-completions.md",
     "docs/guides/troubleshooting.md",
     "docs/schema/codex-limits.schema.json",
     "docs/schema/codex-limits-coupons.schema.json",
@@ -430,6 +431,14 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
     {args: ["coupons"], includes: "Reset Coupons"},
     {args: ["doctor"], includes: "Codex Limits diagnostics"},
     {args: ["doctor", "--json"], json: true},
+    {
+      args: ["completions", "bash"],
+      includes: "complete -F _codex_limits_completion codex-limits",
+    },
+    {
+      args: ["completions", "nushell"],
+      includes: 'export extern "codex-limits agents install"',
+    },
     {args: ["agents", "--help"], includes: "Manage optional coding-agent integrations"},
     {args: ["agents", "install", "--help"], includes: "Install optional agent integrations"},
     {
