@@ -67,15 +67,7 @@ Restart OpenCode after installation, then run:
   />
 </p>
 
-This modal is the expected result: Codex Limits appears over the OpenCode session and closes without adding a conversation message.
-
-OpenCode loads the shared core directly and displays:
-
-- remaining capacity and status for the weekly window;
-- the 5-hour window when it is supplied by the usage service;
-- reset durations;
-- available reset credits and the next expiration;
-- safe warnings when some data is unavailable.
+This modal is the expected result: Codex Limits renders the [shared read-only summary](../agent-integrations.md#shared-behavior-and-privacy) over the OpenCode session and closes without adding a conversation message.
 
 Loading failures are reduced to a static safe error instead of exposing raw filesystem, credential, or network details.
 
@@ -108,17 +100,11 @@ Correct the affected OpenCode configuration before running the installer again. 
 
 Run `codex-limits status` outside OpenCode. If data is also unavailable there, verify Codex authentication, local data discovery, and network access.
 
-## Security and behavior notes
-
-See the [Security policy](../../../SECURITY.md#agent-integrations-and-installers) for the canonical agent, credential, local-data, installer, and output safety guarantees.
-
 ## Related documentation
 
 - [Agent integrations](../agent-integrations.md) — Supported-agent index and behavior shared by every adapter.
 - [Compatibility](../compatibility.md) — Runtime, operating-system, terminal, network, and agent compatibility.
-- [JSON output](../json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
 - [Security policy](../../../SECURITY.md) — Local-data safeguards, network behavior, and vulnerability reporting.
-- [OpenCode](https://opencode.ai/) — Official agent website.
 - [Troubleshooting](../troubleshooting.md) — Cross-surface diagnosis and common problem resolution.
 - [Documentation hub](../../README.md) — Task-oriented index for CLI, automation, agent, development, and security guides.
 - [Project README](../../../README.md) — Product overview, installation, commands, and configuration.

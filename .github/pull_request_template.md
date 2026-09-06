@@ -10,6 +10,7 @@
 
 <!-- List any additional manual or targeted checks you ran. Explain any check you could not run. -->
 
+- [ ] `bun run audit`
 - [ ] `bun run check`
 
 ## Screenshots

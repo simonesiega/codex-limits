@@ -151,23 +151,32 @@ test("CI and publishing audit the locked dependency graph", async () => {
   expect(publishWorkflow).toContain("run: bun run audit");
 });
 
-test("source coverage is reported and enforced by the validation workflow", async () => {
-  const [packageJson, bunfigText, checkWorkflow] = await Promise.all([
+test("source coverage is reported, enforced, and published by the validation workflow", async () => {
+  const [packageJson, bunfigText, checkWorkflow, readme] = await Promise.all([
     readPackageMetadata(),
     readFile(resolve(import.meta.dir, "../../bunfig.toml"), "utf8"),
     readFile(resolve(import.meta.dir, "../../.github/workflows/check.yml"), "utf8"),
+    readFile(resolve(import.meta.dir, "../../README.md"), "utf8"),
   ]);
   const bunfig = Bun.TOML.parse(bunfigText) as BunConfiguration;
 
   expect(packageJson.scripts["test:coverage"]).toBe("bun test --coverage");
   expect(packageJson.scripts.check).toContain("bun run test:coverage");
   expect(bunfig.test).toEqual({
-    coverageReporter: "text",
+    coverageReporter: ["text", "lcov"],
     coverageSkipTestFiles: true,
     coveragePathIgnorePatterns: ["tests/**"],
     coverageThreshold: {lines: 0.84, functions: 0.33},
   });
   expect(checkWorkflow).toContain("run: bun run check");
+  expect(checkWorkflow).toContain("id-token: write");
+  expect(checkWorkflow).toMatch(/uses: codecov\/codecov-action@[a-f0-9]{40}/);
+  expect(checkWorkflow).toContain("files: ./coverage/lcov.info");
+  expect(checkWorkflow).toContain("use_oidc: true");
+  expect(readme).toContain(
+    "https://codecov.io/gh/simonesiega/codex-limits/branch/main/graph/badge.svg"
+  );
+  expect(readme).not.toContain("img.shields.io/badge/coverage-");
 });
 
 test("validation and prepack scripts do not recurse", async () => {

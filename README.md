@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="#requirements">Requirements</a> · <a href="#quick-start">Installation</a> · <a href="#usage">Commands</a> · <a href="docs/README.md">Documentation</a>
+  <a href="#requirements">Requirements</a> · <a href="#quick-start">Installation</a> · <a href="#usage">Commands</a> · <a href="docs/README.md">Documentation</a> · <a href="CONTRIBUTING.md#finding-work">Contributing</a>
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
   <a href="https://www.npmjs.com/package/@simonesiega/codex-limits"><img src="https://img.shields.io/npm/dt/@simonesiega/codex-limits?label=total%20downloads" alt="Total npm downloads" /></a>
   <a href="https://github.com/simonesiega/codex-limits/actions/workflows/check.yml?query=branch%3Amain"><img src="https://img.shields.io/github/actions/workflow/status/simonesiega/codex-limits/check.yml?branch=main&amp;label=tests" alt="Automated test status" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/simonesiega/codex-limits" alt="License" /></a>
-  <a href="CONTRIBUTING.md#local-development"><img src="https://img.shields.io/badge/coverage-97.75%25-brightgreen" alt="Test coverage: 97.75% lines" /></a>
+  <a href="https://codecov.io/gh/simonesiega/codex-limits"><img src="https://codecov.io/gh/simonesiega/codex-limits/branch/main/graph/badge.svg" alt="Code coverage" /></a>
 </p>
 
 <p align="center">
@@ -95,8 +95,8 @@ For automation, use `codex-limits --json`, `codex-limits coupons --json`, or `co
 
 Generate a completion script for Bash, Zsh, Fish, PowerShell, or Nushell:
 
-```bash
-codex-limits completions bash
+```text
+codex-limits completions <shell>
 ```
 
 See [Shell completions](docs/guides/shell-completions.md) for installation steps and an explanation of how registry-driven generation works.
@@ -130,17 +130,7 @@ The supported public interfaces are the CLI, its documented JSON contracts, and 
 
 ## Documentation
 
-The [documentation hub](docs/README.md) routes users and contributors to the canonical guide for each topic.
-
-| Topic               | Canonical documentation                                                                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Runtime and support | [Compatibility](docs/guides/compatibility.md)                                                                                                                                         |
-| Troubleshooting     | [Troubleshooting](docs/guides/troubleshooting.md)                                                                                                                                     |
-| JSON contracts      | [JSON output](docs/guides/json-output.md) · [Schemas](docs/schema/) · [Examples](docs/examples/)                                                                                      |
-| Shell completions   | [Bash, Zsh, Fish, PowerShell, and Nushell setup](docs/guides/shell-completions.md)                                                                                                    |
-| Agent integrations  | [Shared guide](docs/guides/agent-integrations.md) · [OpenCode](docs/guides/agents/opencode.md) · [pi](docs/guides/agents/pi.md) · [GitHub Copilot CLI](docs/guides/agents/copilot.md) |
-| Security            | [Security policy](SECURITY.md)                                                                                                                                                        |
-| Contributing        | [Contribution guide](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Contributors](https://github.com/simonesiega/codex-limits/graphs/contributors)                       |
+See the [documentation hub](docs/README.md) for compatibility, troubleshooting, JSON contracts, shell completions, agent integrations, security, and contributor documentation.
 
 ## Local development
 
@@ -151,14 +141,7 @@ bun install
 bun run dev
 ```
 
-Use Bun for repository development. Run the complete validation pipeline before submitting changes:
-
-```bash
-bun run audit
-bun run check
-```
-
-See [Contributing](CONTRIBUTING.md) for the development workflow, architecture boundaries, testing expectations, and documentation rules.
+Use Bun for repository development. See [Contributing](CONTRIBUTING.md#local-development) for the full development and validation workflow.
 
 ## Security
 

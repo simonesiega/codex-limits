@@ -8,6 +8,7 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added an automated Codecov badge backed by LCOV reports from the existing coverage-enforced CI run.
 - Added built-in Bun coverage reporting with baseline-derived per-file regression floors enforced by local validation and CI.
 - Added generated Bash, Zsh, Fish, PowerShell, and Nushell completions through `codex-limits completions <shell>`, with native syntax validation for every supported shell.
 

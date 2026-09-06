@@ -104,9 +104,9 @@ Enforcement decisions will consider context, severity, impact, prior behavior, a
 
 ## Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct.html), available under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
+This Code of Conduct is adapted from the [Contributor Covenant, version 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/), available under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/).
 
-The enforcement guidelines were inspired by [Mozilla's code of conduct enforcement ladder](https://github.com/mozilla/diversity).
+The enforcement guidelines were inspired by [Mozilla's code of conduct enforcement ladder](https://github.com/mozilla/inclusion).
 
 ## Related documentation
 

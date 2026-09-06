@@ -16,20 +16,20 @@ Read [`README.md`](README.md) first, follow the [`CODE_OF_CONDUCT.md`](CODE_OF_C
 
 - [Quick start](#quick-start)
 - [Branch naming](#branch-naming)
+- [Finding work](#finding-work)
 - [Issues](#issues)
 - [Local development](#local-development)
 - [Code guidelines](#code-guidelines)
 - [Safety rules](#safety-rules)
 - [Adding a new agent](#adding-a-new-agent)
 - [Documentation changes](#documentation-changes)
-- [Pull request checklist](#pull-request-checklist)
-- [Security policy](#security-policy)
+- [Pull requests](#pull-requests)
 - [Community guidelines](#community-guidelines)
 - [Contact](#contact)
 
 ## Quick start
 
-If you are new to the project, read [`README.md`](README.md) and the [documentation hub](docs/README.md), then choose one focused issue or improvement.
+If you are new to the project, start with [Finding work](#finding-work) to see whether a scoped issue is available.
 
 | Step | Action                                                                                                 |
 | ---- | ------------------------------------------------------------------------------------------------------ |
@@ -48,6 +48,15 @@ If you are new to the project, read [`README.md`](README.md) and the [documentat
 | Docs        | `docs/`  | `docs/update-agent-guide`   |
 | Maintenance | `chore/` | `chore/update-build-config` |
 | Tests       | `test/`  | `test/add-coupon-coverage`  |
+
+## Finding work
+
+Maintainers reserve two labels for open issues that are ready for external contributors:
+
+- [`good first issue`](https://github.com/simonesiega/codex-limits/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) identifies bounded tasks with a clear expected outcome and limited project context.
+- [`help wanted`](https://github.com/simonesiega/codex-limits/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) identifies accepted work where external implementation or investigation would be useful.
+
+These filters may be empty. In that case, there is no currently advertised contribution task. Follow the [issue process](#issues) only for a genuine bug or focused improvement rather than creating placeholder work. Comment before substantial implementation to confirm that an issue is available and align on its scope.
 
 ## Issues
 
@@ -120,7 +129,9 @@ Run tests with source coverage reporting and the enforced regression floors:
 bun run test:coverage
 ```
 
-Coverage excludes test files and test support code under `tests`. The reviewed Bun 1.3.14 baseline measures 97.75% aggregate line coverage and 97.88% aggregate function coverage; the minimum loaded-source-file results are 84.17% for lines and 33.33% for functions. Because Bun applies configured thresholds per file, the validation floors round those per-file baselines down to 84% for lines and 33% for functions. `bun run check` uses the same coverage command and fails when a loaded source file drops below either floor.
+Coverage excludes test files and test support code under `tests`. The reviewed Bun 1.3.14 baseline measures 97.78% aggregate line coverage and 97.93% aggregate function coverage; the minimum loaded-source-file results are 84.17% for lines and 33.33% for functions. Because Bun applies configured thresholds per file, the validation floors round those per-file baselines down to 84% for lines and 33% for functions. `bun run check` uses the same coverage command and fails when a loaded source file drops below either floor.
+
+CI uploads the generated LCOV report to Codecov using GitHub OIDC, without a long-lived Codecov token. The README badge reflects the latest uploaded `main`-branch report; Bun's local thresholds remain the coverage regression gate.
 
 Treat coverage as a regression signal rather than a target. Tests should protect observable behavior, safety boundaries, or supported integration contracts; do not add assertions solely to execute uncovered lines.
 
@@ -219,25 +230,9 @@ git diff --check
 
 Documentation-only changes do not require unrelated runtime changes, but the complete `bun run check` remains the final repository gate before release.
 
-## Pull request checklist
+## Pull requests
 
-Opening a Pull Request loads the repository's [Pull Request template](https://github.com/simonesiega/codex-limits/blob/main/.github/pull_request_template.md). Complete its summary, related-issue, validation, and screenshot sections before requesting review.
-
-Then verify:
-
-- [ ] The PR title and description explain what changed and why.
-- [ ] The change is focused and does not include unrelated cleanup.
-- [ ] `bun run format` was run and both `bun run audit` and `bun run check` pass locally.
-- [ ] Tests were added or updated for behavior changes.
-- [ ] Documentation was updated if commands, setup, output, or agent support changed.
-- [ ] No secrets, account data, tokens, cookies, or raw local files were committed.
-- [ ] Screenshots were updated only when the visual output changed.
-
-## Security policy
-
-If you discover a vulnerability or a way to expose private Codex data, do not open a public issue.
-
-Please follow the private reporting process in [`SECURITY.md`](./SECURITY.md).
+Opening a Pull Request loads the repository's [Pull Request template](https://github.com/simonesiega/codex-limits/blob/main/.github/pull_request_template.md). It is the canonical submission checklist for scope, validation, tests, documentation, changelog entries, compatibility, privacy, and screenshots. Complete every applicable item before requesting review.
 
 ## Community guidelines
 

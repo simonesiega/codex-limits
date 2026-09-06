@@ -11,7 +11,7 @@ This documentation is organized by task. The root README is the product overview
 - **Enabling command completion?** Follow the [Bash, Zsh, Fish, PowerShell, or Nushell setup](guides/shell-completions.md).
 - **Installing or removing an agent command?** Open the [agent integrations guide](guides/agent-integrations.md), then choose [OpenCode](guides/agents/opencode.md), [pi](guides/agents/pi.md), or [GitHub Copilot CLI](guides/agents/copilot.md).
 - **Diagnosing an environment?** Run `codex-limits doctor`, then use [Troubleshooting](guides/troubleshooting.md) and check the relevant [compatibility requirements](guides/compatibility.md).
-- **Contributing?** Start with [`CONTRIBUTING.md`](../CONTRIBUTING.md), follow the [Code of Conduct](../CODE_OF_CONDUCT.md), use the [issue chooser](https://github.com/simonesiega/codex-limits/issues/new/choose) for bug reports or feature requests, and review the [security policy](../SECURITY.md).
+- **Contributing?** Use [Finding work](../CONTRIBUTING.md#finding-work) to check for scoped issues, follow the [Code of Conduct](../CODE_OF_CONDUCT.md), use the [issue chooser](https://github.com/simonesiega/codex-limits/issues/new/choose) for genuine bug reports or focused improvements, and review the [security policy](../SECURITY.md).
 
 ## CLI and automation
 

@@ -69,9 +69,17 @@ Each agent name links to its dedicated installation, usage, removal, compatibili
 | [pi](agents/pi.md)                      | [pi.dev](https://pi.dev/)                                   | Supported | `/codex-limits` | `pi`             |
 | [GitHub Copilot CLI](agents/copilot.md) | [github/copilot-cli](https://github.com/github/copilot-cli) | Supported | `/codex-limits` | `copilot`        |
 
-## Data and privacy
+## Shared behavior and privacy
 
-Agent integrations are read-only views over the shared local core. The Security policy is canonical for [agent data flow and installer safeguards](../../SECURITY.md#agent-integrations-and-installers) and [command safety boundaries](../../SECURITY.md#command-safety-boundaries).
+Every `/codex-limits` integration displays the same compact summary:
+
+- remaining capacity and status for the weekly window;
+- the 5-hour window when supplied by Codex;
+- reset durations;
+- available reset credits and the next expiration;
+- safe warnings when some data is unavailable.
+
+Agent integrations are read-only views over the shared local core. They do not receive reset capabilities or send the command or limits data to the LLM. The Security policy is canonical for [agent data flow and installer safeguards](../../SECURITY.md#agent-integrations-and-installers) and [command safety boundaries](../../SECURITY.md#command-safety-boundaries).
 
 Agent adapters must reuse the shared core rather than independently reading Codex data, resolving credentials, making live requests, or defining safety rules.
 

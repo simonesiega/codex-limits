@@ -44,7 +44,7 @@ The following environments are covered by the repository's automated checks or l
 | Area                             | Tested environments                                                                                                                         |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | Automated packaged CLI           | GitHub Actions on `ubuntu-latest` with Node.js 20 and 22, `windows-latest` with Node.js 20, and `macos-latest` with Node.js 22              |
-| Latest recorded local validation | Windows build `10.0.26200.8875` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-08-09)                                                   |
+| Latest recorded local validation | Windows build `10.0.26200.9168` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-09-06)                                                   |
 | Terminal rendering               | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix                          |
 | Shell completion generation      | Native syntax validation for Bash, Zsh, Fish, PowerShell, and Nushell on `ubuntu-latest`                                                    |
 | OpenCode agent adapter           | Mocked API coverage plus packed install, plugin loading, `/codex-limits` dispatch, and removal in real OpenCode 1.18.14 and latest hosts    |

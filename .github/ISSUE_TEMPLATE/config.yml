@@ -9,3 +9,6 @@ contact_links:
   - name: Troubleshooting guide
     url: https://github.com/simonesiega/codex-limits/blob/main/docs/guides/troubleshooting.md
     about: Diagnose CLI, Codex data, network, coupon, terminal, JSON, reset, and agent problems.
+  - name: Contribution guide
+    url: https://github.com/simonesiega/codex-limits/blob/main/CONTRIBUTING.md#finding-work
+    about: See whether maintainer-scoped work is available and review the contribution workflow.

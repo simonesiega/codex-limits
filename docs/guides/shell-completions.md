@@ -151,7 +151,7 @@ The generated files are snapshots of the installed CLI's registry. Regenerate th
 
 ## Verify or remove
 
-Type `codex-limits ` and press <kbd>Tab</kbd> to verify command completion. Subcommands, options, shell names, and supported agent IDs are completed from the current command definitions.
+Type `codex-limits` followed by a space, then press <kbd>Tab</kbd> to verify command completion. Subcommands, options, shell names, and supported agent IDs are completed from the current command definitions.
 
 To remove completions, delete the generated file and remove the matching `source`, `fpath`, PowerShell profile, or Nushell autoload entry. Restart the shell afterward.
 

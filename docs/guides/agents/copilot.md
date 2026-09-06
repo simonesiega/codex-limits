@@ -66,18 +66,10 @@ Start a new interactive Copilot CLI session, then invoke:
   />
 </p>
 
-This timeline entry is the expected result: Codex Limits reports locally without creating a model prompt.
+This timeline entry is the expected result: Codex Limits renders the [shared read-only summary](../agent-integrations.md#shared-behavior-and-privacy) locally without creating a model prompt.
 
 > [!IMPORTANT]
 > Run the command only inside Copilot CLI's interactive interface. Do not use `copilot -p "/codex-limits"`; prompt mode can treat that text as an LLM prompt instead of dispatching the extension command.
-
-The extension logs a compact limits summary directly to the Copilot CLI timeline, including:
-
-- remaining capacity and status for the weekly window;
-- the 5-hour window when supplied by Codex;
-- compact progress bars and reset durations;
-- available reset credits and the next expiration;
-- safe warnings when some data is unavailable.
 
 The slash-command handler calls the shared local core directly. It does not call `session.send()`, create a user message, or ask the model to process the request. Loading and timeline failures are reduced to static safe messages instead of exposing raw filesystem, credential, or network details.
 
@@ -126,9 +118,7 @@ See the [Security policy](../../../SECURITY.md#agent-integrations-and-installers
 
 - [Agent integrations](../agent-integrations.md) — Supported-agent index and behavior shared by every adapter.
 - [Compatibility](../compatibility.md) — Runtime, operating-system, terminal, network, and agent compatibility.
-- [JSON output](../json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
 - [Security policy](../../../SECURITY.md) — Local-data safeguards, network behavior, and vulnerability reporting.
-- [GitHub Copilot CLI][copilot-cli] — Official CLI repository.
 - [Copilot CLI documentation][copilot-docs] — Official concepts and usage documentation.
 - [Copilot SDK extension documentation][copilot-extension-docs] — Current experimental extension lifecycle and API.
 - [Troubleshooting](../troubleshooting.md) — Cross-surface diagnosis and common problem resolution.
@@ -136,6 +126,6 @@ See the [Security policy](../../../SECURITY.md#agent-integrations-and-installers
 - [Project README](../../../README.md) — Product overview, installation, commands, and configuration.
 
 [copilot-cli]: https://github.com/github/copilot-cli
-[copilot-docs]: https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli
+[copilot-docs]: https://docs.github.com/en/copilot/concepts/agents/copilot-cli/about-copilot-cli
 [copilot-install]: https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli
 [copilot-extension-docs]: https://github.com/github/copilot-sdk/blob/main/nodejs/docs/extensions.md

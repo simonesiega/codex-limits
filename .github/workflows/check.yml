@@ -10,7 +10,7 @@ on:
     - cron: "23 6 * * 1"
   workflow_dispatch:
 
-# Validation only needs read access to repository contents.
+# Default every job to read-only repository access; the source job adds OIDC for coverage upload.
 permissions:
   contents: read
 
@@ -25,6 +25,9 @@ jobs:
     name: Source checks and build (Node 24)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       # Use immutable action revisions and do not retain repository credentials.
@@ -82,6 +85,16 @@ jobs:
           # Fail instead of skipping syntax validation when any supported shell parser is unavailable.
           CODEX_LIMITS_REQUIRE_COMPLETION_SHELLS: "true"
         run: bun run check
+
+      # Publish the generated LCOV report without storing a long-lived upload token.
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          disable_search: true
+          fail_ci_if_error: true
+          files: ./coverage/lcov.info
+          use_oidc: true
+          version: v11.3.1
 
       # Reuse exactly the build accepted above in every packed-runtime job.
       - name: Archive validated build
