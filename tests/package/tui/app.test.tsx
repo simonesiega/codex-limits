@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for app. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {render} from "ink-testing-library";
 import type {CodexLimitsResult} from "@/package/core/types";

@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Agent adapter support for install. The adapter stays thin, delegates Codex data handling to the shared core, and preserves the host integration safety boundary.
+ */
 import {homedir} from "node:os";
 import {join} from "node:path";
 import {
@@ -10,6 +13,7 @@ import {createAgentOperationError, type AgentOperation} from "@/agents/shared/op
 import {
   type AgentInstallResult,
   type AgentIntegrationStatus,
+  type AgentLifecycleResult,
   type AgentUninstallResult,
 } from "@/agents/types";
 import {isRecord} from "@/package/core/utils/unknown";
@@ -25,40 +29,38 @@ interface OpencodeConfigOptions {
 }
 
 /** Adds the Codex Limits package to OpenCode's global plugin configurations. */
-export async function installOpencodeIntegration(
+export function installOpencodeIntegration(
   options: OpencodeConfigOptions = {}
 ): Promise<AgentInstallResult> {
+  return updateOpencodeIntegration("install", options, addPlugin);
+}
+
+/** Removes only recognized Codex Limits entries from OpenCode's plugin configurations. */
+export function uninstallOpencodeIntegration(
+  options: OpencodeConfigOptions = {}
+): Promise<AgentUninstallResult> {
+  return updateOpencodeIntegration("uninstall", options, removePlugin);
+}
+
+// Keep both host configuration files on one update path so install and uninstall cannot drift.
+/** Reads every target before mutation so malformed sibling configuration prevents partial writes. */
+async function updateOpencodeIntegration(
+  operation: AgentOperation,
+  options: OpencodeConfigOptions,
+  updatePlugin: (config: Record<string, unknown>) => boolean
+): Promise<AgentLifecycleResult> {
   const {configPath, tuiConfigPath} = resolveOpencodePaths(options);
 
   // OpenCode versions discover TUI plugins from different global config files, so keep both in sync.
   const [config, tuiConfig] = await Promise.all([
-    readOpencodeConfig(configPath, "https://opencode.ai/config.json"),
-    readOpencodeConfig(tuiConfigPath, "https://opencode.ai/tui.json"),
+    readOpencodeConfig(configPath, "https://opencode.ai/config.json", operation),
+    readOpencodeConfig(tuiConfigPath, "https://opencode.ai/tui.json", operation),
   ]);
-  const configChanged = addPlugin(config.value);
-  const tuiConfigChanged = addPlugin(tuiConfig.value);
-  await writeOpencodeConfigs("install", [
-    {...config, path: configPath, changed: configChanged},
-    {...tuiConfig, path: tuiConfigPath, changed: tuiConfigChanged},
-  ]);
-
-  return {changed: configChanged || tuiConfigChanged, configPaths: [configPath, tuiConfigPath]};
-}
-
-/** Removes only recognized Codex Limits entries from OpenCode's plugin configurations. */
-export async function uninstallOpencodeIntegration(
-  options: OpencodeConfigOptions = {}
-): Promise<AgentUninstallResult> {
-  const {configPath, tuiConfigPath} = resolveOpencodePaths(options);
-  const [config, tuiConfig] = await Promise.all([
-    readOpencodeConfig(configPath, "https://opencode.ai/config.json", "uninstall"),
-    readOpencodeConfig(tuiConfigPath, "https://opencode.ai/tui.json", "uninstall"),
-  ]);
-  const configChanged = removePlugin(config.value);
-  const tuiConfigChanged = removePlugin(tuiConfig.value);
-  await writeOpencodeConfigs("uninstall", [
-    {...config, path: configPath, changed: configChanged},
-    {...tuiConfig, path: tuiConfigPath, changed: tuiConfigChanged},
+  const configChanged = updatePlugin(config.value);
+  const tuiConfigChanged = updatePlugin(tuiConfig.value);
+  await writeOpencodeConfigs(operation, [
+    {...config, path: configPath, maxBytes: MAX_CONFIG_BYTES, changed: configChanged},
+    {...tuiConfig, path: tuiConfigPath, maxBytes: MAX_CONFIG_BYTES, changed: tuiConfigChanged},
   ]);
 
   return {changed: configChanged || tuiConfigChanged, configPaths: [configPath, tuiConfigPath]};
@@ -80,6 +82,7 @@ export async function inspectOpencodeIntegration(
   return statuses.every((status) => status === "not-installed") ? "not-installed" : "unknown";
 }
 
+/** Resolves explicit test paths or the two supported global OpenCode configuration locations. */
 function resolveOpencodePaths(options: OpencodeConfigOptions): {
   configPath: string;
   tuiConfigPath: string;
@@ -91,6 +94,7 @@ function resolveOpencodePaths(options: OpencodeConfigOptions): {
   };
 }
 
+/** Classifies one configuration without modifying missing or malformed files. */
 async function inspectOpencodeConfig(
   path: string,
   schema: string
@@ -105,6 +109,7 @@ async function inspectOpencodeConfig(
   }
 }
 
+/** Maps bounded JSON read failures to operation-specific safe adapter errors. */
 async function readOpencodeConfig(
   path: string,
   schema: string,
@@ -125,6 +130,7 @@ async function readOpencodeConfig(
     : document;
 }
 
+/** Batches changed documents so validation occurs before the first replacement. */
 async function writeOpencodeConfigs(
   operation: AgentOperation,
   configs: ReadonlyArray<AgentJsonUpdate & {changed: boolean}>
@@ -144,6 +150,7 @@ async function writeOpencodeConfigs(
   }
 }
 
+/** Adds the package registration only when no recognized entry already exists. */
 function addPlugin(config: Record<string, unknown>): boolean {
   const plugins = readPluginArray(config.plugin);
   if (plugins.some(isCodexLimitsPlugin)) {
@@ -153,6 +160,7 @@ function addPlugin(config: Record<string, unknown>): boolean {
   return true;
 }
 
+/** Removes recognized package registrations while preserving every unrelated plugin. */
 function removePlugin(config: Record<string, unknown>): boolean {
   const plugins = readPluginArray(config.plugin, "uninstall");
   const remaining = plugins.filter((plugin) => !isCodexLimitsPlugin(plugin));
@@ -163,6 +171,7 @@ function removePlugin(config: Record<string, unknown>): boolean {
   return true;
 }
 
+/** Treats a missing plugin list as empty but rejects malformed list entries. */
 function readPluginArray(
   value: unknown,
   operation: AgentOperation = "install"
@@ -176,6 +185,7 @@ function readPluginArray(
   return value;
 }
 
+/** Narrows supported string and tuple registration forms. */
 function isPluginEntry(value: unknown): value is OpencodePluginEntry {
   return (
     typeof value === "string" ||
@@ -186,6 +196,7 @@ function isPluginEntry(value: unknown): value is OpencodePluginEntry {
   );
 }
 
+/** Recognizes package registrations with optional npm version suffixes. */
 function isCodexLimitsPlugin(value: OpencodePluginEntry): boolean {
   // A pinned version or tag has the same package identity and must not be added a second time.
   const spec = Array.isArray(value) ? value[0] : value;

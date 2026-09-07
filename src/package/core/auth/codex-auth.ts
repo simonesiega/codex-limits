@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for codex auth. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {join, normalize} from "node:path";
 import {detectCodexHome} from "@/package/core/codex/paths";
 import {warningDiagnostic, type Diagnostic} from "@/package/core/diagnostics";
@@ -52,6 +55,7 @@ export async function resolveCodexCredentialResult(
     : {credentials: null, status: "missing", diagnostics: []};
 }
 
+/** Chooses an explicit auth path first, otherwise the bounded file under the detected Codex home. */
 async function resolveCodexAuthFile(options: CodexAuthOptions): Promise<string | null> {
   if (options.authFile) {
     return normalize(options.authFile);
@@ -60,6 +64,7 @@ async function resolveCodexAuthFile(options: CodexAuthOptions): Promise<string |
   return detection.foundHome ? join(detection.foundHome, "auth.json") : null;
 }
 
+/** Reads and validates only the credential fields required for authenticated requests. */
 async function readAuthFile(authPath: string): Promise<CodexCredentialResolution> {
   let content: string;
   try {
@@ -102,6 +107,7 @@ async function readAuthFile(authPath: string): Promise<CodexCredentialResolution
   }
 }
 
+/** Returns a stable failure without retaining raw credential content or parser errors. */
 function malformedAuthResult(): CodexCredentialResolution {
   return {
     credentials: null,

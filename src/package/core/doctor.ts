@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for doctor. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {detectCodexHome} from "@/package/core/codex/paths";
 import {getLocalUsage} from "@/package/core/limits";
 import type {CodexDiagnosticsResult, CodexLimitsOptions} from "@/package/core/types";

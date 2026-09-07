@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Secure local session discovery. Traversal, candidate selection, line parsing, and file identity checks are deliberately bounded to prevent untrusted local data from escaping the core safety boundary.
+ */
 import {constants} from "node:fs";
 import type {Dirent, ReadStream, Stats} from "node:fs";
 import type {FileHandle} from "node:fs/promises";
@@ -54,6 +57,7 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
   const files: CodexSessionFile[] = [];
   let latestSnapshot: CodexSessionSnapshot | null = null;
 
+  // Candidates are newest-first, but event timestamps still decide which parsed snapshot wins.
   for (const candidate of candidates.slice(0, MAX_SESSION_FILES_TO_PARSE)) {
     const relativePath = toSafeRelativePath(homePath, candidate.path);
     if (candidate.size > MAX_SESSION_FILE_BYTES) {
@@ -116,6 +120,7 @@ export async function readCodexSessions(homePath: string): Promise<CodexSessionR
   return {homePath, sessionsRoot, files, latestSnapshot, warnings};
 }
 
+/** Pins the sessions directory to a real path and rejects replacement or symlink races. */
 async function resolveSafeSessionsRoot(
   homePath: string,
   sessionsRoot: string,
@@ -151,6 +156,7 @@ async function resolveSafeSessionsRoot(
   }
 }
 
+/** Walks the verified sessions root, then sorts candidates newest-first before applying parse limits. */
 async function findSessionFiles(
   sessionsRoot: string,
   realSessionsRoot: string,
@@ -184,6 +190,7 @@ async function findSessionFiles(
   );
 }
 
+/** Captures the file identity and timestamps later used to detect replacement races. */
 async function statSessionFile(
   realSessionsRoot: string,
   path: string,
@@ -208,6 +215,7 @@ async function statSessionFile(
   }
 }
 
+/** Traverses only bounded real directories and records safe regular-file candidates. */
 async function walkSessions(
   currentPath: string,
   depth: number,
@@ -259,6 +267,7 @@ async function walkSessions(
   }
 }
 
+/** Reads a capped directory listing and records when traversal had to be truncated. */
 async function readBoundedDirectory(
   currentPath: string,
   state: SessionWalkState
@@ -278,6 +287,7 @@ async function readBoundedDirectory(
   return entries.sort((left, right) => right.name.localeCompare(left.name));
 }
 
+/** Streams bounded JSONL records and retains the newest recognized snapshot in the file. */
 async function extractSnapshotFromSessionFile(
   homePath: string,
   candidate: SessionCandidate
@@ -358,6 +368,7 @@ async function extractSnapshotFromSessionFile(
   return {snapshot: latest, skippedOversizedLine};
 }
 
+/** Opens by file descriptor and verifies identity again before any content is consumed. */
 async function openVerifiedSessionStream(candidate: SessionCandidate): Promise<ReadStream> {
   let handle: FileHandle | undefined;
 
@@ -395,11 +406,13 @@ async function openVerifiedSessionStream(candidate: SessionCandidate): Promise<R
   }
 }
 
+/** Compares stable device and inode identity rather than mutable path metadata. */
 function isSameFile(left: Pick<Stats, "dev" | "ino">, right: Pick<Stats, "dev" | "ino">): boolean {
   return left.dev === right.dev && left.ino === right.ino;
 }
 
 // Valid event timestamps are authoritative; mtime ordering remains the fallback when none exist.
+/** Prefers event time and uses file metadata only as a deterministic tie-breaker. */
 function isNewerSnapshot(candidate: CodexSessionSnapshot, current: CodexSessionSnapshot): boolean {
   const candidateTimestamp = parseDateValue(candidate.eventTimestamp)?.getTime() ?? null;
   const currentTimestamp = parseDateValue(current.eventTimestamp)?.getTime() ?? null;
@@ -410,6 +423,7 @@ function isNewerSnapshot(candidate: CodexSessionSnapshot, current: CodexSessionS
   return currentTimestamp === null || candidateTimestamp > currentTimestamp;
 }
 
+/** Recognizes token-count events and extracts only the rate-limit fields needed downstream. */
 function parseSnapshotLine(rawLine: string): {
   threadId: string | null;
   timestamp: string | null;
@@ -427,6 +441,7 @@ function parseSnapshotLine(rawLine: string): {
   };
 }
 
+/** Parses one JSONL record defensively without allowing malformed lines to stop discovery. */
 function parseJsonLine(rawLine: string): Record<string, unknown> | null {
   const line = rawLine.trim();
   if (!line) {
@@ -441,6 +456,7 @@ function parseJsonLine(rawLine: string): Record<string, unknown> | null {
   }
 }
 
+/** Reads compatible thread identifiers without exposing unrelated session content. */
 function readSessionThreadId(entry: Record<string, unknown>): string | null {
   if (entry.type !== "session_meta" || !isRecord(entry.payload)) {
     return null;
@@ -448,6 +464,7 @@ function readSessionThreadId(entry: Record<string, unknown>): string | null {
   return readString(entry.payload, "id");
 }
 
+/** Unwraps supported event payload variants to the rate-limit object. */
 function readRateLimits(entry: Record<string, unknown>): Record<string, unknown> | null {
   if (entry.type !== "event_msg" || !isRecord(entry.payload)) {
     return null;
@@ -458,6 +475,7 @@ function readRateLimits(entry: Record<string, unknown>): Record<string, unknown>
   return entry.payload.rate_limits;
 }
 
+/** Builds sanitized session metadata for diagnostics without copying file contents. */
 function toSessionFile(
   path: string,
   relativePath: string,

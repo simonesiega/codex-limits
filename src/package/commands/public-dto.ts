@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for public dto. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {AgentIntegrationStatus} from "@/agents";
 import type {
   CodexLimitsResult,

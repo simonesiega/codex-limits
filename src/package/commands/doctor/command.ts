@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for command. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {AgentIntegration, AgentIntegrationStatus} from "@/agents";
 import {
   getOutputFormat,
@@ -60,6 +63,7 @@ export function createDoctorCommand(
   };
 }
 
+/** Contains adapter inspection failures and reports unknown status instead of leaking host errors. */
 async function inspectAgentIntegration(
   integration: AgentIntegration
 ): Promise<readonly [string, AgentIntegrationStatus]> {

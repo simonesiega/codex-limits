@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for command. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import {
   hasOption,
   type OptionDefinition,
@@ -137,6 +140,7 @@ export function createResetCommand(
   };
 }
 
+/** Accepts only positive safe integers matching the displayed one-based coupon index. */
 function parseCouponIndex(value: string): number | null {
   if (!/^\d+$/.test(value)) {
     return null;
@@ -145,6 +149,7 @@ function parseCouponIndex(value: string): number | null {
   return Number.isSafeInteger(index) && index > 0 ? index : null;
 }
 
+/** Requires an explicit affirmative answer and treats prompt failures as cancellation. */
 async function promptForConfirmation(io: CliIo): Promise<boolean | null> {
   let prompt: Prompt;
   try {

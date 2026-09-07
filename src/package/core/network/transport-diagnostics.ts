@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for transport diagnostics. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {warningDiagnostic, type Diagnostic} from "@/package/core/diagnostics";
 import type {JsonGetFailure} from "@/package/core/types";
 

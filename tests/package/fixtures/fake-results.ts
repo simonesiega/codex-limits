@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for fake results. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import type {CodexLimitsResult, CouponResult, CouponSummary} from "@/package/core/types";
 
 export function createFakeLimitsResult(): CodexLimitsResult {

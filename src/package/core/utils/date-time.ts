@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for date time. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 const DAY_NAMES = [
   "Sunday",
   "Monday",
@@ -80,18 +83,22 @@ export function parseDateValue(value: unknown): Date | null {
   return null;
 }
 
+/** Formats a date with an unambiguous local calendar year for detailed output. */
 export function formatLongDate(date: Date): string {
   return `${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
 }
 
+/** Formats a compact local date and minute-precision time for constrained displays. */
 export function formatShortDateTime(date: Date): string {
   return `${date.getDate()} ${SHORT_MONTH_NAMES[date.getMonth()]} ${date.getFullYear()} ${formatTime(date)}`;
 }
 
+/** Formats local time at minute precision, intentionally omitting noisy seconds. */
 export function formatTime(date: Date): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+/** Compares local calendar fields rather than elapsed time or UTC dates. */
 export function isSameLocalDate(left: Date, right: Date): boolean {
   return (
     left.getFullYear() === right.getFullYear() &&

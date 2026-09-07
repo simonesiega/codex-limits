@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for live usage. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {mkdir, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";

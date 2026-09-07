@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for atomic file. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {readFile, readdir, writeFile} from "node:fs/promises";
 import {join} from "node:path";

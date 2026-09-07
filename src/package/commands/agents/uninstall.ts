@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for uninstall. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import {AgentUninstallError, type AgentIntegration} from "@/agents";
 import {
   closeAgentPrompt,
@@ -74,6 +77,7 @@ export async function uninstallAgentIntegrations(
   return uninstallSelected(ids, dependencies);
 }
 
+/** Inspects candidates before prompting so absent integrations are never offered for removal. */
 async function findInstalledIntegrations(
   integrations: readonly AgentIntegration[]
 ): Promise<AgentIntegration[]> {
@@ -89,6 +93,7 @@ async function findInstalledIntegrations(
   return integrations.filter((_, index) => statuses[index]);
 }
 
+/** Runs conservative removals independently so one adapter failure does not stop the others. */
 async function uninstallSelected(
   ids: readonly string[],
   dependencies: AgentLifecycleDependencies
@@ -105,6 +110,7 @@ async function uninstallSelected(
   return summary.failed ? 1 : 0;
 }
 
+/** Allows only deliberate AgentUninstallError messages to reach terminal output. */
 function formatUninstallError(error: unknown): string {
   if (!(error instanceof AgentUninstallError)) {
     return "Integration uninstallation failed.";

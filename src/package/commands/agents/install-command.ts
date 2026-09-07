@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for install command. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import {installAgentIntegrations} from "@/package/commands/agents/install";
 import {
   createAgentsLifecycleCommand,

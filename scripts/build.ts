@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Repository automation for build. It is run through Bun and keeps build or validation policy outside the published runtime.
+ */
 import {chmod, mkdir, readFile, readdir, rm, writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {format, resolveConfig} from "prettier";

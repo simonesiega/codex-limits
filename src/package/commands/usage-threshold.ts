@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for usage threshold. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {
   CommandValidationIssue,
   OptionDefinition,
@@ -13,8 +16,7 @@ import {
 const THRESHOLD_OPTION_KEY = "usage.threshold";
 const THRESHOLD_PATTERN = /^(five-hour|weekly)=(\d+(?:\.\d+)?)$/;
 
-/** Process exit codes reserved for evaluated usage-threshold outcomes. */
-export const USAGE_THRESHOLD_EXIT_CODES = {
+const USAGE_THRESHOLD_EXIT_CODES = {
   satisfied: 0,
   breached: 2,
   unavailable: 3,
@@ -46,6 +48,7 @@ export function getUsageThresholdExitCode(
   return USAGE_THRESHOLD_EXIT_CODES[evaluateUsageThresholds(windows, thresholds)];
 }
 
+/** Parses all repeated threshold expressions before any usage data is loaded. */
 function parseUsageThresholds(values: ParsedCommandValues): {
   thresholds: UsageThreshold[];
   issue: CommandValidationIssue | null;
@@ -86,6 +89,7 @@ function parseUsageThresholds(values: ParsedCommandValues): {
   return {thresholds, issue: null};
 }
 
+/** Maps public threshold names to stable normalized usage-window keys. */
 function toWindow(value: string | undefined): UsageThresholdWindow | null {
   if (value === "five-hour") {
     return "fiveHour";

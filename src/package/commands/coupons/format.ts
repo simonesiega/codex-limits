@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for format. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import {formatUnknown, formatWarnings} from "@/package/commands/format-shared";
 import type {CouponItem, CouponResult} from "@/package/core/types";
 

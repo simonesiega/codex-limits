@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Package entry-point support for pi. This module exposes the smallest runtime surface needed by the corresponding consumer.
+ */
 import piPlugin from "@/agents/pi/plugin";
 import {exposeAgentHost} from "@/agents/shared/host-entry";
 

@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for paths. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {constants} from "node:fs";
 import {access, stat} from "node:fs/promises";
 import {homedir} from "node:os";
@@ -63,6 +66,7 @@ export async function detectCodexHome(options: CodexHomeOptions = {}): Promise<C
   };
 }
 
+/** Adds a path candidate only when its source produced a non-empty value. */
 function appendCandidate(
   paths: CodexHomeCandidatePath[],
   path: string | null,
@@ -73,6 +77,7 @@ function appendCandidate(
   }
 }
 
+/** Verifies that a home candidate is a readable directory rather than merely an existing path. */
 async function canReadDirectory(path: string): Promise<boolean> {
   try {
     const details = await stat(path);
@@ -88,6 +93,7 @@ async function canReadDirectory(path: string): Promise<boolean> {
   }
 }
 
+/** Preserves discovery priority while removing equivalent normalized candidate paths. */
 function dedupePaths(paths: readonly CodexHomeCandidatePath[]): CodexHomeCandidatePath[] {
   const seen = new Set<string>();
   const result: CodexHomeCandidatePath[] = [];

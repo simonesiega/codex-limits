@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for redact. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 const SENSITIVE_FIELD =
   /(?:chatgpt[-_]?account[-_]?id|access[-_]?token|refresh[-_]?token|id[-_]?token|session[-_]?token|api[-_]?key|account[-_]?id|authorization|cookie|client[-_]?secret|password|credential|secret|token)/;
 

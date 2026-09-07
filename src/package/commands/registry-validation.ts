@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Startup validation for declarative command metadata. These checks reject ambiguous or unsafe registry definitions before parsing or help rendering can consume them.
+ */
 import type {
   CommandDefinition,
   CommandRegistry,
@@ -220,6 +223,7 @@ function assertValidPositionals(command: CommandDefinition): void {
   }
 }
 
+/** Ensures every non-interactive mutation has a declared boolean confirmation gate. */
 function assertRemoteMutationConfirmation(command: CommandDefinition): void {
   if (command.safety !== "remote-mutation" || command.confirmation.kind === "interactive") {
     return;
@@ -234,6 +238,7 @@ function assertRemoteMutationConfirmation(command: CommandDefinition): void {
   }
 }
 
+/** Prevents shared option spellings from changing token shape between command contexts. */
 function assertCompatibleOptionSpellings(registry: CommandRegistry): void {
   const definitions = [
     ...registry.globalOptions,
@@ -277,6 +282,7 @@ function assertGlobalOptionsDoNotOverlap(registry: CommandRegistry): void {
   }
 }
 
+/** Requires every nested path and alias to have a renderable parent help group. */
 function assertNestedCommandsHaveGroups(registry: CommandRegistry): void {
   const groupPaths = new Set<string>();
   for (const group of registry.groups) {

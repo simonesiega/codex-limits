@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for command registry. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {AgentIntegration} from "@/agents";
 import {createAgentsInstallCommand} from "@/package/commands/agents/install-command";
 import {createAgentsUninstallCommand} from "@/package/commands/agents/uninstall-command";
@@ -112,6 +115,7 @@ export function createCommandRegistry(runtime: CliRuntime): CommandRegistry {
   return registry;
 }
 
+/** Rejects unsafe adapter metadata before it can enter generated help or prompts. */
 function assertValidIntegrations(integrations: readonly AgentIntegration[]): void {
   const ids = new Set<string>();
   for (const integration of integrations) {
@@ -131,6 +135,7 @@ function assertValidIntegrations(integrations: readonly AgentIntegration[]): voi
   }
 }
 
+/** Bounds integration labels and excludes terminal control characters. */
 function isSafeIntegrationText(value: string, maxLength: number): boolean {
   return Boolean(
     value.trim() && value.length <= maxLength && !/[\u0000-\u001f\u007f-\u009f]/.test(value)

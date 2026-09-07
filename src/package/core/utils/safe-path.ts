@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for safe path. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {isAbsolute, relative, resolve, sep} from "node:path";
 import {redactSensitiveText} from "@/package/core/utils/redact";
 

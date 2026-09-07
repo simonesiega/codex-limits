@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for format. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {AgentIntegration, AgentIntegrationStatus} from "@/agents";
 import type {DoctorDto} from "@/package/commands/public-dto";
 import type {LiveEndpointStatus} from "@/package/core/types";

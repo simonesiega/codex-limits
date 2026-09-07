@@ -1,5 +1,8 @@
+/**
+ * @fileoverview Agent adapter support for plugin. The adapter stays thin, delegates Codex data handling to the shared core, and preserves the host integration safety boundary.
+ */
 import type {TuiCommand, TuiPluginApi, TuiPluginModule} from "@opencode-ai/plugin/tui";
-import {formatOpencodeLimits} from "@/agents/opencode/format";
+import {formatAgentLimits} from "@/agents/shared/format";
 import {getCodexLimits} from "@/package/core/limits";
 import type {CodexLimitsResult} from "@/package/core/types";
 
@@ -60,6 +63,7 @@ export function createOpencodePlugin(
   };
 }
 
+/** Builds the read-only slash command and guards against stale asynchronous results. */
 function createCommand(
   api: TuiPluginApi,
   loadLimits: () => Promise<CodexLimitsResult>,
@@ -89,7 +93,7 @@ function createCommand(
       try {
         const result = await loadLimits();
         if (currentInvocation === invocation) {
-          show(formatOpencodeLimits(result));
+          show(formatAgentLimits(result));
         }
       } catch {
         if (currentInvocation === invocation) {
@@ -101,6 +105,7 @@ function createCommand(
   };
 }
 
+/** Supports current and legacy host registration APIs behind one disposable contract. */
 function registerCommand(api: TuiPluginApi, command: TuiCommand): void | (() => void) {
   const compatibleApi = api as {
     command?: TuiPluginApi["command"];

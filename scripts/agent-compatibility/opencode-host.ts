@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Real-host compatibility support for opencode host. This module keeps external process behavior bounded and reports sanitized diagnostics to the compatibility harness.
+ */
 import {createHash} from "node:crypto";
 import {open, readFile, writeFile} from "node:fs/promises";
 import {createServer, type Server} from "node:http";

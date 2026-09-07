@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Package entry-point support for opencode. This module exposes the smallest runtime surface needed by the corresponding consumer.
+ */
 import opencodePlugin from "@/agents/opencode/plugin";
 import {exposeAgentHost} from "@/agents/shared/host-entry";
 

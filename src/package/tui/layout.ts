@@ -1,6 +1,10 @@
-// Type of layout mode based on terminal dimensions.
+/**
+ * @fileoverview Terminal UI support for layout. This rendering layer consumes normalized data and does not perform local discovery or authenticated requests.
+ */
+/** Responsive breakpoint selected from the terminal dimensions captured at startup. */
 export type LayoutMode = "compact" | "standard" | "ultra" | "wide";
 
+/** Render decisions shared by the dashboard and its responsive components. */
 export interface TuiLayout {
   terminalWidth: number;
   contentWidth: number;
@@ -30,6 +34,7 @@ export function createTuiLayout(columns: number, rows: number): TuiLayout {
   };
 }
 
+/** Selects deterministic breakpoints from sanitized terminal dimensions. */
 function getLayoutMode(columns: number, rows: number): LayoutMode {
   if (columns < 70 || rows < 18) {
     return "ultra";

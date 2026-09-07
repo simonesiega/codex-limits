@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Host-independent agent support for format. Agent adapters reuse this module to keep lifecycle and presentation behavior consistent.
+ */
 import type {CodexLimitsResult, UsageWindow} from "@/package/core/types";
 
 const BAR_WIDTH = 22;

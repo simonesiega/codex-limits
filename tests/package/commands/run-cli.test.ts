@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for run cli. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import type {AgentIntegration} from "@/agents";
 import {runCli} from "@/package/commands/run-cli";

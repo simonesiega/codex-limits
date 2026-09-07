@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for limits. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {detectCodexHome} from "@/package/core/codex/paths";
 import {readCodexSessions} from "@/package/core/codex/session-reader";
 import {readCodexState} from "@/package/core/codex/state-reader";

@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Agent adapter support for index. The adapter stays thin, delegates Codex data handling to the shared core, and preserves the host integration safety boundary.
+ */
 import {copilotIntegration} from "@/agents/copilot/integration";
 import {opencodeIntegration} from "@/agents/opencode/integration";
 import {piIntegration} from "@/agents/pi/integration";

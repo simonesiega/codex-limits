@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for install. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import {homedir} from "node:os";
 import {isAbsolute} from "node:path";
 import {AgentInstallError, type AgentLifecycleResult} from "@/agents";
@@ -73,6 +76,7 @@ export async function installAgentIntegrations(
   return installSelected(ids, dependencies);
 }
 
+/** Runs selected adapters through the shared isolated lifecycle coordinator. */
 async function installSelected(
   ids: readonly string[],
   dependencies: AgentLifecycleDependencies
@@ -84,12 +88,13 @@ async function installSelected(
       `${result.changed ? "installed" : "already installed"}${formatConfigPaths(result)}`,
   });
 
-  if (!summary.failed) {
+  if (summary.changed) {
     dependencies.io.stdout("Restart the target agent terminal for changes to take effect.\n");
   }
   return summary.failed ? 1 : 0;
 }
 
+/** Formats only bounded public configuration paths returned by successful adapters. */
 function formatConfigPaths(result: AgentLifecycleResult): string {
   const paths = result.configPaths;
   if (!paths?.length) {
@@ -102,6 +107,7 @@ function formatConfigPaths(result: AgentLifecycleResult): string {
   return ` (${displayed.join(", ")})`;
 }
 
+/** Shortens home-relative paths and redacts paths that cannot be shown safely. */
 function formatConfigPath(path: string): string {
   const home = homedir();
   // Never expose an adapter-provided absolute path outside the current user's home.
@@ -112,6 +118,7 @@ function formatConfigPath(path: string): string {
   return relativePath === "." ? "~" : `~/${relativePath}`;
 }
 
+/** Allows only deliberate AgentInstallError messages to reach terminal output. */
 function formatInstallError(error: unknown): string {
   if (!(error instanceof AgentInstallError)) {
     return "Integration installation failed.";

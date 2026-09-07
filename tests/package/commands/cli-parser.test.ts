@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for cli parser. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {createCommandRegistry} from "@/package/commands/command-registry";
 import type {CommandDefinition, CommandRegistry, OptionValue} from "@/package/commands/command";

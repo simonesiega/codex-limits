@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for plugin. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {type Component, visibleWidth} from "@earendil-works/pi-tui";
 import {createPiPlugin} from "@/agents/pi/plugin";

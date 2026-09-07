@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for format. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {CouponItem, ResetCouponResult} from "@/package/core/types";
 
 /** Formats the review shown before an irreversible coupon redemption. */

@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Real-host compatibility support for pi host. This module keeps external process behavior bounded and reports sanitized diagnostics to the compatibility harness.
+ */
 import {spawn, type ChildProcessWithoutNullStreams} from "node:child_process";
 import {
   assert,

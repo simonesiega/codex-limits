@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Real-host compatibility support for harness. This module keeps external process behavior bounded and reports sanitized diagnostics to the compatibility harness.
+ */
 import {spawn, type ChildProcess, type ChildProcessWithoutNullStreams} from "node:child_process";
 import {basename, join} from "node:path";
 

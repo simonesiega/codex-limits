@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Bounded authenticated HTTP transport. Redirect, cancellation, response-size, and error handling rules here prevent credentials or remote response details from leaking to callers.
+ */
 import {request as httpRequest} from "node:http";
 import type {ClientRequest, IncomingMessage} from "node:http";
 import {request as httpsRequest} from "node:https";
@@ -73,6 +76,7 @@ export function authenticatedJsonGet(request: AuthenticatedJsonRequest): Promise
   return authenticatedJsonRequest(getRequest);
 }
 
+/** Allows credential-bearing requests only over HTTPS or explicit loopback HTTP. */
 function validateEndpoint(endpoint: string): {ok: true; url: URL} | JsonGetFailure {
   let url: URL;
   try {
@@ -96,6 +100,7 @@ function validateEndpoint(endpoint: string): {ok: true; url: URL} | JsonGetFailu
   return failure("unsupported-protocol");
 }
 
+/** Runs the preferred fetch transport while collapsing raw exceptions into stable failure codes. */
 async function requestWithFetch(
   url: URL,
   request: AuthenticatedJsonRequest,
@@ -138,6 +143,7 @@ async function requestWithFetch(
   }
 }
 
+/** Bounds both declared and streamed response bytes before parsing untrusted JSON. */
 async function readFetchJson(response: FetchResponseLike, maxBytes: number): Promise<unknown> {
   const declaredLength = Number(response.headers?.get("content-length"));
   if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
@@ -186,6 +192,7 @@ async function readFetchJson(response: FetchResponseLike, maxBytes: number): Pro
   throw new InvalidJsonError();
 }
 
+/** Cancels unread response data so failed requests do not continue buffering in the background. */
 async function cancelFetchBody(response: FetchResponseLike): Promise<void> {
   if (!response.body) {
     return;
@@ -198,6 +205,7 @@ async function cancelFetchBody(response: FetchResponseLike): Promise<void> {
   }
 }
 
+/** Provides a bounded native HTTP fallback with redirects disabled and explicit cancellation. */
 function requestWithNode(url: URL, request: AuthenticatedJsonRequest): Promise<JsonGetResult> {
   return new Promise((resolve) => {
     const timeout = createRequestSignal(request.timeoutMs, request.signal);
@@ -242,6 +250,7 @@ function requestWithNode(url: URL, request: AuthenticatedJsonRequest): Promise<J
   });
 }
 
+/** Collects native response chunks up to the byte ceiling before parsing JSON. */
 function consumeNodeResponse(
   response: IncomingMessage,
   maxBytes: number,
@@ -286,12 +295,14 @@ function consumeNodeResponse(
   response.on("error", () => finish(failure("network-error")));
 }
 
+/** Stops and resumes a native response so its socket can be released safely. */
 function destroyNodeResponse(response: IncomingMessage): void {
   response.destroy();
   // Bun's Node compatibility layer may leave the socket open after IncomingMessage.destroy().
   response.socket.destroy();
 }
 
+/** Combines caller cancellation with a disposable timeout signal. */
 function createRequestSignal(
   timeoutMs: number,
   callerSignal?: AbortSignal
@@ -327,6 +338,7 @@ function createRequestSignal(
   };
 }
 
+/** Limits fallback retries to transport failures and explicitly permitted HTTP errors. */
 function shouldUseNativeFallback(result: JsonGetFailure, fallbackOnHttpError: boolean): boolean {
   return (
     result.code === "network-error" ||
@@ -336,6 +348,7 @@ function shouldUseNativeFallback(result: JsonGetFailure, fallbackOnHttpError: bo
   );
 }
 
+/** Converts parsing failures into the transport layer's stable invalid-JSON classification. */
 function parseJson(body: string): unknown {
   try {
     return JSON.parse(body) as unknown;
@@ -344,10 +357,12 @@ function parseJson(body: string): unknown {
   }
 }
 
+/** Accepts only valid integer HTTP status codes for public diagnostics. */
 function normalizeStatus(status: number | undefined): number | null {
   return typeof status === "number" && Number.isInteger(status) && status >= 0 ? status : null;
 }
 
+/** Constructs a stable endpoint-free transport failure result. */
 function failure(code: JsonGetFailureCode, status: number | null = null): JsonGetFailure {
   return {ok: false, code, status};
 }

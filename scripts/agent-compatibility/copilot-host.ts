@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Real-host compatibility support for copilot host. This module keeps external process behavior bounded and reports sanitized diagnostics to the compatibility harness.
+ */
 import {type CompatibilityHarness, executablePath} from "./harness";
 import {probeInteractiveHost} from "./interactive-host";
 

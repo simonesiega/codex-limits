@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Terminal UI support for app. This rendering layer consumes normalized data and does not perform local discovery or authenticated requests.
+ */
 import {Box, Text, render} from "ink";
 import type {ReactElement} from "react";
 import type {CodexLimitsResult} from "@/package/core/types";
@@ -58,6 +61,7 @@ export function App({result, terminalColumns, terminalRows, width, now}: AppProp
   );
 }
 
+/** Uses a box-free summary when terminal height cannot safely fit dashboard panels. */
 function renderTextSummary(
   view: TuiViewModel,
   terminalWidth: number,
@@ -118,10 +122,12 @@ function renderTextSummary(
   );
 }
 
+/** Compacts one usage card into a single line for very short terminals. */
 function formatUsageLine(card: TuiViewModel["usageCards"][number]): string {
   return `${card.remainingLabel}, ${card.resetLabel}`;
 }
 
+/** Shortens known titles without changing labels supplied for unknown future windows. */
 function formatUsageTitle(title: string): string {
   return title.replace(/ usage limit$/i, "");
 }

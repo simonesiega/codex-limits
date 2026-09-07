@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for plain text format. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {formatCoupons} from "@/package/commands/coupons/format";
 import {formatStatus} from "@/package/commands/status/format";

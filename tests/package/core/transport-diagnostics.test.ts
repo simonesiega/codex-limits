@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for transport diagnostics. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {diagnosticForJsonFailure} from "@/package/core/network/transport-diagnostics";
 import type {JsonGetFailure} from "@/package/core/types";

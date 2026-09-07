@@ -1,7 +1,13 @@
+/**
+ * @fileoverview Shared core logic for bounded file. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {constants} from "node:fs";
 import type {Stats} from "node:fs";
-import {lstat, open} from "node:fs/promises";
+import type {FileHandle} from "node:fs/promises";
+import {lstat, open, realpath} from "node:fs/promises";
+import {isPathWithin} from "@/package/core/utils/safe-path";
 
+/** Path-free outcomes exposed by bounded filesystem reads. */
 export type BoundedFileErrorCode = "not-file" | "not-found" | "read-error" | "too-large";
 
 /** Carries only a safe classification, never a path or raw filesystem error. */
@@ -16,8 +22,26 @@ export class BoundedFileError extends Error {
 }
 
 /** Reads one regular UTF-8 file while enforcing a byte limit before and during the read. */
-export async function readBoundedUtf8File(path: string, maxBytes: number): Promise<string> {
-  let handle;
+export function readBoundedUtf8File(path: string, maxBytes: number): Promise<string> {
+  return readVerifiedUtf8File(path, maxBytes);
+}
+
+/** Reads a bounded file only while its opened identity resolves inside the supplied real root. */
+export function readBoundedUtf8FileWithin(
+  path: string,
+  maxBytes: number,
+  realRootPath: string
+): Promise<string> {
+  return readVerifiedUtf8File(path, maxBytes, realRootPath);
+}
+
+/** Reads through an opened handle and revalidates identity before returning bounded UTF-8 content. */
+async function readVerifiedUtf8File(
+  path: string,
+  maxBytes: number,
+  realRootPath?: string
+): Promise<string> {
+  let handle: FileHandle | undefined;
 
   try {
     const pathDetails = await lstat(path);
@@ -39,6 +63,24 @@ export async function readBoundedUtf8File(path: string, maxBytes: number): Promi
     ) {
       throw new BoundedFileError("not-file");
     }
+
+    if (realRootPath) {
+      const resolvedPath = await realpath(path);
+      const [resolvedPathDetails, finalPathDetails] = await Promise.all([
+        lstat(resolvedPath),
+        lstat(path),
+      ]);
+      if (
+        !isPathWithin(realRootPath, resolvedPath) ||
+        !resolvedPathDetails.isFile() ||
+        !finalPathDetails.isFile() ||
+        !isSameFile(details, resolvedPathDetails) ||
+        !isSameFile(details, finalPathDetails)
+      ) {
+        throw new BoundedFileError("not-file");
+      }
+    }
+
     if (details.size > maxBytes) {
       throw new BoundedFileError("too-large");
     }
@@ -74,10 +116,12 @@ export async function readBoundedUtf8File(path: string, maxBytes: number): Promi
   }
 }
 
+/** Compares device and inode values to detect path replacement during a read. */
 function isSameFile(left: Stats, right: Stats): boolean {
   return left.dev === right.dev && left.ino === right.ino;
 }
 
+/** Narrows platform filesystem failures without exposing their messages. */
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error;
 }

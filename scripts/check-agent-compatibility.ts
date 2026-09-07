@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Top-level real-host compatibility dispatcher. Host-specific behavior remains in agent-compatibility modules while this file validates options and coordinates isolated execution.
+ */
 import {mkdtemp, mkdir, readFile, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join, resolve} from "node:path";

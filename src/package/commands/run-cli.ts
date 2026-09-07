@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for run cli. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import {createCommandRegistry} from "@/package/commands/command-registry";
 import {getCommandSafetyViolation} from "@/package/commands/command-safety";
 import {formatHelp} from "@/package/commands/help";

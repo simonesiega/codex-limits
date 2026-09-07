@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for runtime. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import {platform} from "node:os";
 import {stdin as processStdin, stdout as processStdout} from "node:process";
 import {createInterface} from "node:readline/promises";
@@ -112,6 +115,7 @@ export function createCliRuntime(overrides: CliRuntimeOverrides = {}): CliRuntim
   };
 }
 
+/** Maps Node platform identifiers to stable user-facing operating-system names. */
 function getOperatingSystemName(value: NodeJS.Platform): string {
   const names: Partial<Record<NodeJS.Platform, string>> = {
     aix: "AIX",
@@ -126,6 +130,7 @@ function getOperatingSystemName(value: NodeJS.Platform): string {
   return names[value] ?? value;
 }
 
+/** Creates the interactive prompt lazily so non-interactive commands avoid terminal side effects. */
 function createTerminalPrompt(): Prompt {
   const reader = createInterface({input: processStdin, output: processStdout});
   const prompt: Prompt = (question) => reader.question(question);
@@ -133,6 +138,7 @@ function createTerminalPrompt(): Prompt {
   return prompt;
 }
 
+/** Loads Ink only when the dashboard command actually needs terminal rendering. */
 async function renderDefaultDashboard(result: CodexLimitsResult): Promise<void> {
   // Keep Ink out of startup paths used by plain-text, JSON, and agent commands.
   const {renderApp} = await import("@/package/tui/app");

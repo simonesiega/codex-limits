@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for command. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {ReadOnlyCommandDefinition} from "@/package/commands/command";
 import type {CliIo, UsageServices} from "@/package/commands/runtime";
 import {formatStatus} from "@/package/commands/status/format";

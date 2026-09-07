@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Ink presentation component for usage panel. It renders display-ready values only; data access, normalization, and safety decisions belong to the shared core.
+ */
 import {Box, Text} from "ink";
 import type {ReactElement} from "react";
 import type {TuiUsageCard} from "@/package/tui/view-model";

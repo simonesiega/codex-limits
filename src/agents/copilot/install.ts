@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Agent adapter support for install. The adapter stays thin, delegates Codex data handling to the shared core, and preserves the host integration safety boundary.
+ */
 import {lstat, rmdir, stat} from "node:fs/promises";
 import {homedir} from "node:os";
 import {dirname, join, resolve} from "node:path";
@@ -112,6 +115,7 @@ interface ResolvedCopilotPaths {
   packageRoot: string;
 }
 
+/** Resolves the host directory and managed extension target from explicit or environment settings. */
 function resolveCopilotPaths(options: CopilotConfigOptions): ResolvedCopilotPaths {
   const homeDirectory = resolve(options.homeDirectory ?? homedir());
   const env = options.env ?? process.env;
@@ -128,6 +132,7 @@ function resolveCopilotPaths(options: CopilotConfigOptions): ResolvedCopilotPath
   };
 }
 
+/** Pins the extension directory and rejects symlinks or replacements before writing. */
 async function assertSafeExtensionDirectory(
   extensionPath: string,
   operation: AgentOperation = "install"
@@ -154,6 +159,7 @@ async function assertSafeExtensionDirectory(
   }
 }
 
+/** Loads only the bounded built extension and verifies its ownership marker. */
 async function readCopilotBundle(packageRoot: string): Promise<string> {
   try {
     const [rootDetails, manifestContent, bundle] = await Promise.all([
@@ -176,6 +182,7 @@ async function readCopilotBundle(packageRoot: string): Promise<string> {
   }
 }
 
+/** Refuses installation when a competing host entry point could shadow the managed file. */
 async function assertNoAlternativeEntryPoints(
   path: string,
   operation: AgentOperation = "install"
@@ -202,6 +209,7 @@ async function assertNoAlternativeEntryPoints(
   }
 }
 
+/** Classifies the current target as absent, managed, or unsafe without exposing its contents. */
 async function readExistingExtension(
   path: string,
   operation: AgentOperation = "install"
@@ -229,6 +237,7 @@ async function readExistingExtension(
   }
 }
 
+/** Narrows filesystem error codes used for conservative absence handling. */
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error;
 }

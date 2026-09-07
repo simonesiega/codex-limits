@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for command safety. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {CommandDefinition, ParsedCommandValues} from "@/package/commands/command";
 
 /** Returns a safety violation when a remote mutation cannot perform its declared confirmation. */

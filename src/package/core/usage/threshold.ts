@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for threshold. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import type {UsageWindows} from "@/package/core/types";
 
 /** Stable identifiers accepted by usage-threshold automation. */

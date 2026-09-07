@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for agent install. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {homedir} from "node:os";
 import {join} from "node:path";
@@ -7,7 +10,8 @@ import type {Prompt} from "@/package/commands/runtime";
 
 function createIntegration(
   id = "opencode",
-  configPaths = [`/${id}.json`]
+  configPaths = [`/${id}.json`],
+  changed = true
 ): AgentIntegration & {installs: number} {
   return {
     id,
@@ -16,7 +20,7 @@ function createIntegration(
     installs: 0,
     async install() {
       this.installs += 1;
-      return {changed: true, configPaths};
+      return {changed, configPaths};
     },
     async uninstall() {
       return {changed: false, configPaths};
@@ -43,6 +47,36 @@ test("agents install supports named and all selections", async () => {
     expect(opencode.installs).toBe(1);
     expect(output.join("")).toContain("opencode: installed ([path], [path])");
   }
+});
+
+test("agent installation prints restart guidance only when a target changed", async () => {
+  const unchangedOutput: string[] = [];
+  const unchanged = createIntegration("opencode", [], false);
+  expect(
+    await runCli(["agents", "install", "opencode"], {
+      io: {stdout: (text) => unchangedOutput.push(text), interactive: false},
+      agents: {integrations: [unchanged]},
+    })
+  ).toBe(0);
+  expect(unchangedOutput.join("")).not.toContain("Restart the target agent terminal");
+
+  const partialOutput: string[] = [];
+  const changed = createIntegration("opencode");
+  const failed = createIntegration("pi");
+  failed.install = async () => {
+    throw new Error("private install failure");
+  };
+  expect(
+    await runCli(["agents", "install", "opencode", "pi"], {
+      io: {
+        stdout: (text) => partialOutput.push(text),
+        stderr: () => undefined,
+        interactive: false,
+      },
+      agents: {integrations: [changed, failed]},
+    })
+  ).toBe(1);
+  expect(partialOutput.join("")).toContain("Restart the target agent terminal");
 });
 
 test("agent installation safely shortens configuration paths under the user home", async () => {

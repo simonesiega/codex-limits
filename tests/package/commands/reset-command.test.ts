@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for reset command. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {runCli} from "@/package/commands/run-cli";
 import type {Prompt} from "@/package/commands/runtime";

@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Packed-artifact validation harness. It inspects the publishable package and exercises supported Node entry points without relying on repository-only files.
+ */
 import {spawn} from "node:child_process";
 import {copyFile, mkdtemp, mkdir, readFile, realpath, rm, stat, writeFile} from "node:fs/promises";
 import {builtinModules} from "node:module";
@@ -19,6 +22,11 @@ interface CommandResult {
   exitCode: number;
   stdout: string;
   stderr: string;
+}
+
+interface RunResultOptions {
+  /** Closes the parent read end immediately to exercise the CLI's broken-pipe handling. */
+  closeStdout?: boolean;
 }
 
 const root = join(import.meta.dir, "..");
@@ -482,6 +490,18 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
     }
   }
 
+  // Closing an output pipe early must not expose an unhandled Node stack trace.
+  const brokenPipe = await runResult(
+    "node",
+    [join(packedRoot, "dist", "cli.js"), "--help"],
+    packedRoot,
+    env,
+    {closeStdout: true}
+  );
+  assert(brokenPipe.exitCode === 0, "Packed CLI failed when its output pipe closed early.");
+  assert(brokenPipe.stdout === "", "Broken-pipe smoke test unexpectedly wrote output.");
+  assert(brokenPipe.stderr === "", "Packed CLI exposed an error for a closed output pipe.");
+
   const piSettings = JSON.parse(
     await readFile(join(home, ".pi", "agent", "settings.json"), "utf8")
   ) as {packages?: unknown[]};
@@ -578,14 +598,19 @@ function runResult(
   command: string,
   args: string[],
   cwd: string,
-  env: NodeJS.ProcessEnv
+  env: NodeJS.ProcessEnv,
+  options: RunResultOptions = {}
 ): Promise<CommandResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {cwd, env, stdio: ["ignore", "pipe", "pipe"]});
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
 
-    child.stdout.on("data", (chunk: Buffer) => stdout.push(chunk));
+    if (options.closeStdout) {
+      child.stdout.destroy();
+    } else {
+      child.stdout.on("data", (chunk: Buffer) => stdout.push(chunk));
+    }
     child.stderr.on("data", (chunk: Buffer) => stderr.push(chunk));
     child.on("error", reject);
     child.on("close", (exitCode) =>

@@ -1,9 +1,12 @@
+/**
+ * @fileoverview Shared core logic for state reader. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import type {Dirent} from "node:fs";
 import {opendir, realpath} from "node:fs/promises";
 import {extname, join} from "node:path";
 import type {CodexStateFile, CodexStateReadResult} from "@/package/core/types";
-import {BoundedFileError, readBoundedUtf8File} from "@/package/core/utils/bounded-file";
-import {isPathWithin, toSafeRelativePath} from "@/package/core/utils/safe-path";
+import {BoundedFileError, readBoundedUtf8FileWithin} from "@/package/core/utils/bounded-file";
+import {toSafeRelativePath} from "@/package/core/utils/safe-path";
 
 const MAX_DEPTH = 2;
 const MAX_FILES = 25;
@@ -64,12 +67,7 @@ export async function readCodexState(homePath: string): Promise<CodexStateReadRe
   for (const filePath of paths.slice(0, MAX_FILES)) {
     const relativePath = toSafeRelativePath(homePath, filePath);
     try {
-      const resolvedFilePath = await realpath(filePath);
-      if (!isPathWithin(realHomePath, resolvedFilePath)) {
-        throw new BoundedFileError("not-file");
-      }
-      // Keep the original path so the bounded reader still rejects a replaced leaf symlink.
-      const content = await readBoundedUtf8File(filePath, MAX_FILE_BYTES);
+      const content = await readBoundedUtf8FileWithin(filePath, MAX_FILE_BYTES, realHomePath);
       const json = parseJson(content, state.warnings);
       files.push({path: filePath, relativePath, json: json.value, error: json.error});
     } catch (error) {
@@ -89,6 +87,7 @@ export async function readCodexState(homePath: string): Promise<CodexStateReadRe
   return {homePath, files, warnings: state.warnings};
 }
 
+/** Traverses state directories within depth, entry, file-count, and symlink limits. */
 async function walk(currentPath: string, depth: number, state: WalkState): Promise<void> {
   if (depth > MAX_DEPTH || state.files.length >= MAX_DISCOVERED_FILES) {
     state.hitFileLimit ||= state.files.length >= MAX_DISCOVERED_FILES;
@@ -122,6 +121,7 @@ async function walk(currentPath: string, depth: number, state: WalkState): Promi
   }
 }
 
+/** Caps each directory listing before recursive discovery can expand further. */
 async function readBoundedDirectory(currentPath: string, state: WalkState): Promise<Dirent[]> {
   try {
     const directory = await opendir(currentPath);
@@ -140,6 +140,7 @@ async function readBoundedDirectory(currentPath: string, state: WalkState): Prom
   }
 }
 
+/** Parses one bounded state document while converting malformed content to a safe diagnostic. */
 function parseJson(
   content: string,
   warnings: string[]

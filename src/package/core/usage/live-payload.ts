@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for live payload. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import type {UsageResult} from "@/package/core/types";
 import {
   buildUsageResult,
@@ -32,10 +35,12 @@ export function mapLiveUsagePayload(payload: unknown, endpoint: string, now: Dat
   return result;
 }
 
+/** Produces the canonical unavailable live result while retaining safe public warnings. */
 export function unavailableLiveUsage(warnings: string[]): UsageResult {
   return buildUsageResult({fiveHour: null, weekly: null}, UNAVAILABLE_SOURCE, warnings);
 }
 
+/** Accepts both nested API wrappers and payloads that directly expose named windows. */
 function findRateLimits(root: unknown): Record<string, unknown> | null {
   return searchPayload(root, (value) => {
     if (!isRecord(value)) {
@@ -51,6 +56,7 @@ function findRateLimits(root: unknown): Record<string, unknown> | null {
   });
 }
 
+/** Adapts array-based API variants to the named shape consumed by the normalizer. */
 function buildRateLimitsFromWindowArray(root: unknown): Record<string, unknown> | null {
   return searchPayload(root, (value) => {
     if (!Array.isArray(value)) {
@@ -63,6 +69,7 @@ function buildRateLimitsFromWindowArray(root: unknown): Record<string, unknown> 
   });
 }
 
+/** Searches untrusted payloads with explicit depth and node budgets to prevent pathological traversal. */
 function searchPayload(
   root: unknown,
   match: (value: unknown) => Record<string, unknown> | null
@@ -105,6 +112,7 @@ function searchPayload(
   return null;
 }
 
+/** Uses declared duration first and bounded label hints only as a compatibility fallback. */
 function isUsageWindowRecord(
   value: unknown,
   kind: "fiveHour" | "weekly"

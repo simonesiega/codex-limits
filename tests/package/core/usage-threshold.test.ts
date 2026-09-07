@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for usage threshold. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import type {UsageWindows} from "@/package/core/types";
 import {evaluateUsageThresholds, type UsageThreshold} from "@/package/core/usage/threshold";

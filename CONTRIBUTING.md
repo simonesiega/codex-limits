@@ -129,7 +129,7 @@ Run tests with source coverage reporting and the enforced regression floors:
 bun run test:coverage
 ```
 
-Coverage excludes test files and test support code under `tests`. The reviewed Bun 1.3.14 baseline measures 97.78% aggregate line coverage and 97.93% aggregate function coverage; the minimum loaded-source-file results are 84.17% for lines and 33.33% for functions. Because Bun applies configured thresholds per file, the validation floors round those per-file baselines down to 84% for lines and 33% for functions. `bun run check` uses the same coverage command and fails when a loaded source file drops below either floor.
+Coverage excludes test files and test support code under `tests`. The reviewed Bun 1.3.14 baseline measures 97.84% aggregate line coverage and 97.98% aggregate function coverage; the minimum loaded-source-file results are 84.48% for lines and 33.33% for functions. Because Bun applies configured thresholds per file, the validation floors round those per-file baselines down to 84% for lines and 33% for functions. `bun run check` uses the same coverage command and fails when a loaded source file drops below either floor.
 
 CI uploads the generated LCOV report to Codecov using GitHub OIDC, without a long-lived Codecov token. The README badge reflects the latest uploaded `main`-branch report; Bun's local thresholds remain the coverage regression gate.
 
@@ -187,20 +187,20 @@ Command handlers should let the router replace unexpected exceptions with their 
 
 ## Adding a new agent
 
-New agents should use the same small adapter shape as [`src/agents/opencode`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/opencode), [`src/agents/pi`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/pi), and [`src/agents/copilot`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/copilot): `format.ts`, `install.ts`, `integration.ts`, and `plugin.ts`. Put reusable presentation and safe configuration behavior in `src/agents/shared`.
+New agents should use the same small adapter shape as [`src/agents/opencode`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/opencode), [`src/agents/pi`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/pi), and [`src/agents/copilot`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/copilot): `install.ts`, `integration.ts`, and `plugin.ts`. Reuse presentation and safe configuration behavior from `src/agents/shared`; add an agent-specific formatter only when its host requires different output.
 
-| Step | Action                                                                                                                              |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | Create `src/agents/<agent-name>` with the standard four-file adapter layout.                                                        |
-| 2    | Define metadata, optional environment help, `install`, `uninstall`, and `inspect` in `integration.ts`.                              |
-| 3    | Keep `plugin.ts` focused on the target host API and load Codex data only through the shared package core.                           |
-| 4    | Register the integration descriptor once in `src/agents/index.ts`; shared lifecycle and doctor commands consume it automatically.   |
-| 5    | Add install, conservative uninstall, formatter, and host-behavior tests. Document manual validation when automation is impractical. |
-| 6    | Add `docs/guides/agents/<agent-name>.md`.                                                                                           |
-| 7    | Add the integration to [Agent Integrations](docs/guides/agent-integrations.md).                                                     |
-| 8    | Add `src/package/<agent-name>.ts`, its host-only `./<agent-name>` subpath, and the shared package-build metadata.                   |
-| 9    | Add or update screenshots when the visual output changes.                                                                           |
-| 10   | Run the documentation link and schema checks.                                                                                       |
+| Step | Action                                                                                                                                 |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Create `src/agents/<agent-name>` with the standard three-file adapter layout.                                                          |
+| 2    | Define metadata, optional environment help, `install`, `uninstall`, and `inspect` in `integration.ts`.                                 |
+| 3    | Keep `plugin.ts` focused on the target host API and load Codex data only through the shared package core.                              |
+| 4    | Register the integration descriptor once in `src/agents/index.ts`; shared lifecycle and doctor commands consume it automatically.      |
+| 5    | Add install, conservative uninstall, presentation, and host-behavior tests. Document manual validation when automation is impractical. |
+| 6    | Add `docs/guides/agents/<agent-name>.md`.                                                                                              |
+| 7    | Add the integration to [Agent Integrations](docs/guides/agent-integrations.md).                                                        |
+| 8    | Add `src/package/<agent-name>.ts`, its host-only `./<agent-name>` subpath, and the shared package-build metadata.                      |
+| 9    | Add or update screenshots when the visual output changes.                                                                              |
+| 10   | Run the documentation link and schema checks.                                                                                          |
 
 When real-host automation is practical, add a focused `scripts/agent-compatibility/*-host.ts` probe and matching workflow matrix entry. Otherwise, document the manual host validation performed.
 

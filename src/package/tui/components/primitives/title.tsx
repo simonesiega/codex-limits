@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Ink presentation component for title. It renders display-ready values only; data access, normalization, and safety decisions belong to the shared core.
+ */
 import {Box, Text} from "ink";
 import type {ReactElement} from "react";
 import {theme} from "@/package/tui/theme";
@@ -67,8 +70,8 @@ interface BlockTitleProps {
 function BlockTitle({lines, width}: BlockTitleProps): ReactElement {
   return (
     <Box flexDirection="column" marginBottom={1} width={width}>
-      {lines.map((line, index) => (
-        <Box key={`${index}-${line}`} justifyContent="center" width={width}>
+      {lines.map((line) => (
+        <Box key={line} justifyContent="center" width={width}>
           <Text bold color={theme.title}>
             {line}
           </Text>

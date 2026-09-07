@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Terminal UI support for view model. This rendering layer consumes normalized data and does not perform local discovery or authenticated requests.
+ */
 import {
   formatShortDateTime,
   formatTime,
@@ -72,6 +75,7 @@ export function createTuiViewModel(
   };
 }
 
+/** Maps one normalized window into display labels and threshold tone. */
 function createUsageCard(window: UsageWindow, now: Date): TuiUsageCard {
   const percent = window.remainingPercent;
 
@@ -84,6 +88,7 @@ function createUsageCard(window: UsageWindow, now: Date): TuiUsageCard {
   };
 }
 
+/** Builds stable unknown placeholders when coupon data is absent or partial. */
 function createCouponSummary(coupons: CouponSummary | null): TuiCouponSummaryCard {
   return {
     availableCoupons: formatUnknown(coupons?.available ?? null),
@@ -93,10 +98,12 @@ function createCouponSummary(coupons: CouponSummary | null): TuiCouponSummaryCar
   };
 }
 
+/** Returns only bounded normalized coupon rows supplied by the core. */
 function createCouponRows(coupons: CouponSummary | null): TuiCouponRow[] {
   return (coupons?.items ?? []).map(formatCouponRow);
 }
 
+/** Converts one coupon into display-safe status and expiration labels. */
 function formatCouponRow(item: CouponSummaryItem): TuiCouponRow {
   const available = (item.status ?? "").toLowerCase() === "available";
 
@@ -111,6 +118,7 @@ function formatCouponRow(item: CouponSummaryItem): TuiCouponRow {
   };
 }
 
+/** Formats the next verified expiration without exposing raw service values. */
 function formatSummaryExpiration(coupons: CouponSummary | null): string {
   const next =
     coupons?.items.find((item) => item.status?.toLowerCase() === "available") ??
@@ -119,6 +127,7 @@ function formatSummaryExpiration(coupons: CouponSummary | null): string {
   return next ? formatCompactCouponDate(next.expiresAt, true) : "Unknown";
 }
 
+/** Uses local calendar fields and includes a year only when layout context requires it. */
 function formatCompactCouponDate(value: string | null, includeYear: boolean): string {
   const date = parseDateValue(value);
   if (!date) {
@@ -144,6 +153,7 @@ function formatCompactCouponDate(value: string | null, includeYear: boolean): st
   return includeYear ? `${base} ${date.getFullYear()}` : base;
 }
 
+/** Drops seconds from canonical durations to reduce dashboard noise. */
 function formatTuiDuration(value: string | null): string {
   if (!value) {
     return "Unknown";
@@ -153,6 +163,7 @@ function formatTuiDuration(value: string | null): string {
   return parts.length > 0 ? parts.join(" ") : "0m";
 }
 
+/** Prefers an absolute reset time and falls back to normalized relative text. */
 function formatResetLabel(window: UsageWindow, now: Date): string {
   const resetDate = parseDateValue(window.resetsAt);
   if (resetDate) {
@@ -164,6 +175,7 @@ function formatResetLabel(window: UsageWindow, now: Date): string {
   return window.resetsIn ? `Resets in ${window.resetsIn}` : "Reset time unknown";
 }
 
+/** Maps remaining capacity to shared visual severity thresholds. */
 function toneForPercent(percent: number | null): TuiTone {
   if (percent === null) {
     return "gray";

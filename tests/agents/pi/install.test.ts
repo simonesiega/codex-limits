@@ -1,5 +1,8 @@
+/**
+ * @fileoverview Behavioral coverage for install. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
-import {lstat, mkdir, readFile, symlink, writeFile} from "node:fs/promises";
+import {lstat, mkdir, readFile, stat, symlink, writeFile} from "node:fs/promises";
 import {dirname, join} from "node:path";
 import {
   inspectPiIntegration as inspectPiPlugin,
@@ -402,6 +405,29 @@ test("installPiPlugin safely rejects malformed and oversized settings", async ()
     await expect(installPiPlugin({settingsPath, packageRoot})).rejects.toThrow(
       "Pi settings are too large to update safely."
     );
+  });
+});
+
+test("installPiPlugin keeps serialized rewrites within the settings limit", async () => {
+  await withPiConfig(async ({settingsPath, packageRoot}) => {
+    const expansiveSource = JSON.stringify({values: Array(180_000).fill(0)});
+    expect(Buffer.byteLength(expansiveSource, "utf8")).toBeLessThan(1_000_000);
+    await mkdir(dirname(settingsPath), {recursive: true});
+    await writeFile(settingsPath, expansiveSource, "utf8");
+
+    expect((await installPiPlugin({settingsPath, packageRoot})).changed).toBe(true);
+    expect((await stat(settingsPath)).size).toBeLessThanOrEqual(1_000_000);
+    const rewritten = await readJson<{values: number[]; packages: string[]}>(settingsPath);
+    expect(rewritten.values).toHaveLength(180_000);
+    expect(rewritten.packages).toEqual([packageRoot]);
+
+    const oversizedRewriteSource = JSON.stringify({padding: "x".repeat(999_950)});
+    expect(Buffer.byteLength(oversizedRewriteSource, "utf8")).toBeLessThan(1_000_000);
+    await writeFile(settingsPath, oversizedRewriteSource, "utf8");
+    await expect(installPiPlugin({settingsPath, packageRoot})).rejects.toThrow(
+      "Could not safely update the pi settings."
+    );
+    expect(await readFile(settingsPath, "utf8")).toBe(oversizedRewriteSource);
   });
 });
 

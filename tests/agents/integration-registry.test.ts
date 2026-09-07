@@ -1,11 +1,10 @@
+/**
+ * @fileoverview Behavioral coverage for integration registry. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
-import {access} from "node:fs/promises";
-import {resolve} from "node:path";
 import {AGENT_INTEGRATIONS} from "@/agents";
 
-const REQUIRED_ADAPTER_FILES = ["format.ts", "install.ts", "integration.ts", "plugin.ts"];
-
-test("registered agents expose the shared adapter contract and layout", async () => {
+test("registered agents expose a unique shared adapter contract", () => {
   const ids = AGENT_INTEGRATIONS.map((integration) => integration.id);
   expect(ids).toContain("opencode");
   expect(ids).toContain("pi");
@@ -17,12 +16,5 @@ test("registered agents expose the shared adapter contract and layout", async ()
     expect(typeof integration.install).toBe("function");
     expect(typeof integration.uninstall).toBe("function");
     expect(typeof integration.inspect).toBe("function");
-
-    await Promise.all([
-      ...REQUIRED_ADAPTER_FILES.map((file) =>
-        access(resolve(import.meta.dir, "../../src/agents", integration.id, file))
-      ),
-      access(resolve(import.meta.dir, "../../src/package", `${integration.id}.ts`)),
-    ]);
   }
 });

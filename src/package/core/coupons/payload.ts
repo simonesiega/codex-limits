@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for payload. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {isValidCouponId} from "@/package/core/coupons/coupon-id";
 import type {CouponItem, CouponResult} from "@/package/core/types";
 import {formatDuration, formatLongDate, parseDateValue} from "@/package/core/utils/date-time";
@@ -11,6 +14,7 @@ const EARNED_KEYS = [
   "earnedThisPeriod",
   "totalEarnedCount",
 ] as const;
+const MAX_COUPON_ITEMS = 100;
 const MAX_TIMESTAMP_LENGTH = 64;
 const RFC_3339_TIMESTAMP =
   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(?:Z|[+-](\d{2}):(\d{2}))$/i;
@@ -35,19 +39,26 @@ export function mapResetCouponsPayload(
   }
 
   const rawCredits = creditField.value;
-  const items = rawCredits
+  const parsedItems = rawCredits
     .map((credit, index) => parseCouponItem(credit, index + 1, now))
     .filter((credit): credit is CouponItem => credit !== null)
-    .sort(compareCouponsByExpiry)
+    .sort(compareCouponsByExpiry);
+  const availableItems = parsedItems.filter((item) => item.status?.toLowerCase() === "available");
+  const nextExpiring = availableItems[0] ?? parsedItems[0] ?? null;
+  const items = parsedItems
+    .slice(0, MAX_COUPON_ITEMS)
     .map((credit, index) => ({...credit, index: index + 1}));
-  const availableItems = items.filter((item) => item.status?.toLowerCase() === "available");
-  const nextExpiring = availableItems[0] ?? items[0] ?? null;
   const available = readNonNegativeInteger(payload, AVAILABLE_KEYS);
   const earnedThisPeriod = readNonNegativeInteger(payload, EARNED_KEYS);
   const warnings: string[] = [];
 
-  if (rawCredits.length !== items.length) {
+  if (rawCredits.length !== parsedItems.length) {
     warnings.push("Live reset coupon endpoint ignored malformed coupon entries.");
+  }
+  if (parsedItems.length > MAX_COUPON_ITEMS) {
+    warnings.push(
+      "Live reset coupon endpoint omitted extra coupon entries to keep output bounded."
+    );
   }
   if (available.malformed || earnedThisPeriod.malformed) {
     warnings.push("Live reset coupon endpoint ignored malformed summary fields.");
@@ -90,10 +101,12 @@ export function unavailableCoupons(endpoint: string, warnings: string[] = []): C
   };
 }
 
+/** Rejects unrelated objects before they can be mistaken for coupon API payloads. */
 function hasRecognizedCouponField(payload: Record<string, unknown>): boolean {
   return [...CREDIT_KEYS, ...AVAILABLE_KEYS, ...EARNED_KEYS].some((key) => key in payload);
 }
 
+/** Validates one coupon and derives display-only expiration fields from trusted values. */
 function parseCouponItem(value: unknown, index: number, now: Date): CouponItem | null {
   if (!isRecord(value)) {
     return null;
@@ -138,6 +151,7 @@ function parseCouponItem(value: unknown, index: number, now: Date): CouponItem |
   };
 }
 
+/** Accepts strict timestamp forms and rejects calendar rollover normalization by Date. */
 function parseCouponTimestamp(value: string | null): Date | null {
   if (!value || value.length > MAX_TIMESTAMP_LENGTH) {
     return null;
@@ -173,6 +187,7 @@ function parseCouponTimestamp(value: string | null): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/** Uses UTC calendar arithmetic to validate explicit coupon date components. */
 function daysInMonth(year: number, month: number): number {
   if (month === 2) {
     const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
@@ -181,14 +196,17 @@ function daysInMonth(year: number, month: number): number {
   return month === 4 || month === 6 || month === 9 || month === 11 ? 30 : 31;
 }
 
+/** Orders verified expirations first while retaining deterministic display order. */
 function compareCouponsByExpiry(left: CouponItem, right: CouponItem): number {
   return dateSortValue(left.expiresAt) - dateSortValue(right.expiresAt);
 }
 
+/** Maps absent or invalid expirations after every finite timestamp. */
 function dateSortValue(value: string | null): number {
   return parseDateValue(value)?.getTime() ?? Number.POSITIVE_INFINITY;
 }
 
+/** Reads the first array-valued compatibility key without coercing other payload types. */
 function readArray(
   value: Record<string, unknown>,
   keys: readonly string[]
@@ -207,6 +225,7 @@ function readArray(
   return {value: [], malformed: found};
 }
 
+/** Accepts only safe non-negative counters so malformed service totals stay unknown. */
 function readNonNegativeInteger(
   value: Record<string, unknown>,
   keys: readonly string[]

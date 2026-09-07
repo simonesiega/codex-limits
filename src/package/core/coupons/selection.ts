@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for selection. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import type {CouponItem, CouponResult} from "@/package/core/types";
 import {parseDateValue} from "@/package/core/utils/date-time";
 
@@ -46,14 +49,17 @@ export function selectResetCoupon(
   return (result.available ?? 0) > 0 ? {kind: "details-unavailable"} : {kind: "none-available"};
 }
 
+/** Requires an explicitly available status rather than inferring availability from missing fields. */
 function isAvailable(coupon: CouponItem): boolean {
   return coupon.status?.toLowerCase() === "available";
 }
 
+/** Requires both availability and a validated opaque redemption identifier. */
 function isRedeemable(coupon: CouponItem): boolean {
   return coupon.id !== null && coupon.resetType === "codex_rate_limits";
 }
 
+/** Places unverifiable expirations last so soonest selection can fail closed. */
 function expirationSortValue(coupon: CouponItem): number {
   return parseDateValue(coupon.expiresAt)?.getTime() ?? Number.POSITIVE_INFINITY;
 }

@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Registry-driven CLI parser. It separates token scanning, command resolution, option validation, and positional validation so all commands receive the same deterministic error behavior.
+ */
 import {
   type CommandDefinition,
   type CommandGroupDefinition,
@@ -121,6 +124,7 @@ export function parseCliArguments(
   return {kind: "command", command: resolved.command, values};
 }
 
+/** Tokenizes options separately from operands before a command-specific schema is known. */
 function scanArguments(
   registry: CommandRegistry,
   args: readonly string[],
@@ -191,6 +195,7 @@ function scanArguments(
   return {operands, options, error: firstError};
 }
 
+/** Resolves the longest command or group path and leaves remaining operands as positionals. */
 function resolveSubject(
   registry: CommandRegistry,
   operands: readonly string[],
@@ -235,6 +240,7 @@ function resolveSubject(
   return {kind: "unknown", message: `Unknown command or option: ${input}`};
 }
 
+/** Applies only the selected subject's option schema, including repeat and conflict rules. */
 function parseSelectedOptions(
   rawOptions: readonly RawOption[],
   selectedOptions: readonly OptionDefinition[],
@@ -311,6 +317,7 @@ function parseSelectedOptions(
   return {values};
 }
 
+/** Validates required, variadic, and choice-constrained operands in declaration order. */
 function validatePositionals(
   command: CommandDefinition,
   values: readonly string[],

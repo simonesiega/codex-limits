@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for format shared. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 /** Formats a nullable command value with the stable Unknown fallback. */
 export function formatUnknown(value: number | string | null): string {
   return value === null ? "Unknown" : String(value);

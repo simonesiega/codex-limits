@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for http server. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {createServer, type RequestListener} from "node:http";
 
 /** Runs a test against an ephemeral loopback HTTP server and always closes it. */

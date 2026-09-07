@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for lifecycle. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {AgentIntegration, AgentLifecycleResult} from "@/agents";
 import type {CliIo, Prompt} from "@/package/commands/runtime";
 import {sanitizeArguments} from "@/package/commands/safe-error";

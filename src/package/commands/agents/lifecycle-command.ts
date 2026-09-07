@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for lifecycle command. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import type {AgentIntegration} from "@/agents";
 import {
   hasOption,

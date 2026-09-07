@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Agent adapter support for integration. The adapter stays thin, delegates Codex data handling to the shared core, and preserves the host integration safety boundary.
+ */
 import {
   inspectCopilotIntegration,
   installCopilotIntegration,

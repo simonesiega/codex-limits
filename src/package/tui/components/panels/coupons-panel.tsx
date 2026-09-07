@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Ink presentation component for coupons panel. It renders display-ready values only; data access, normalization, and safety decisions belong to the shared core.
+ */
 import {Box, Text} from "ink";
 import type {ReactElement} from "react";
 import {theme} from "@/package/tui/theme";

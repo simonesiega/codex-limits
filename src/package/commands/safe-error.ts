@@ -1,3 +1,6 @@
+/**
+ * @fileoverview CLI command-layer support for safe error. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ */
 import {isAbsolute} from "node:path";
 import {redactSensitiveText} from "@/package/core/utils/redact";
 
@@ -52,7 +55,7 @@ export function sanitizePublicErrorMessage(value: string, fallback: string): str
   if (!value || value.length > MAX_ERROR_MESSAGE_LENGTH) {
     return fallback;
   }
-  const message = redactSensitiveText(value).replace(CONTROL_CHARACTERS, "?").trim();
+  const message = redactSensitiveText(value).trim();
   return message && message.length <= MAX_ERROR_MESSAGE_LENGTH && !PRIVATE_PATH.test(message)
     ? message
     : fallback;

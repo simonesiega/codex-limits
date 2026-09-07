@@ -243,10 +243,10 @@ For comparisons and stored data, prefer canonical fields such as `resetsAt` and 
 | `earnedThisPeriod`   | Total earned reset credits as a non-negative safe integer, or `null`.                     |
 | `nextExpirationDate` | Local calendar date for the next available coupon, or otherwise the soonest coupon.       |
 | `nextExpirationIn`   | Compact non-negative duration until that expiration.                                      |
-| `items`              | Valid coupon entries sorted by expiration time.                                           |
+| `items`              | Up to 100 valid coupon entries, sorted by expiration time.                                |
 | `warnings`           | Safe coupon-specific availability or payload warnings.                                    |
 
-Coupon `index` values are one-based and assigned after sorting. `grantedAt` and `expiresAt` preserve bounded RFC 3339 timestamp strings from the service. `expirationDate` is rendered in the machine's local timezone as `Weekday D Month YYYY`; `expiresIn` is calculated at command execution time. Coupon entries with malformed or extra timestamp text are omitted and produce a warning.
+Coupon `index` values are one-based and assigned after sorting. `grantedAt` and `expiresAt` preserve bounded RFC 3339 timestamp strings from the service. `expirationDate` is rendered in the machine's local timezone as `Weekday D Month YYYY`; `expiresIn` is calculated at command execution time. Coupon entries with malformed or extra timestamp text are omitted and produce a warning. Responses with more than 100 valid entries retain the earliest-expiring 100 and report partial data so terminal and JSON output remain bounded.
 
 The complete limits contract permits `coupons: null` when a core caller intentionally omits coupon loading. The standard `codex-limits --json` command requests coupons and normally returns a coupon summary object, including an unavailable summary when credentials or network data are missing.
 

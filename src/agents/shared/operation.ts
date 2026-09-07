@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Host-independent agent support for operation. Agent adapters reuse this module to keep lifecycle and presentation behavior consistent.
+ */
 import {AgentInstallError, AgentUninstallError} from "@/agents/types";
 
 export type AgentOperation = "install" | "uninstall";

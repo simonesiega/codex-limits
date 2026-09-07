@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for safe error. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {sanitizePublicErrorMessage} from "@/package/commands/safe-error";
 

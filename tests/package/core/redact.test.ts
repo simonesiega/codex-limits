@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for redact. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {redactSensitiveText, redactWarnings} from "@/package/core/utils/redact";
 

@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for format. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {formatAgentLimits} from "@/agents/shared/format";
 import {createFakeLimitsResult} from "@tests/package/fixtures/fake-results";

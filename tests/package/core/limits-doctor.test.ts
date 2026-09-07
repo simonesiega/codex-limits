@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for limits doctor. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {mkdir, writeFile} from "node:fs/promises";
 import {join} from "node:path";
@@ -120,7 +123,7 @@ test("getCodexLimits starts independent live requests concurrently", async () =>
     },
   });
 
-  // Fail boundedly if a regression serializes the requests and leaves the condition unresolved.
+  // Fail within a bounded interval if a regression serializes the requests.
   let timeout: ReturnType<typeof setTimeout> | undefined;
   const startResult = await Promise.race([
     bothStarted.then(() => "started" as const),

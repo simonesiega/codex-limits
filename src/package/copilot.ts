@@ -1,5 +1,9 @@
-import startCopilotPlugin, {
+/**
+ * @fileoverview Package entry-point support for copilot. This module exposes the smallest runtime surface needed by the corresponding consumer.
+ */
+import {
   COPILOT_EXTENSION_MARKER as copilotExtensionMarker,
+  startCopilotExtension as startCopilotPlugin,
 } from "@/agents/copilot/plugin";
 import {exposeAgentHost} from "@/agents/shared/host-entry";
 

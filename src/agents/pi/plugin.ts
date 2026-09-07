@@ -1,7 +1,10 @@
+/**
+ * @fileoverview Agent adapter support for plugin. The adapter stays thin, delegates Codex data handling to the shared core, and preserves the host integration safety boundary.
+ */
 import type {ExtensionAPI, ExtensionCommandContext, Theme} from "@earendil-works/pi-coding-agent";
 import {DynamicBorder} from "@earendil-works/pi-coding-agent";
 import {Container, matchesKey, Text} from "@earendil-works/pi-tui";
-import {formatPiLimits} from "@/agents/pi/format";
+import {formatAgentLimits} from "@/agents/shared/format";
 import {getCodexLimits} from "@/package/core/limits";
 import type {CodexLimitsResult} from "@/package/core/types";
 
@@ -31,7 +34,7 @@ export function createPiPlugin(
         ctx.ui.setStatus("codex-limits", "Loading Codex limits...");
         let message: string;
         try {
-          message = formatPiLimits(await loadLimits());
+          message = formatAgentLimits(await loadLimits());
         } catch {
           message = SAFE_LOAD_ERROR;
           ctx.ui.notify(SAFE_LOAD_ERROR, "error");
@@ -49,6 +52,7 @@ export function createPiPlugin(
   };
 }
 
+/** Presents limits through pi's custom UI while containing rendering failures. */
 async function showDialog(message: string, ctx: ExtensionCommandContext): Promise<void> {
   await ctx.ui.custom<void>(
     (_tui, theme, _keybindings, done) => {
@@ -82,6 +86,7 @@ async function showDialog(message: string, ctx: ExtensionCommandContext): Promis
   );
 }
 
+/** Creates a bounded scrollable dialog from the already formatted read-only summary. */
 function buildDialog(message: string, theme: Theme): Container {
   const container = new Container();
   container.addChild(new DynamicBorder((text: string) => theme.fg("accent", text)));

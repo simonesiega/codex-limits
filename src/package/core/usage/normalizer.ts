@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Compatibility-focused usage normalizer. It recognizes bounded variants of Codex state and session payloads, then emits the stable UsageWindow model shared by every output surface.
+ */
 import {formatDuration, parseDateValue} from "@/package/core/utils/date-time";
 import {isRecord} from "@/package/core/utils/unknown";
 import type {
@@ -143,6 +146,7 @@ export function classifyUsageWindowByDuration(
   return null;
 }
 
+/** Attaches provenance only after local fields have passed through shared normalization. */
 export function withUsageSource(result: LocalUsageResult, source: UsageSource): UsageResult {
   return {...result, source};
 }
@@ -163,6 +167,7 @@ export function parseUsageFromState(
 ): LocalUsageResult {
   let windows: UsageWindows = {fiveHour: null, weekly: null};
 
+  // Merge independently parsed files so a partial snapshot cannot erase a recognized window.
   for (const file of state.files) {
     if (!file.json) {
       continue;
@@ -194,6 +199,7 @@ export function mergeLocalUsage(
   return buildLocalUsageResult(windows, [...primary.warnings, ...fallback.warnings]);
 }
 
+/** Searches an unknown local payload for recognized windows without trusting its outer shape. */
 function parseUsageFromUnknown(value: unknown, now: Date): Pick<LocalUsageResult, "windows"> {
   if (!isRecord(value)) {
     return {windows: {fiveHour: null, weekly: null}};
@@ -219,6 +225,7 @@ function parseUsageFromUnknown(value: unknown, now: Date): Pick<LocalUsageResult
   };
 }
 
+/** Classifies both candidate slots by declared duration before using legacy slot semantics. */
 function parseCandidateUsageWindows(
   namedFiveHour: Record<string, unknown> | null,
   namedWeekly: Record<string, unknown> | null,
@@ -238,6 +245,7 @@ function parseCandidateUsageWindows(
   };
 }
 
+/** Converts one candidate into bounded percentages and reset labels. */
 function parseUsageWindow(
   value: Record<string, unknown> | null,
   label: string,
@@ -262,6 +270,7 @@ function parseUsageWindow(
   return hasWindowData(window) ? window : null;
 }
 
+/** Derives the aggregate availability state from normalized windows. */
 function buildLocalUsageResult(windows: UsageWindows, warnings: string[]): LocalUsageResult {
   return {
     status: statusForWindows(windows),
@@ -270,6 +279,7 @@ function buildLocalUsageResult(windows: UsageWindows, warnings: string[]): Local
   };
 }
 
+/** Distinguishes complete, partial, and unavailable data using required window fields. */
 function statusForWindows(windows: UsageWindows): AvailabilityStatus {
   const presentWindows = [windows.fiveHour, windows.weekly].filter(
     (window): window is UsageWindow => hasWindowData(window)
@@ -281,6 +291,7 @@ function statusForWindows(windows: UsageWindows): AvailabilityStatus {
   return presentWindows.every(isCompleteWindow) ? "available" : "partial";
 }
 
+/** Selects a duration-matched window while preserving compatibility with legacy slot names. */
 function selectRateLimitWindow(
   candidates: RateLimitWindowCandidate[],
   kind: UsageWindowKind
@@ -300,6 +311,7 @@ function selectRateLimitWindow(
   );
 }
 
+/** Combines independently discovered windows without replacing useful data with empty values. */
 function mergeUsageWindows(primary: UsageWindows, fallback: UsageWindows): UsageWindows {
   return {
     fiveHour: mergeUsageWindow(primary.fiveHour, fallback.fiveHour, FIVE_HOUR_LABEL),
@@ -307,6 +319,7 @@ function mergeUsageWindows(primary: UsageWindows, fallback: UsageWindows): Usage
   };
 }
 
+/** Chooses the more complete window and fills any missing fields from its fallback. */
 function mergeUsageWindow(
   primary: UsageWindow | null,
   fallback: UsageWindow | null,
@@ -325,6 +338,7 @@ function mergeUsageWindow(
   };
 }
 
+/** Checks whether a candidate contributes any displayable usage information. */
 function hasWindowData(window: UsageWindow | null): boolean {
   return (
     window !== null &&
@@ -335,6 +349,7 @@ function hasWindowData(window: UsageWindow | null): boolean {
   );
 }
 
+/** Requires remaining and used percentages plus either an absolute or relative reset value. */
 function isCompleteWindow(window: UsageWindow | null): boolean {
   return (
     window !== null &&
@@ -345,6 +360,7 @@ function isCompleteWindow(window: UsageWindow | null): boolean {
 }
 
 // Local state shapes vary across Codex versions, so searches are recursive but depth-bounded.
+/** Performs a depth- and breadth-bounded search for a matching nested record. */
 function findRecord(
   value: Record<string, unknown>,
   keys: readonly string[],
@@ -375,6 +391,7 @@ function findRecord(
   return null;
 }
 
+/** Reads the first object-valued field among compatible payload keys. */
 function readRecord(
   value: Record<string, unknown>,
   keys: readonly string[]
@@ -389,6 +406,7 @@ function readRecord(
   return null;
 }
 
+/** Finds a compatible field locally or through the bounded nested-record search. */
 function findValue(
   value: Record<string, unknown>,
   keys: readonly string[],
@@ -423,6 +441,7 @@ function findValue(
   return undefined;
 }
 
+/** Accepts finite numeric percentages, including numeric strings, and clamps their range. */
 function toPercent(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
     return clampPercent(value);
@@ -438,10 +457,12 @@ function toPercent(value: unknown): number | null {
   return null;
 }
 
+/** Keeps malformed percentage values inside the public zero-to-one-hundred contract. */
 function clampPercent(value: number): number {
   return Math.round(Math.min(Math.max(value, 0), 100) * 10) / 10;
 }
 
+/** Narrows numbers and numeric strings while rejecting infinities and empty text. */
 function toFiniteNumber(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
@@ -453,6 +474,7 @@ function toFiniteNumber(value: unknown): number | null {
   return null;
 }
 
+/** Canonicalizes compact duration text after validating every component and separator. */
 function normalizeCompactDuration(value: unknown): string | null {
   const text = readStringValue(value);
   if (!text || text.length > 100) {
@@ -487,6 +509,7 @@ function normalizeCompactDuration(value: unknown): string | null {
     : null;
 }
 
+/** Returns trimmed non-empty text while rejecting every other untrusted value type. */
 function readStringValue(value: unknown): string | null {
   if (typeof value === "string" && value.trim().length > 0) {
     return value.trim();

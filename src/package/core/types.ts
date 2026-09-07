@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for types. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 /** Normalized availability status shared by core, commands, and UI adapters. */
 export type AvailabilityStatus = "available" | "partial" | "unavailable";
 

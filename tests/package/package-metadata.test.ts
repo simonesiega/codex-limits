@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for package metadata. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";

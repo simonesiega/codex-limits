@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Terminal UI support for theme. This rendering layer consumes normalized data and does not perform local discovery or authenticated requests.
+ */
 /** Shared terminal color tokens for the Ink TUI. */
 export const theme = {
   title: "#f8fafc",

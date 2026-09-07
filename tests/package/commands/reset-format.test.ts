@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for reset format. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {formatResetOutcome, formatResetRecap} from "@/package/commands/reset/format";
 import type {CouponItem, ResetCouponResult} from "@/package/core/types";

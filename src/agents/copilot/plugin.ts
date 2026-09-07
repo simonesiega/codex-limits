@@ -1,8 +1,11 @@
+/**
+ * @fileoverview Agent adapter support for plugin. The adapter stays thin, delegates Codex data handling to the shared core, and preserves the host integration safety boundary.
+ */
 import {
   joinSession as joinCopilotSession,
   type JoinSessionConfig,
 } from "@github/copilot-sdk/extension";
-import {formatCopilotLimits} from "@/agents/copilot/format";
+import {formatAgentLimits} from "@/agents/shared/format";
 import {getCodexLimits} from "@/package/core/limits";
 import type {CodexLimitsResult} from "@/package/core/types";
 
@@ -46,7 +49,7 @@ export async function startCopilotExtension(
         handler: async () => {
           let message: string;
           try {
-            message = formatCopilotLimits(await loadLimits());
+            message = formatAgentLimits(await loadLimits());
           } catch {
             await logToTimeline(session, SAFE_LOAD_ERROR, {level: "error"});
             return;
@@ -59,6 +62,7 @@ export async function startCopilotExtension(
   });
 }
 
+/** Writes display output to the host timeline and hides host logging failures. */
 async function logToTimeline(
   session: CopilotTimeline | undefined,
   message: string,
@@ -87,5 +91,3 @@ if (
     process.exitCode = 1;
   }
 }
-
-export default startCopilotExtension;

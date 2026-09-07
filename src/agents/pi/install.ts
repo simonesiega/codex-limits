@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Conservative pi configuration lifecycle. Installation and removal recognize only Codex Limits registrations and use bounded, revalidated writes so unrelated host settings remain untouched.
+ */
 import {lstat, stat} from "node:fs/promises";
 import {homedir} from "node:os";
 import {dirname, isAbsolute, join, normalize, resolve} from "node:path";
@@ -79,11 +82,7 @@ export async function installPiIntegration(
 
   if (changed) {
     document.value.packages = packages;
-    try {
-      await writeAgentJsonAtomically(paths.settingsPath, document.value, document.source);
-    } catch {
-      throw new AgentInstallError("Could not safely update the pi settings.");
-    }
+    await writePiSettings(paths.settingsPath, document, "install");
   }
 
   return {changed, configPaths: [paths.settingsPath]};
@@ -104,11 +103,7 @@ export async function uninstallPiIntegration(
 
   if (changed) {
     document.value.packages = remaining;
-    try {
-      await writeAgentJsonAtomically(paths.settingsPath, document.value, document.source);
-    } catch {
-      throw createAgentOperationError("uninstall", "Could not safely update the pi settings.");
-    }
+    await writePiSettings(paths.settingsPath, document, "uninstall");
   }
 
   return {changed, configPaths: [paths.settingsPath]};
@@ -140,6 +135,7 @@ interface ResolvedPiPaths {
   homeDirectory: string;
 }
 
+/** Resolves pi settings and package locations while keeping injectable paths available to tests. */
 function resolvePiPaths(options: PiConfigOptions): ResolvedPiPaths {
   const homeDirectory = resolve(options.homeDirectory ?? homedir());
   const env = options.env ?? process.env;
@@ -155,6 +151,7 @@ function resolvePiPaths(options: PiConfigOptions): ResolvedPiPaths {
   };
 }
 
+/** Verifies that the selected package exposes the expected bounded pi bundle. */
 async function isPiPackageAvailable(packageRoot: string): Promise<boolean> {
   try {
     const [rootDetails, bundleDetails, manifestContent] = await Promise.all([
@@ -181,6 +178,21 @@ async function isPiPackageAvailable(packageRoot: string): Promise<boolean> {
   }
 }
 
+// Keep size validation and safe lifecycle errors identical for install and uninstall writes.
+/** Serializes pi settings through the shared atomic and byte-bounded writer. */
+async function writePiSettings(
+  path: string,
+  document: AgentJsonDocument,
+  operation: AgentOperation
+): Promise<void> {
+  try {
+    await writeAgentJsonAtomically(path, document.value, document.source, MAX_SETTINGS_BYTES);
+  } catch {
+    throw createAgentOperationError(operation, "Could not safely update the pi settings.");
+  }
+}
+
+/** Reads pi settings with operation-specific safe errors. */
 function readPiSettings(
   path: string,
   operation: AgentOperation = "install"
@@ -197,6 +209,7 @@ function readPiSettings(
   });
 }
 
+/** Treats missing package settings as empty and rejects malformed host configuration. */
 function readPackageEntries(
   value: unknown,
   operation: AgentOperation = "install"
@@ -213,6 +226,7 @@ function readPackageEntries(
   return [...value];
 }
 
+/** Narrows string and object package registration forms. */
 function isPackageEntry(value: unknown): value is PiPackageEntry {
   if (typeof value === "string") {
     return Boolean(value.trim());
@@ -227,6 +241,7 @@ function isPackageEntry(value: unknown): value is PiPackageEntry {
   );
 }
 
+/** Replays autoload and resource filters to determine whether this package can load. */
 function isPackageEntryEnabled(entry: PiPackageEntry): boolean {
   if (typeof entry === "string") {
     return true;
@@ -264,6 +279,7 @@ function isPackageEntryEnabled(entry: PiPackageEntry): boolean {
   return enabled;
 }
 
+/** Replays pi's ordered include/exclude deltas to determine the final bundle state. */
 function isPiBundleEnabledByDelta(filters: string[]): boolean {
   let enabled = false;
 
@@ -284,6 +300,7 @@ function isPiBundleEnabledByDelta(filters: string[]): boolean {
   return enabled;
 }
 
+/** Makes the bundle explicit without discarding unrelated package resource filters. */
 function enablePackageEntry(entry: Exclude<PiPackageEntry, string>): PiPackageEntry {
   const extensions = Array.isArray(entry.extensions) ? entry.extensions : [];
   if (entry.autoload === false) {
@@ -307,6 +324,7 @@ function enablePackageEntry(entry: Exclude<PiPackageEntry, string>): PiPackageEn
   return {...entry, extensions: enabledExtensions};
 }
 
+/** Returns null for unsupported glob syntax so callers can take the conservative path. */
 function matchesPiBundlePattern(pattern: string): boolean | null {
   const normalizedPattern = normalizePackagePath(pattern);
   if (/[[\]{}()]/.test(normalizedPattern)) {
@@ -319,6 +337,7 @@ function matchesPiBundlePattern(pattern: string): boolean | null {
 }
 
 // Memoized matching avoids regex backtracking on untrusted package-filter patterns.
+/** Implements the small pi glob subset with memoized states instead of vulnerable regex conversion. */
 function matchesGlobPattern(value: string, pattern: string): boolean {
   const memo = new Map<number, boolean>();
   const valueStates = value.length + 1;
@@ -385,6 +404,7 @@ function normalizeExactPackagePath(value: string): string {
   return normalizePackagePath(value).replace(/^\.\//, "");
 }
 
+/** Recognizes npm and safely resolved local registrations without broad substring matching. */
 function isCodexLimitsPackage(
   entry: PiPackageEntry,
   packageRoot: string,
@@ -400,6 +420,7 @@ function isCodexLimitsPackage(
   return configuredPath !== null && pathsEqual(configuredPath, packageRoot);
 }
 
+/** Accepts the package name with an optional pinned npm version. */
 function isNpmCodexLimitsPackage(entry: PiPackageEntry): boolean {
   const source = typeof entry === "string" ? entry : entry.source;
   if (!source.startsWith("npm:")) {
@@ -412,6 +433,7 @@ function isNpmCodexLimitsPackage(entry: PiPackageEntry): boolean {
   );
 }
 
+/** Resolves tilde, absolute, and settings-relative package paths for exact comparison. */
 function resolveLocalPackagePath(
   source: string,
   settingsPath: string,
@@ -436,6 +458,7 @@ function resolveLocalPackagePath(
   return resolve(dirname(settingsPath), source);
 }
 
+/** Uses platform normalization and case rules when comparing resolved registration paths. */
 function pathsEqual(left: string, right: string): boolean {
   const normalizedLeft = normalize(left);
   const normalizedRight = normalize(right);

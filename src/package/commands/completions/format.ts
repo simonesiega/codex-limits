@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shell-completion renderers generated from the command registry. Each renderer applies the quoting and syntax rules of its target shell while preserving one shared command model.
+ */
 import type {
   CommandDefinition,
   CommandRegistry,

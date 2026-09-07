@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for diagnostics. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {redactSensitiveText} from "@/package/core/utils/redact";
 
 export type DiagnosticSource = "authentication" | "filesystem" | "network" | "payload";
@@ -10,6 +13,7 @@ export interface Diagnostic {
   message: string;
 }
 
+/** Creates a stable warning value without retaining a potentially sensitive thrown error. */
 export function warningDiagnostic(
   code: string,
   source: DiagnosticSource,

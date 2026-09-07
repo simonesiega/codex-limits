@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Repository automation for documentation heading. It is run through Bun and keeps build or validation policy outside the published runtime.
+ */
 /** Removes HTML tags and angle brackets from Markdown heading text. */
 export function stripHtmlTags(value: string): string {
   let result = "";

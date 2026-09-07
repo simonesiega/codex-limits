@@ -1,5 +1,8 @@
+/**
+ * @fileoverview Behavioral coverage for install. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
-import {lstat, readFile, symlink, writeFile} from "node:fs/promises";
+import {lstat, readFile, stat, symlink, writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {
   inspectOpencodeIntegration as inspectOpencodePlugin,
@@ -177,6 +180,28 @@ if (process.platform !== "win32") {
     });
   });
 }
+
+test("installOpencodePlugin keeps serialized rewrites within the config limit", async () => {
+  await withOpencodeConfigs(async ({configPath, tuiConfigPath}) => {
+    const expansiveSource = JSON.stringify({values: Array(180_000).fill(0)});
+    expect(Buffer.byteLength(expansiveSource, "utf8")).toBeLessThan(1_000_000);
+    await writeFile(configPath, expansiveSource, "utf8");
+
+    expect((await installOpencodePlugin({configPath, tuiConfigPath})).changed).toBe(true);
+    expect((await stat(configPath)).size).toBeLessThanOrEqual(1_000_000);
+    const rewritten = await readJson<{values: number[]; plugin: string[]}>(configPath);
+    expect(rewritten.values).toHaveLength(180_000);
+    expect(rewritten.plugin).toEqual(["@simonesiega/codex-limits"]);
+
+    const oversizedRewriteSource = JSON.stringify({padding: "x".repeat(999_950)});
+    expect(Buffer.byteLength(oversizedRewriteSource, "utf8")).toBeLessThan(1_000_000);
+    await writeFile(configPath, oversizedRewriteSource, "utf8");
+    await expect(installOpencodePlugin({configPath, tuiConfigPath})).rejects.toThrow(
+      "Could not safely update the OpenCode configuration."
+    );
+    expect(await readFile(configPath, "utf8")).toBe(oversizedRewriteSource);
+  });
+});
 
 test("installOpencodePlugin preserves a version-pinned tuple plugin", async () => {
   await withOpencodeConfigs(async ({configPath, tuiConfigPath}) => {

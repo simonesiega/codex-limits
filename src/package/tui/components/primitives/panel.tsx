@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Ink presentation component for panel. It renders display-ready values only; data access, normalization, and safety decisions belong to the shared core.
+ */
 import {Box, Text} from "ink";
 import type {ReactNode, ReactElement} from "react";
 import {theme} from "@/package/tui/theme";

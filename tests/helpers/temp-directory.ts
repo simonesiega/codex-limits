@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for temp directory. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {mkdtemp, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";

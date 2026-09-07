@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Minimal npm postinstall notice. It avoids side effects in source, CI, and
+ * host-managed installs, and only points global users toward the explicit agent installer.
+ */
 const {existsSync} = require("node:fs");
 const {join} = require("node:path");
 

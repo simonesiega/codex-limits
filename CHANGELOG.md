@@ -22,6 +22,8 @@ All notable changes to codex-limits are documented in this file.
 
 - Fixed development type checks to use Node.js 20 definitions, matching the published CLI's minimum supported runtime.
 - Fixed type checking to cover every TypeScript build, documentation, package-validation, and compatibility script.
+- Fixed agent lifecycle writes to keep serialized OpenCode and pi configuration within host file limits and reject changes that cannot fit safely.
+- Fixed install restart guidance to appear only when at least one selected agent configuration changed, including partial multi-agent successes.
 
 ### Removed
 
@@ -29,6 +31,8 @@ All notable changes to codex-limits are documented in this file.
 
 - Added CodeQL scanning with GitHub's default JavaScript and TypeScript security queries for pull requests, main-branch changes, and weekly analysis.
 - Updated locked `fast-uri` and `toml` development dependencies to patched releases.
+- Prevented closed CLI output pipes from exposing Node.js stack traces and private installation paths.
+- Bound rendered coupon lists and tied local state reads to opened file identities verified inside the detected Codex home.
 
 ## [1.2.0] - 2026-08-09
 

@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for live. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 import {resolveCodexCredentialResult} from "@/package/core/auth/codex-auth";
 import {diagnosticsToWarnings} from "@/package/core/diagnostics";
 import {
@@ -78,6 +81,7 @@ export async function inspectLiveUsage(
   };
 }
 
+/** Constructs the minimal headers required by the live usage endpoint. */
 function buildUsageHeaders(credentials: {
   accessToken: string;
   accountId: string;
@@ -94,6 +98,7 @@ function buildUsageHeaders(credentials: {
   };
 }
 
+/** Uses the documented endpoint unless an explicit caller override is supplied. */
 function resolveUsageEndpoint(options: CodexLimitsOptions): string {
   const env = resolveEnvironment(options.env);
   return (
@@ -101,6 +106,7 @@ function resolveUsageEndpoint(options: CodexLimitsOptions): string {
   );
 }
 
+/** Maps transport outcomes to endpoint diagnostics without retaining the endpoint or response body. */
 function getEndpointStatus(result: JsonGetResult): LiveEndpointStatus {
   if (result.ok) {
     return "reachable";
@@ -121,6 +127,7 @@ function getEndpointStatus(result: JsonGetResult): LiveEndpointStatus {
   }
 }
 
+/** Converts transport failures into a normalized unavailable usage result. */
 function unavailableFromFailure(failure: JsonGetFailure): UsageResult {
   return unavailableLiveUsage(
     diagnosticsToWarnings([diagnosticForJsonFailure(failure, "Live usage")])

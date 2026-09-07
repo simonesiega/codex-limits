@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Shared core logic for coupon id. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ */
 const MAX_COUPON_ID_LENGTH = 512;
 const UNSAFE_COUPON_ID_CHARACTER = /[\u0000-\u0020\u007f-\u009f]/;
 

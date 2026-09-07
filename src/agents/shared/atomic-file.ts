@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Host-independent agent support for atomic file. Agent adapters reuse this module to keep lifecycle and presentation behavior consistent.
+ */
 import {randomUUID} from "node:crypto";
 import {mkdir, open, rename, rm, unlink} from "node:fs/promises";
 import {dirname, join} from "node:path";
@@ -77,6 +80,7 @@ export async function removeAgentFileIfUnchanged(
   await unlink(path);
 }
 
+/** Reverses committed batch entries without masking the failure that triggered recovery. */
 async function rollbackAgentFileUpdates(updates: readonly AgentFileUpdate[]): Promise<void> {
   for (const update of [...updates].reverse()) {
     try {
@@ -91,6 +95,7 @@ async function rollbackAgentFileUpdates(updates: readonly AgentFileUpdate[]): Pr
   }
 }
 
+/** Re-reads a target and compares the exact snapshot used to authorize its mutation. */
 async function assertAgentFileUnchanged(
   path: string,
   expectedContent: string | null

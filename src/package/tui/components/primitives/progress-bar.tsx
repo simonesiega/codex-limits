@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Ink presentation component for progress bar. It renders display-ready values only; data access, normalization, and safety decisions belong to the shared core.
+ */
 import {Text} from "ink";
 import type {ReactElement} from "react";
 import {theme, type TuiTone} from "@/package/tui/theme";
@@ -8,6 +11,7 @@ export interface ProgressBarProps {
   tone: TuiTone;
 }
 
+/** Renders a themed bar whose text width remains stable for terminal layout calculations. */
 export function ProgressBar({percent, width, tone}: ProgressBarProps): ReactElement {
   const bar = buildProgressBar(percent, width);
   return <Text color={theme[tone]}>{bar}</Text>;

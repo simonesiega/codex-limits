@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for coupons. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
@@ -162,6 +165,38 @@ test("getResetCoupons reports inconsistent coupon availability", async () => {
   expect(result.status).toBe("partial");
   expect(result.warnings).toEqual([
     "Live reset coupon endpoint returned inconsistent availability data.",
+  ]);
+});
+
+test("getResetCoupons bounds the rendered coupon list", async () => {
+  const credits = Array.from({length: 101}, (_, index) => ({
+    id: `coupon-${index + 1}`,
+    reset_type: "codex_rate_limits",
+    status: "available",
+    expires_at: new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString(),
+  }));
+  const result = await getResetCoupons({
+    env: {
+      CODEX_LIMITS_ACCESS_TOKEN: "fake-access-token",
+      CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
+    },
+    now: new Date("2026-01-01T00:00:00.000Z"),
+    transport: async () => ({
+      ok: true,
+      status: 200,
+      transport: "fetch",
+      payload: {available_count: credits.length, credits: [...credits].reverse()},
+    }),
+  });
+
+  expect(result.status).toBe("partial");
+  expect(result.available).toBe(101);
+  expect(result.items).toHaveLength(100);
+  expect(result.items[0]?.id).toBe("coupon-1");
+  expect(result.items.at(-1)?.id).toBe("coupon-100");
+  expect(result.nextExpirationIn).toBe("0m");
+  expect(result.warnings).toEqual([
+    "Live reset coupon endpoint omitted extra coupon entries to keep output bounded.",
   ]);
 });
 

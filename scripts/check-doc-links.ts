@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Repository automation for check doc links. It is run through Bun and keeps build or validation policy outside the published runtime.
+ */
+import type {Dirent} from "node:fs";
 import {readdir, readFile, stat} from "node:fs/promises";
 import {dirname, extname, relative, resolve, sep} from "node:path";
 import {stripHtmlTags} from "./documentation-heading";
@@ -209,7 +213,7 @@ async function existsWithExactCase(path: string): Promise<boolean> {
 
   let current = root;
   for (const part of relativePath.split(sep)) {
-    let entries;
+    let entries: Dirent[];
     try {
       entries = await readdir(current, {withFileTypes: true});
     } catch {

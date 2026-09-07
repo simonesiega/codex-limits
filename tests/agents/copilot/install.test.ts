@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for install. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {lstat, mkdir, readFile, symlink, writeFile} from "node:fs/promises";
 import {dirname, join} from "node:path";

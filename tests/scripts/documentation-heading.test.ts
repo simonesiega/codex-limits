@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for documentation heading. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {stripHtmlTags} from "../../scripts/documentation-heading";
 

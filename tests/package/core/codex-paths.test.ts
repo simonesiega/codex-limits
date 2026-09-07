@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Behavioral coverage for codex paths. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ */
 import {expect, test} from "bun:test";
 import {writeFile} from "node:fs/promises";
 import {join, normalize} from "node:path";
