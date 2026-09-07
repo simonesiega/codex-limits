@@ -2,7 +2,7 @@
 
 [← Documentation hub](../README.md) · [Project README](../../README.md)
 
-This page describes the runtime, operating-system, Codex data, network, terminal, and agent compatibility implemented by the current codebase.
+This page is the canonical compatibility reference for the runtime, operating-system, Codex data, network, terminal, and agent support implemented by the current codebase.
 
 ## Runtime and installation
 
@@ -16,9 +16,18 @@ This page describes the runtime, operating-system, Codex data, network, terminal
 
 Bun is used for dependency management, tests, development commands, and production builds. It is not required to run the published CLI. Runtime dependencies are bundled into `dist`, so the published package does not declare separate production dependencies.
 
-The root package module resolves to the agent-specific `dist/opencode.js` bundle for OpenCode plugin-loader compatibility. The explicit `@simonesiega/codex-limits/opencode` subpath and OpenCode's loader-reserved `@simonesiega/codex-limits/tui` subpath resolve to the same module; all three expose a default plugin and the named `tui` export. The host-only `@simonesiega/codex-limits/pi` subpath resolves to the separate `dist/pi.js` extension also declared in the package's `pi.extensions` manifest. The host-only `@simonesiega/codex-limits/copilot` subpath resolves to the executable `dist/copilot.mjs` extension, which the GitHub Copilot CLI installer also copies to its recognized user extension entry point.
+### Package interfaces
 
-These agent-host exports are not a general-purpose JavaScript API and do not install an integration by themselves. The supported general interfaces are the CLI and its documented [JSON output](json-output.md). There is intentionally no `@simonesiega/codex-limits/core` export; internal core modules may change without a public API compatibility guarantee.
+The package exposes host-specific entry points required by supported agent integrations:
+
+- the root package module resolves to `dist/opencode.js` for OpenCode plugin-loader compatibility;
+- `@simonesiega/codex-limits/opencode` and OpenCode's loader-reserved `@simonesiega/codex-limits/tui` subpath resolve to the same module and expose a default plugin plus the named `tui` export;
+- `@simonesiega/codex-limits/pi` resolves to the separate `dist/pi.js` extension declared in the package's `pi.extensions` manifest;
+- `@simonesiega/codex-limits/copilot` resolves to the executable `dist/copilot.mjs` extension, which the GitHub Copilot CLI installer also copies to its recognized user extension entry point.
+
+These agent-host exports are not a general-purpose JavaScript API and do not install an integration by themselves. The supported general interfaces are the CLI and its documented [JSON output](json-output.md).
+
+There is intentionally no `@simonesiega/codex-limits/core` export. Internal core modules may change without a public API compatibility guarantee.
 
 ## Environment overrides
 
@@ -43,6 +52,7 @@ The following environments are covered by the repository's automated checks or l
 
 | Area                             | Tested environments                                                                                                                         |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source checks and build          | GitHub Actions on `ubuntu-latest` with Node.js 24                                                                                           |
 | Automated packaged CLI           | GitHub Actions on `ubuntu-latest` with Node.js 20 and 22, `windows-latest` with Node.js 20, and `macos-latest` with Node.js 22              |
 | Latest recorded local validation | Windows build `10.0.26200.9168` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-09-07)                                                   |
 | Terminal rendering               | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix                          |
@@ -51,7 +61,9 @@ The following environments are covered by the repository's automated checks or l
 | pi agent adapter                 | Mocked UI coverage plus packed install, command discovery, dispatch, removal, and post-removal discovery in real pi 0.81.1 and latest hosts |
 | Copilot CLI adapter              | Mocked SDK coverage plus packed install, extension loading, `/codex-limits` dispatch, and removal in the latest real Copilot CLI host       |
 
-The supported runtime and operating-system ranges are broader than this test matrix. Automated checks sample each supported operating system but do not test every supported Node.js version on every platform. The real-agent matrix runs on `ubuntu-latest` for normal repository checks and on a weekly schedule so moving `latest` host releases are exercised even when the project has no new commits.
+The supported runtime and operating-system ranges are broader than this test matrix. Automated checks sample each supported operating system but do not test every supported Node.js version on every platform.
+
+The real-agent matrix runs on `ubuntu-latest` with Node.js 24 for normal repository checks and on the weekly workflow schedule, so moving `latest` host releases are exercised even when the project has no new commits.
 
 ## Operating systems
 
@@ -86,7 +98,9 @@ Both credential environment variables are required together. Supplying only one 
 
 Local Codex data is inspected read-only. See the [Security policy](../../SECURITY.md#local-data-and-network-behavior) for the canonical traversal, redaction, and file-handling safeguards.
 
-Local state layouts can vary between Codex versions. The parser recognizes common primary/five-hour and secondary/weekly window names and can return partial data when only some fields are understood. For live responses, declared window durations such as `limit_window_seconds` take precedence over legacy primary/secondary slot names, because the usage service can now return weekly usage in `primary_window` without a 5-hour window.
+Local state layouts can vary between Codex versions. The parser recognizes common primary/five-hour and secondary/weekly window names and can return partial data when only some fields are understood.
+
+For live responses, declared window durations such as `limit_window_seconds` take precedence over legacy primary/secondary slot names, because the usage service can return weekly usage in `primary_window` without a 5-hour window.
 
 ## Network compatibility
 
@@ -100,11 +114,13 @@ Live data uses these defaults:
 
 These endpoints are implementation details rather than a public API contract and may change when Codex changes its service behavior. A response containing only a recognized weekly window is treated as valid live usage; local discovery is used only when the live response contains no recognized usage window.
 
-Requests require complete Codex credentials and use a 10-second timeout by default. The runtime's `fetch` implementation and native Node HTTP/HTTPS transport are both supported. See the [Security policy](../../SECURITY.md#local-data-and-network-behavior) for canonical request, response, endpoint, timestamp, and redemption safeguards.
+Requests require complete Codex credentials and use a 10-second timeout by default. The runtime's `fetch` implementation and native Node HTTP/HTTPS transport are both supported.
+
+See the [Security policy](../../SECURITY.md#local-data-and-network-behavior) for canonical request, response, endpoint, timestamp, and redemption safeguards.
 
 `CODEX_LIMITS_USAGE_ENDPOINT` can override only the live usage endpoint. Supported overrides use HTTPS, with plain HTTP limited to loopback testing on `localhost`, `127.0.0.1`, or `::1`.
 
-An internet connection is therefore recommended for current usage and required for coupon data. The CLI remains usable offline when compatible local usage snapshots exist.
+An internet connection is recommended for current live usage and required for coupon data. The CLI remains usable offline when compatible local usage snapshots exist.
 
 ## Terminal and automation compatibility
 
@@ -113,12 +129,16 @@ An internet connection is therefore recommended for current usage and required f
 | Interactive dashboard       | A terminal capable of running the Ink UI                   |
 | `status` and `coupons`      | Any environment that can capture standard output           |
 | JSON output                 | Any environment that can capture and parse standard output |
-| Generated shell completion  | Bash, Zsh, Fish, PowerShell, or Nushell                    |
+| Generated shell completions | Bash, Zsh, Fish, PowerShell, or Nushell                    |
 | Reset coupon redemption     | Both standard input and standard output must be TTYs       |
 | Interactive agent lifecycle | Both standard input and standard output must be TTYs       |
 | Explicit agent lifecycle    | Install and uninstall work with agent names or `--all`     |
 
-Use [`codex-limits --json`](json-output.md), `codex-limits coupons --json`, or `codex-limits doctor --json` in scripts. Errors use a non-zero exit code and are written to standard error; successful machine-readable output is written to standard output. Usage thresholds can also return documented non-zero condition codes while preserving complete standard output and leaving standard error empty. `codex-limits reset` is intentionally interactive and has no JSON or unattended confirmation mode.
+Use [`codex-limits --json`](json-output.md), `codex-limits coupons --json`, or `codex-limits doctor --json` in scripts. Errors use a non-zero exit code and are written to standard error; successful machine-readable output is written to standard output.
+
+Usage thresholds can also return documented non-zero condition codes while preserving complete standard output and leaving standard error empty.
+
+`codex-limits reset` is intentionally interactive and has no JSON or unattended confirmation mode.
 
 `codex-limits completions <shell>` generates a script for Bash, Zsh, Fish, PowerShell, or Nushell from the current command registry. Follow the [shell completion guide](shell-completions.md) for installation and implementation details.
 
@@ -134,11 +154,15 @@ The source-check job generates scripts from registry metadata containing quotes,
 | PowerShell | Runner-provided PowerShell (`pwsh`) on `ubuntu-latest`        | PowerShell language parser API |
 | Nushell    | Nushell 0.115.1 pinned by release archive digest in the build | `nu -n`                        |
 
-Bash, Zsh, Fish, and PowerShell versions follow the `ubuntu-latest` runner or its package repositories rather than defining minimum supported versions. Nushell is pinned because it is downloaded separately for syntax validation. Local tests perform the same validation for whichever native parsers are installed; CI requires all five.
+Bash, Zsh, Fish, and PowerShell versions follow the `ubuntu-latest` runner or its package repositories rather than defining minimum supported versions. Nushell is pinned because it is downloaded separately for syntax validation.
+
+Local tests perform the same validation for whichever native parsers are installed; CI requires all five.
 
 ## OpenCode compatibility
 
-The integration supports OpenCode hosts that expose either the current keymap layer registration API or the legacy command registration API. Compatibility is detected from the runtime API shape rather than an exact version list. Automated adapter tests cover both shapes, while the real-host compatibility matrix installs the packed package, dispatches `/codex-limits`, and verifies safe removal in OpenCode 1.18.14 and the latest npm release.
+The integration supports OpenCode hosts that expose either the current keymap layer registration API or the legacy command registration API. Compatibility is detected from the runtime API shape rather than an exact version list.
+
+Automated adapter tests cover both shapes, while the real-host compatibility matrix installs the packed package, dispatches `/codex-limits`, and verifies safe removal in OpenCode 1.18.14 and the latest npm release.
 
 See the [OpenCode integration guide](agents/opencode.md) for canonical installation, configuration, removal, and troubleshooting instructions.
 
@@ -146,21 +170,29 @@ See the [OpenCode integration guide](agents/opencode.md) for canonical installat
 
 The extension is developed against `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 0.81.x, which require Node.js 22.19 or newer. Those optional peers are supplied by the pi host and do not change the standalone CLI's Node.js 20 requirement.
 
-Automated real-host checks install the packed package into pi 0.81.1 and the latest npm release, verify that the host discovers `/codex-limits` as an extension command, dispatch it through pi's RPC command path without creating a model-conversation message, uninstall it, and verify that a fresh pi host no longer discovers the command. Mocked tests continue to cover the interactive overlay with real TUI components; the overlay itself is not terminal-tested against every pi release.
+Automated real-host checks install the packed package into pi 0.81.1 and the latest npm release, verify that the host discovers `/codex-limits` as an extension command, dispatch it through pi's RPC command path without creating a model-conversation message, uninstall it, and verify that a fresh pi host no longer discovers the command.
+
+Mocked tests continue to cover the interactive overlay with real TUI components; the overlay itself is not terminal-tested against every pi release.
 
 See the [pi integration guide](agents/pi.md) for canonical installation, configuration, removal, and troubleshooting instructions.
 
 ## GitHub Copilot CLI compatibility
 
-The integration depends on Copilot CLI's experimental extension mechanism, which may change. npm installations of the current Copilot CLI require Node.js 22 or newer; other official installation methods package the host separately. The host must provide `@github/copilot-sdk/extension` to the extension process.
+The integration depends on Copilot CLI's experimental extension mechanism, which may change. npm installations of the current Copilot CLI require Node.js 22 or newer; other official installation methods package the host separately.
 
-The adapter is type-checked against `@github/copilot-sdk` 1.0.8. Automated tests cover registration, timeline output, and safe failures. The real-host compatibility matrix additionally installs the packed extension into the latest Copilot CLI npm release, dispatches `/codex-limits`, requires its local timeline summary to appear without model authentication, and verifies safe removal through packed diagnostics.
+The host must provide `@github/copilot-sdk/extension` to the extension process.
+
+The adapter is type-checked against `@github/copilot-sdk` 1.0.8. Automated tests cover registration, timeline output, and safe failures.
+
+The real-host compatibility matrix additionally installs the packed extension into the latest Copilot CLI npm release, dispatches `/codex-limits`, requires its local timeline summary to appear without model authentication, and verifies safe removal through packed diagnostics.
 
 See the [GitHub Copilot CLI integration guide](agents/copilot.md) for canonical installation, configuration, removal, and troubleshooting instructions.
 
 ## Support policy
 
-The latest npm release is supported. The current `main` branch is supported for unreleased fixes, while older releases receive best-effort support. See the [Security policy](../../SECURITY.md#supported-versions) for security support details.
+The latest npm release is supported. The current `main` branch is supported for unreleased fixes, while older releases receive best-effort support.
+
+See the [Security policy](../../SECURITY.md#supported-versions) for security support details.
 
 ## Related documentation
 

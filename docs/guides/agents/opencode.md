@@ -2,7 +2,7 @@
 
 [← Documentation hub](../../README.md) · [Agent integrations](../agent-integrations.md) · [Project README](../../../README.md)
 
-The OpenCode integration adds a read-only `/codex-limits` command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limit data to the LLM.
+The OpenCode integration adds a read-only `/codex-limits` command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limits data to the LLM. This page is the canonical setup, usage, removal, and troubleshooting guide for the OpenCode adapter.
 
 ## At a glance
 
@@ -28,11 +28,11 @@ npm install -g @simonesiega/codex-limits@latest
 codex-limits agents install opencode
 ```
 
-The explicit agent name works in interactive and non-interactive terminals. The compatible `codex-limits init --opencode` form remains supported. Restart OpenCode after installation so it reloads its configuration.
+The explicit agent name works in interactive and non-interactive terminals. The legacy `codex-limits init --opencode` form remains supported for backward compatibility, but new usage should prefer `codex-limits agents install opencode`. Restart OpenCode after installation so it reloads its configuration.
 
 ### Configuration files
 
-The installer updates both of these global configuration files for the current user:
+The installer keeps both of these global configuration files in sync for the current user:
 
 ```text
 ~/.config/opencode/opencode.json
@@ -47,7 +47,7 @@ It adds the following package to each file's `plugin` array:
 
 The package root, the explicit `@simonesiega/codex-limits/opencode` host subpath, and OpenCode's loader-reserved `@simonesiega/codex-limits/tui` subpath resolve to the same bundled plugin. The installer registers the root package name; compatible OpenCode hosts use the `./tui` export automatically during TUI plugin discovery. Neither subpath is a separate installation method.
 
-Both files are updated because compatible OpenCode versions discover TUI plugins through different global configuration files. The installer creates missing configuration objects, preserves unrelated fields and plugins, recognizes common package version forms, and avoids duplicate registrations. If one file is already configured and the other is not, only the missing plugin registration is added.
+Both files are managed because supported OpenCode host versions have used different global configuration surfaces for TUI plugin discovery. The installer creates missing configuration objects, preserves unrelated fields and plugins, recognizes common package version forms, and avoids duplicate registrations. If one file is already configured and the other is not, only the missing plugin registration is added.
 
 Installer file-handling, size, symbolic-link, atomic-write, and path-redaction guarantees are canonical in the [Security policy](../../../SECURITY.md#agent-integrations-and-installers).
 
@@ -98,7 +98,7 @@ Correct the affected OpenCode configuration before running the installer again. 
 
 ### Limits cannot be loaded
 
-Run `codex-limits status` outside OpenCode. If data is also unavailable there, verify Codex authentication, local data discovery, and network access.
+Run `codex-limits doctor` and `codex-limits status` outside OpenCode. If data is also unavailable there, verify Codex authentication, local data discovery, and network access.
 
 ## Related documentation
 

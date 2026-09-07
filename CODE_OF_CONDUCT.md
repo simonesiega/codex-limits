@@ -1,26 +1,8 @@
-<p align="center">
-  <img src="docs/assets/logo/logo.png" alt="codex-limits logo" width="180" />
-</p>
+# Code of Conduct
 
-<h1 align="center">
-  Codex Limits Code of Conduct
-</h1>
+[← Project README](README.md) · [Contributing](CONTRIBUTING.md) · [Security policy](SECURITY.md)
 
-<p align="center">
-  Community standards for a respectful, inclusive, and constructive project.
-</p>
-
-## Contents
-
-- [Our pledge](#our-pledge)
-- [Expected behavior](#expected-behavior)
-- [Unacceptable behavior](#unacceptable-behavior)
-- [Scope](#scope)
-- [Reporting a conduct issue](#reporting-a-conduct-issue)
-- [Enforcement responsibilities](#enforcement-responsibilities)
-- [Enforcement guidelines](#enforcement-guidelines)
-- [Attribution](#attribution)
-- [Related documentation](#related-documentation)
+This Code of Conduct defines the community standards for respectful, inclusive, and constructive participation in the Codex Limits project.
 
 ## Our pledge
 
@@ -68,7 +50,9 @@ Representation includes using an official project account, posting from an offic
 
 ## Reporting a conduct issue
 
-Report abusive, harassing, or otherwise unacceptable behavior privately by emailing [simonesiega1@gmail.com](mailto:simonesiega1@gmail.com) with the subject `Codex Limits conduct report`. Do not open a public issue for a private conduct report.
+Report abusive, harassing, or otherwise unacceptable behavior privately by emailing [simonesiega1@gmail.com](mailto:simonesiega1@gmail.com) with the subject `Codex Limits conduct report`.
+
+Do not open a public issue for a private conduct report.
 
 Include only the information needed to understand and review the concern:
 
@@ -81,7 +65,9 @@ Include only the information needed to understand and review the concern:
 
 All reports will be reviewed as promptly and fairly as reasonably possible. The maintainer will respect the privacy and security of the reporter and affected parties, sharing information only when necessary to investigate or respond.
 
-If the report concerns the project maintainer or cannot safely be reported by email, use GitHub's [Report Abuse form](https://support.github.com/contact/report-abuse). Security vulnerabilities should instead follow the private process in [`SECURITY.md`](SECURITY.md#reporting-a-vulnerability).
+If the report concerns the project maintainer or cannot safely be reported by email, use GitHub's [Report Abuse form](https://support.github.com/contact/report-abuse).
+
+Security vulnerabilities should instead follow the private process in [`SECURITY.md`](SECURITY.md#reporting-a-vulnerability).
 
 ## Enforcement responsibilities
 
@@ -110,6 +96,7 @@ The enforcement guidelines were inspired by [Mozilla's code of conduct enforceme
 
 ## Related documentation
 
-- Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for contribution workflow and review expectations.
-- Read [`SECURITY.md`](SECURITY.md) for private vulnerability reporting and project safety boundaries.
-- Use the [documentation hub](docs/README.md) to find product, automation, agent, and development guides.
+- [Contributing](CONTRIBUTING.md) — Contribution workflow, development expectations, and Pull Request guidance.
+- [Security policy](SECURITY.md) — Private vulnerability reporting and canonical project safety boundaries.
+- [Documentation hub](docs/README.md) — Task-oriented product, automation, agent, development, and security documentation.
+- [Project README](README.md) — Product overview, installation, commands, and configuration.

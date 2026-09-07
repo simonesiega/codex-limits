@@ -2,7 +2,7 @@
 
 [← Documentation hub](../README.md) · [Project README](../../README.md)
 
-`codex-limits` provides predictable, machine-readable JSON for scripts and automation.
+`codex-limits` provides predictable, machine-readable JSON for scripts and automation. This page is the canonical reference for the public JSON documents, field semantics, warnings, threshold exit codes, and scripting behavior.
 
 ## Commands
 
@@ -51,7 +51,7 @@ interface UsageWindowJson {
 }
 ```
 
-This example represents a sanitized snapshot:
+Sanitized example ([see the complete limits example](../examples/codex-limits-output.example.json)):
 
 <!-- validated-example: codex-limits-output.example.json -->
 
@@ -250,9 +250,24 @@ Coupon `index` values are one-based and assigned after sorting. `grantedAt` and 
 
 The complete limits contract permits `coupons: null` when a core caller intentionally omits coupon loading. The standard `codex-limits --json` command requests coupons and normally returns a coupon summary object, including an unavailable summary when credentials or network data are missing.
 
+### Doctor diagnostics
+
+| Field                 | Meaning                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| `packageVersion`      | Installed Codex Limits package version.                                                  |
+| `nodeVersion`         | Node.js runtime version used by the CLI.                                                 |
+| `operatingSystem`     | Generic operating-system name only; no private path or host-specific detail is included. |
+| `codexHomeDetected`   | Whether a readable Codex home directory was detected.                                    |
+| `authenticationFound` | Whether complete Codex credentials were discovered without exposing them.                |
+| `localUsageFound`     | Whether at least one recognized local usage window was found.                            |
+| `liveEndpoint`        | `not-checked`, `reachable`, or `unreachable`.                                            |
+| `agentIntegrations`   | Map of registered agent IDs to `installed`, `not-installed`, or `unknown`.               |
+
+`liveEndpoint` is `not-checked` when authentication is unavailable, `reachable` when the endpoint returns an HTTP response, and `unreachable` for invalid endpoint configuration, timeouts, or network failures. An agent integration reports `unknown` only when its adapter cannot safely determine installation state.
+
 ## Contract stability
 
-The documented field names and value types form the public JSON contract. Consumers should tolerate `null` values and additional warning messages.
+The documented field names and value types form the public JSON contract. The published schemas are strict representations of those documents, while consumers should still tolerate documented `null` values and additional warning messages.
 
 Existing fields are not removed, renamed, or assigned incompatible types without being documented as a breaking change. New additive fields may be introduced in a future schema revision, so consumers should update the schema they use when adopting a newer contract version. Human-readable labels and warning text should not be used as stable identifiers.
 

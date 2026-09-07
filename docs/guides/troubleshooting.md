@@ -2,7 +2,7 @@
 
 [← Documentation hub](../README.md) · [Project README](../../README.md)
 
-Use this guide when Codex data, live usage, reset credits, JSON output, the terminal dashboard, reset redemption, or an agent integration is unavailable.
+Use this guide when Codex data, live usage, reset credits, JSON output, the terminal dashboard, reset redemption, or an agent integration is unavailable. This is the cross-surface troubleshooting guide; agent-specific configuration and recovery steps remain canonical in each dedicated agent guide.
 
 ## Contents
 
@@ -36,6 +36,16 @@ codex-limits doctor --json
 ```
 
 Then run `codex-limits status` to see safe usage warnings and `codex-limits coupons` to check coupon availability independently. Diagnostic and warning output intentionally omits credentials, private paths, endpoint URLs, and raw Codex files.
+
+Use the diagnostic result to choose the next section:
+
+| Diagnostic result                                          | Next step                                                                                                                                                                      |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Codex home detected** is **No**                          | [No Codex data found](#no-codex-data-found)                                                                                                                                    |
+| **Authentication found** is **No**                         | [Reset credits are unavailable](#reset-credits-are-unavailable) and, when using overrides, [Authentication overrides are incomplete](#authentication-overrides-are-incomplete) |
+| **Local usage found** is **No**                            | [Usage information is unavailable](#usage-information-is-unavailable)                                                                                                          |
+| **Live endpoint** is **Unreachable**                       | [Usage information is unavailable](#usage-information-is-unavailable) and [Network compatibility](compatibility.md#network-compatibility)                                      |
+| An agent reports `not-installed` or `unknown` unexpectedly | [An agent command does not appear](#an-agent-command-does-not-appear)                                                                                                          |
 
 ## No Codex data found
 
@@ -127,7 +137,7 @@ In general, rerun the named installer, confirm that it reports **installed** or 
 Installers intentionally refuse malformed, oversized, symbolic-link, or conflicting targets rather than overwriting them. Review the relevant dedicated guide before changing agent configuration:
 
 - [OpenCode setup troubleshooting](agents/opencode.md#setup-reports-invalid-json)
-- [pi setup troubleshooting](agents/pi.md#setup-reports-invalid-json)
+- [pi setup troubleshooting](agents/pi.md#setup-reports-invalid-settings)
 - [GitHub Copilot CLI extension conflicts](agents/copilot.md#the-extension-path-is-already-in-use)
 
 Do not remove unrelated plugins, packages, extensions, or configuration fields.
@@ -145,10 +155,12 @@ With multiple named targets or `--all`, review every per-agent result: one failu
 
 ## The problem persists
 
-1. Run `codex-limits doctor` and the affected read-only command again.
-2. Record the command, expected behavior, safe status labels, and warning text.
-3. Include the operating system and Node.js version, but redact private paths and environment values.
+1. Run `codex-limits doctor --json` and the affected read-only command again.
+2. Record the exact command, expected behavior, actual behavior, safe warning text, and whether the issue is reproducible.
+3. Include the Doctor output after reviewing it, plus any relevant terminal or agent version. Do not include private environment values, credentials, or raw Codex files.
 4. Check existing [GitHub issues](https://github.com/simonesiega/codex-limits/issues) before opening a focused report.
+
+The Doctor document is designed for safe diagnostics and contains only bounded version, operating-system, availability, connectivity, and agent-installation status fields.
 
 For a suspected credential, data-exposure, unsafe-write, or reset-redemption vulnerability, follow the private process in the [Security policy](../../SECURITY.md#reporting-a-vulnerability) instead of opening a public issue.
 

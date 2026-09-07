@@ -6,6 +6,17 @@ This page is the central index for supported agent integrations. Each agent has 
 
 `codex-limits` can expose the shared, read-only limits dashboard inside supported coding agents. Integrations remain thin and load normalized data through the same core as the CLI.
 
+## At a glance
+
+| Detail                 | Value                                      |
+| ---------------------- | ------------------------------------------ |
+| Supported integrations | OpenCode, pi, GitHub Copilot CLI           |
+| Agent command          | `/codex-limits`                            |
+| Install                | `codex-limits agents install <agent...>`   |
+| Remove                 | `codex-limits agents uninstall <agent...>` |
+| Data access            | Read-only                                  |
+| Reset capability       | Not exposed to agent integrations          |
+
 ## Installing an integration
 
 Install the CLI first:
@@ -31,9 +42,13 @@ codex-limits agents --help
 codex-limits agents install --help
 ```
 
-Replace `<agent>` with an identifier from the [Agents](#agents) table. `--all` cannot be combined with agent names. Unknown or duplicate names, unknown options, and extra positional arguments are rejected before any integration is installed. In a non-interactive terminal, provide at least one agent name or `--all`.
+Use an identifier from the [Agents](#agents) table.
 
-The existing `codex-limits init`, `codex-limits init --<agent-name>`, and `codex-limits init --all` forms remain supported as compatibility syntax and use the same installation flow.
+- `--all` cannot be combined with agent names.
+- Unknown or duplicate names, unknown options, and extra positional arguments are rejected before installation begins.
+- In a non-interactive terminal, provide at least one agent name or `--all`.
+
+The legacy `codex-limits init`, `codex-limits init --<agent-name>`, and `codex-limits init --all` forms remain supported for backward compatibility, but new usage should prefer `codex-limits agents install` and `codex-limits agents uninstall`. All forms use the same installation flow.
 
 After a successful installation, restart the target agent terminal so it reloads its configuration.
 
@@ -55,19 +70,29 @@ codex-limits agents uninstall --all
 codex-limits agents uninstall --help
 ```
 
-Named and `--all` forms work non-interactively; without either form, removal requires an interactive terminal. An empty interactive selection keeps every integration installed. As with installation, `--all` cannot be combined with names, and invalid names, options, or extra arguments are rejected before configuration changes begin.
+Named and `--all` forms work non-interactively. Without either form, removal requires an interactive terminal.
 
-An absent integration reports `not installed` as a successful no-op. With multiple targets, each result is reported even when another integration fails. Removal is conservative: each integration changes only configuration it recognizes as Codex Limits-owned, refuses malformed or symbolic-link targets, and preserves unrelated plugins, packages, extension files, and settings. Restart affected agent terminals after removal.
+- An empty interactive selection keeps every integration installed.
+- `--all` cannot be combined with agent names.
+- Invalid names, options, or extra arguments are rejected before configuration changes begin.
+- A selected integration that is absent reports `not installed` as a successful no-op.
+- With multiple targets, every result is reported even when another integration fails.
+
+Removal is conservative: each integration changes only configuration it recognizes as Codex Limits-owned, refuses malformed or symbolic-link targets, and preserves unrelated plugins, packages, extension files, and settings.
+
+Restart affected agent terminals after removal.
 
 ## Agents
 
-Each agent name links to its dedicated installation, usage, removal, compatibility, and troubleshooting guide.
+Every supported integration exposes `/codex-limits`.
 
-| Agent                                   | Official page                                               | Status    | Command         | Lifecycle target |
-| --------------------------------------- | ----------------------------------------------------------- | --------- | --------------- | ---------------- |
-| [OpenCode](agents/opencode.md)          | [opencode.ai](https://opencode.ai/)                         | Supported | `/codex-limits` | `opencode`       |
-| [pi](agents/pi.md)                      | [pi.dev](https://pi.dev/)                                   | Supported | `/codex-limits` | `pi`             |
-| [GitHub Copilot CLI](agents/copilot.md) | [github/copilot-cli](https://github.com/github/copilot-cli) | Supported | `/codex-limits` | `copilot`        |
+| Agent                                   | Official page                                               | Lifecycle target |
+| --------------------------------------- | ----------------------------------------------------------- | ---------------- |
+| [OpenCode](agents/opencode.md)          | [opencode.ai](https://opencode.ai/)                         | `opencode`       |
+| [pi](agents/pi.md)                      | [pi.dev](https://pi.dev/)                                   | `pi`             |
+| [GitHub Copilot CLI](agents/copilot.md) | [github/copilot-cli](https://github.com/github/copilot-cli) | `copilot`        |
+
+Each agent name links to its dedicated installation, usage, removal, compatibility, and troubleshooting guide.
 
 ## Shared behavior and privacy
 
@@ -79,7 +104,11 @@ Every `/codex-limits` integration displays the same compact summary:
 - available reset credits and the next expiration;
 - safe warnings when some data is unavailable.
 
-Agent integrations are read-only views over the shared local core. They do not receive reset capabilities or send the command or limits data to the LLM. The Security policy is canonical for [agent data flow and installer safeguards](../../SECURITY.md#agent-integrations-and-installers) and [command safety boundaries](../../SECURITY.md#command-safety-boundaries).
+Agent integrations are read-only views over the shared local core. They do not send the command or limits data to the LLM and do not receive reset-credit redemption capabilities.
+
+The agent command is a presentation surface only; it cannot redeem reset credits.
+
+The Security policy is canonical for [agent data flow and installer safeguards](../../SECURITY.md#agent-integrations-and-installers) and [command safety boundaries](../../SECURITY.md#command-safety-boundaries).
 
 Agent adapters must reuse the shared core rather than independently reading Codex data, resolving credentials, making live requests, or defining safety rules.
 
@@ -90,7 +119,6 @@ Agent integrations use thin host-specific adapters over the shared core and life
 ## Related documentation
 
 - [Compatibility](compatibility.md) — Canonical runtime, operating-system, terminal, network, and agent support requirements.
-- [JSON output](json-output.md) — Machine-readable output, fields, warnings, and scripting behavior.
 - [Contributing](../../CONTRIBUTING.md#adding-a-new-agent) — Complete checklist for developing and submitting another agent adapter.
 - [Security policy](../../SECURITY.md) — Local-data safeguards, network behavior, and vulnerability reporting.
 - [Troubleshooting](troubleshooting.md) — Cross-surface diagnosis and links to agent-specific problem resolution.

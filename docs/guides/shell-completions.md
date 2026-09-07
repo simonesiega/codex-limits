@@ -2,7 +2,7 @@
 
 [← Documentation hub](../README.md) · [Project README](../../README.md)
 
-Codex Limits generates completion scripts from the same command registry used by parsing and help, so commands, options, and supported argument choices stay synchronized. Bash, Zsh, Fish, PowerShell, and Nushell are supported.
+Codex Limits generates completion scripts from the same command registry used by parsing and help, so commands, options, and supported argument choices stay synchronized. This page is the canonical setup guide for Bash, Zsh, Fish, PowerShell, and Nushell completions.
 
 ## Try completions in the current session
 
@@ -53,13 +53,21 @@ Generate a fresh file after upgrading Codex Limits so it reflects the installed 
 ### Bash
 
 ```bash
-mkdir -p ~/.config/codex-limits
-codex-limits completions bash > ~/.config/codex-limits/completion.bash
-printf '\nsource ~/.config/codex-limits/completion.bash\n' >> ~/.bashrc
-source ~/.bashrc
+completion_dir="$HOME/.config/codex-limits"
+completion_file="$completion_dir/completion.bash"
+source_line='source ~/.config/codex-limits/completion.bash'
+
+mkdir -p "$completion_dir"
+codex-limits completions bash > "$completion_file"
+
+touch "$HOME/.bashrc"
+grep -Fqx "$source_line" "$HOME/.bashrc" ||
+  printf '\n%s\n' "$source_line" >> "$HOME/.bashrc"
+
+source "$HOME/.bashrc"
 ```
 
-Add the `source` line only once if you regenerate the completion file later.
+Rerunning the block refreshes the generated script without adding another `source` line.
 
 ### Zsh
 
@@ -123,7 +131,7 @@ codex-limits completions nushell
 
 Nushell loads the file automatically in new interactive sessions.
 
-## How it works
+## How generation works
 
 The completion feature has one metadata source and a small shell-specific rendering layer:
 
@@ -153,7 +161,17 @@ The generated files are snapshots of the installed CLI's registry. Regenerate th
 
 Type `codex-limits` followed by a space, then press <kbd>Tab</kbd> to verify command completion. Subcommands, options, shell names, and supported agent IDs are completed from the current command definitions.
 
-To remove completions, delete the generated file and remove the matching `source`, `fpath`, PowerShell profile, or Nushell autoload entry. Restart the shell afterward.
+For permanent installations, remove the generated file shown below. Also remove the startup entry only when the setup above added one specifically for Codex Limits.
+
+| Shell      | Generated file or location                                  | Startup entry to remove                                          |
+| ---------- | ----------------------------------------------------------- | ---------------------------------------------------------------- |
+| Bash       | `~/.config/codex-limits/completion.bash`                    | `source ~/.config/codex-limits/completion.bash` from `~/.bashrc` |
+| Zsh        | `~/.zsh/completions/_codex-limits`                          | The added `fpath` entry if it is no longer used                  |
+| Fish       | `~/.config/fish/completions/codex-limits.fish`              | None                                                             |
+| PowerShell | `codex-limits-completion.ps1` beside the current `$PROFILE` | Its dot-source line from `$PROFILE`                              |
+| Nushell    | `$nu.data-dir/vendor/autoload/codex-limits.nu`              | None                                                             |
+
+Restart the shell after removal.
 
 ## Related documentation
 

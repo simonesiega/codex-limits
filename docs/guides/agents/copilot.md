@@ -2,7 +2,7 @@
 
 [← Documentation hub](../../README.md) · [Agent integrations](../agent-integrations.md) · [Project README](../../../README.md)
 
-The GitHub Copilot CLI integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limit data to the LLM.
+The GitHub Copilot CLI integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limits data to the LLM. This page is the canonical setup, usage, removal, and troubleshooting guide for the Copilot CLI adapter.
 
 ## At a glance
 
@@ -14,11 +14,15 @@ The GitHub Copilot CLI integration adds a read-only `/codex-limits` extension co
 | Install command    | `codex-limits agents install copilot`   |
 | Uninstall command  | `codex-limits agents uninstall copilot` |
 | Installation scope | Global for the current user             |
-| Host API           | Experimental Copilot CLI extensions     |
+| Host feature       | Experimental Copilot CLI extensions     |
 
 ## Requirements
 
-Install the published CLI and a compatible GitHub Copilot CLI host with extension support. See [GitHub Copilot CLI compatibility](../compatibility.md#github-copilot-cli-compatibility) for the canonical host, Node.js, SDK, operating-system, terminal, and network requirements.
+Install the published CLI and a compatible GitHub Copilot CLI host with extension support. Copilot CLI extensions are currently experimental, so the host must have experimental features enabled.
+
+Inside an interactive Copilot CLI session, use `/experimental show` to check the current state and `/experimental on` when extensions are disabled.
+
+See [GitHub Copilot CLI compatibility](../compatibility.md#github-copilot-cli-compatibility) for the canonical host, Node.js, SDK, operating-system, terminal, and network requirements.
 
 ## Installation
 
@@ -30,9 +34,9 @@ npm install -g @simonesiega/codex-limits@latest
 codex-limits agents install copilot
 ```
 
-Other official Copilot CLI installation methods are documented in [Installing GitHub Copilot CLI][copilot-install]. The explicit agent name works in interactive and non-interactive terminals. The compatible `codex-limits init --copilot` form is also supported.
+Other official Copilot CLI installation methods are documented in [Installing GitHub Copilot CLI][copilot-install]. The explicit agent name works in interactive and non-interactive terminals. The legacy `codex-limits init --copilot` form remains supported for backward compatibility, but new usage should prefer `codex-limits agents install copilot`.
 
-Restart GitHub Copilot CLI after installation so it discovers the extension. Use Copilot CLI's `/extensions` command to review or re-enable extensions when extension loading is disabled in the host.
+Restart GitHub Copilot CLI after installation so it discovers the extension. If experimental features are disabled, enable them with `/experimental on`. Then use `/extensions` to confirm that `codex-limits` is discovered and enabled.
 
 ### Extension file
 
@@ -73,7 +77,7 @@ This timeline entry is the expected result: Codex Limits renders the [shared rea
 
 The slash-command handler calls the shared local core directly. It does not call `session.send()`, create a user message, or ask the model to process the request. Loading and timeline failures are reduced to static safe messages instead of exposing raw filesystem, credential, or network details.
 
-Keep Copilot CLI current and consult the SDK's [extension documentation][copilot-extension-docs] for its evolving host contract.
+Keep Copilot CLI current because the extension mechanism is experimental and may change. Consult the SDK's [extension documentation][copilot-extension-docs] for the current host contract.
 
 ## Removal
 
@@ -93,10 +97,11 @@ The uninstaller uses the same `COPILOT_HOME` resolution as installation. It remo
 
 1. Run `codex-limits agents install copilot` again.
 2. Confirm that it reports `extension.mjs` as installed or already installed.
-3. Restart GitHub Copilot CLI completely.
-4. Run `/extensions` and confirm that `codex-limits` is discovered and enabled.
-5. Check that a project-local `.github/extensions/codex-limits/extension.mjs` is not shadowing the user extension with the same name.
-6. Update Copilot CLI if the installed release does not support experimental extensions and session commands.
+3. Restart GitHub Copilot CLI completely and use an interactive session.
+4. Run `/experimental show`; if experimental features are disabled, run `/experimental on`.
+5. Run `/extensions` and confirm that `codex-limits` is discovered and enabled.
+6. Check that a project-local `.github/extensions/codex-limits/extension.mjs` is not shadowing the user extension with the same name.
+7. Update Copilot CLI if the installed release does not support the current experimental extension contract.
 
 ### The extension path is already in use
 

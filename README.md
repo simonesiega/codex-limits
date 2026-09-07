@@ -3,11 +3,11 @@
 </h1>
 
 <p align="center">
-  <strong>Monitor OpenAI Codex usage limits, reset times, and reset credits directly from your terminal.</strong>
+  <strong>Monitor Codex usage limits, reset times, and reset credits without leaving your terminal.</strong>
 </p>
 
 <p align="center">
-  <a href="#requirements">Requirements</a> · <a href="#quick-start">Installation</a> · <a href="#usage">Commands</a> · <a href="docs/README.md">Documentation</a> · <a href="CONTRIBUTING.md#finding-work">Contributing</a>
+  <a href="#quick-start">Installation</a> · <a href="#usage">Usage</a> · <a href="#agent-integrations">Integrations</a> · <a href="docs/README.md">Documentation</a> · <a href="CONTRIBUTING.md#finding-work">Contributing</a>
 </p>
 
 <p align="center">
@@ -19,14 +19,14 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/terminal/promotional-demo.gif" alt="Animated Codex Limits terminal dashboard showing usage windows and reset credits" width="100%" />
+  <img src="docs/assets/promo/promotional-demo.gif" alt="Animated Codex Limits terminal dashboard showing usage windows and reset credits" width="100%" />
 </p>
 
 ## Overview
 
-**Codex Limits** provides a fast, read-only view of the Codex usage windows currently available to your account, including remaining capacity, reset times, and reset credits. It keeps the information in your terminal so you can check it without interrupting your coding flow.
+**Codex Limits** gives you a fast view of your Codex usage without interrupting your coding flow. Check remaining capacity, reset times, and reset credits through an interactive dashboard or lightweight terminal commands.
 
-The `codex-limits` CLI includes an interactive dashboard, plain-text commands, stable JSON output, safe diagnostics, optional agent integrations, and one explicitly confirmed command for redeeming a reset credit. Sensitive credentials, account IDs, private paths, and raw local files are excluded from public output.
+It also provides stable JSON output for automation, safe diagnostics, shell completions, and optional integrations for supported coding agents. Reset-credit redemption is isolated behind an explicit interactive confirmation flow, and public output excludes sensitive credentials, account IDs, private paths, and raw local files.
 
 ## Quick start
 
@@ -42,7 +42,7 @@ Open the dashboard:
 codex-limits
 ```
 
-For a quick non-interactive check, run:
+For a quick non-interactive check:
 
 ```bash
 codex-limits status
@@ -78,19 +78,21 @@ See [Compatibility](docs/guides/compatibility.md) for the canonical runtime, ins
 
 Run `codex-limits --help` or a command-specific `--help` option for generated CLI help.
 
-### Reset credits
+### Reset credit redemption
 
-`codex-limits reset` is the only remote-mutation command. It refreshes reset-credit data, displays a recap, and proceeds only in an interactive terminal after an explicit `y` or `yes`. See [Command safety boundaries](SECURITY.md#command-safety-boundaries) for the canonical safety behavior.
+`codex-limits reset` is the only remote-mutation command. It refreshes reset-credit data, displays a recap, and proceeds only in an interactive terminal after an explicit `y` or `yes`.
+
+See [Command safety boundaries](SECURITY.md#command-safety-boundaries) for the canonical safety behavior.
 
 ### Diagnostics and automation
 
-Start troubleshooting with the read-only diagnostic command:
+Use the read-only diagnostic command when Codex data, authentication, connectivity, or an integration is unavailable:
 
 ```bash
 codex-limits doctor
 ```
 
-For automation, use `codex-limits --json`, `codex-limits coupons --json`, or `codex-limits doctor --json`. Usage checks can repeat `--threshold five-hour=<percent>` or `--threshold weekly=<percent>` on `status` or the root JSON command to receive deterministic exit codes without changing output. Their contracts, threshold exit codes, schemas, and sanitized examples are documented in [JSON output](docs/guides/json-output.md).
+For scripts and automation, use the supported JSON commands and threshold checks documented in [JSON output](docs/guides/json-output.md), including their stable contracts, schemas, sanitized examples, and exit-code behavior.
 
 ### Shell completions
 
@@ -106,15 +108,19 @@ See [Shell completions](docs/guides/shell-completions.md) for installation steps
 
 Codex Limits can expose the same local, read-only summary inside supported coding agents. Integrations are optional, do not receive reset capabilities, and must be installed separately.
 
-| Agent              | Agent command   | Install command                        | Guide                                                      |
-| ------------------ | --------------- | -------------------------------------- | ---------------------------------------------------------- |
-| OpenCode           | `/codex-limits` | `codex-limits agents install opencode` | [OpenCode setup and usage](docs/guides/agents/opencode.md) |
-| pi                 | `/codex-limits` | `codex-limits agents install pi`       | [pi setup and usage](docs/guides/agents/pi.md)             |
-| GitHub Copilot CLI | `/codex-limits` | `codex-limits agents install copilot`  | [Copilot setup and usage](docs/guides/agents/copilot.md)   |
+Supported integrations expose `/codex-limits` directly inside the agent:
 
-Restart the agent after installation or removal so it reloads its configuration. Shared lifecycle modes, safety boundaries, and integration architecture are documented in the [Agent integrations guide](docs/guides/agent-integrations.md).
+| Agent              | Install command                        | Guide                                                      |
+| ------------------ | -------------------------------------- | ---------------------------------------------------------- |
+| OpenCode           | `codex-limits agents install opencode` | [OpenCode setup and usage](docs/guides/agents/opencode.md) |
+| pi                 | `codex-limits agents install pi`       | [pi setup and usage](docs/guides/agents/pi.md)             |
+| GitHub Copilot CLI | `codex-limits agents install copilot`  | [Copilot setup and usage](docs/guides/agents/copilot.md)   |
 
-## How it works
+Restart the agent after installation or removal so it reloads its configuration.
+
+See the [Agent integrations guide](docs/guides/agent-integrations.md) for shared lifecycle modes, safety boundaries, and integration architecture.
+
+## Architecture overview
 
 Codex Limits keeps shared behavior centralized and exposes it through focused output surfaces:
 
@@ -127,11 +133,18 @@ Codex Limits keeps shared behavior centralized and exposes it through focused ou
 | Agent integrations | `src/agents`           | Thin host-specific installation and read-only presentation layers.      |
 | Tests              | `tests`                | Behavior, output, safety, and integration coverage.                     |
 
-The supported public interfaces are the CLI, its documented JSON contracts, and the agent-host package exports described in [Compatibility](docs/guides/compatibility.md#runtime-and-installation). The internal core is not a public JavaScript API.
+Supported public interfaces and package compatibility boundaries are documented in [Compatibility](docs/guides/compatibility.md#runtime-and-installation).
 
 ## Documentation
 
-See the [documentation hub](docs/README.md) for compatibility, troubleshooting, JSON contracts, shell completions, agent integrations, security, and contributor documentation.
+Start with the [documentation hub](docs/README.md), or jump directly to:
+
+- [Compatibility](docs/guides/compatibility.md) for runtime, platform, Codex-data, network, terminal, and agent-host requirements.
+- [JSON output](docs/guides/json-output.md) for stable machine-readable contracts, schemas, thresholds, and automation.
+- [Troubleshooting](docs/guides/troubleshooting.md) for Codex data, authentication, network, terminal, reset-credit, and integration problems.
+- [Agent integrations](docs/guides/agent-integrations.md) for supported agents, lifecycle behavior, safety boundaries, and adapter architecture.
+
+Contributor, security, changelog, schema, example, and integration-specific documentation are also indexed from the documentation hub.
 
 ## Local development
 
@@ -146,7 +159,9 @@ Use Bun for repository development. See [Contributing](CONTRIBUTING.md#local-dev
 
 ## Security
 
-Inspection commands are read-only. Agent lifecycle commands write only recognized host configuration, and reset credit redemption is isolated behind explicit interactive confirmation. See [`SECURITY.md`](SECURITY.md) for data-access safeguards, command boundaries, and private vulnerability reporting.
+Inspection commands are read-only. Agent lifecycle commands write only recognized host configuration, and reset-credit redemption is isolated behind explicit interactive confirmation.
+
+See [`SECURITY.md`](SECURITY.md) for data-access safeguards, command boundaries, and private vulnerability reporting.
 
 ## License
 

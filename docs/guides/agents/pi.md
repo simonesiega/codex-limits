@@ -2,7 +2,7 @@
 
 [← Documentation hub](../../README.md) · [Agent integrations](../agent-integrations.md) · [Project README](../../../README.md)
 
-The pi integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limit data to the LLM.
+The pi integration adds a read-only `/codex-limits` extension command that loads the shared core locally and displays Codex usage windows, reset times, reset credits, and safe warnings without sending the request or limits data to the LLM. This page is the canonical setup, usage, removal, and troubleshooting guide for the pi adapter.
 
 ## At a glance
 
@@ -25,11 +25,11 @@ Install the CLI and pi, then run the named installer:
 
 ```bash
 npm install -g @simonesiega/codex-limits@latest
-npm install -g @earendil-works/pi-coding-agent@latest
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 codex-limits agents install pi
 ```
 
-The explicit agent name works in interactive and non-interactive terminals. The compatible `codex-limits init --pi` form is also supported. Restart pi after installation so it reloads its extensions. An already-running pi session can use `/reload` instead.
+The explicit agent name works in interactive and non-interactive terminals. The legacy `codex-limits init --pi` form remains supported for backward compatibility, but new usage should prefer `codex-limits agents install pi`. Restart pi after installation so it reloads its extensions. An already-running interactive pi session can use `/reload` instead.
 
 ### Configuration
 
@@ -55,13 +55,15 @@ The installer creates missing settings objects, preserves unrelated settings and
 
 Installer file-handling, size, symbolic-link, atomic-write, package-filter, and path-redaction guarantees are canonical in the [Security policy](../../../SECURITY.md#agent-integrations-and-installers).
 
-Pi's native package command is also supported because the npm package includes the pi manifest:
+### Alternative: pi native package installation
+
+Pi can also install the package directly because the npm package includes the pi manifest:
 
 ```bash
 pi install npm:@simonesiega/codex-limits
 ```
 
-Use either installation method rather than registering the package twice.
+Use either installation method rather than registering the package twice. The named `codex-limits` installer reuses the already installed local package root, while `pi install` lets pi own the npm package lifecycle.
 
 ## Usage
 
@@ -95,7 +97,9 @@ Remove recognized registrations with:
 codex-limits agents uninstall pi
 ```
 
-The uninstaller removes only package entries that exactly identify the current local Codex Limits package root or an unversioned, tagged, or pinned `npm:@simonesiega/codex-limits` source. It handles those recognized registrations regardless of whether they were added by `codex-limits` or pi's native package manager, and preserves unrelated packages and settings. It does not invoke pi's package manager or remove any separate package-manager cache. Use `pi remove npm:@simonesiega/codex-limits` instead when you want pi to manage its complete native package lifecycle.
+The uninstaller removes only package entries that exactly identify the current local Codex Limits package root or an unversioned, tagged, or pinned `npm:@simonesiega/codex-limits` source. It handles those recognized registrations regardless of whether they were added by `codex-limits` or pi's native package manager, and preserves unrelated packages and settings. It does not invoke pi's package manager or remove any separate package-manager cache.
+
+If you originally installed Codex Limits with `pi install npm:@simonesiega/codex-limits`, prefer `pi remove npm:@simonesiega/codex-limits` (or the equivalent `pi uninstall` alias) when you want pi to manage the complete native package lifecycle.
 
 An absent registration reports `not installed`. Malformed, oversized, or symbolic-link settings fail without being rewritten. Restart pi or run `/reload` after successful removal.
 
@@ -105,10 +109,11 @@ An absent registration reports `not installed`. Malformed, oversized, or symboli
 
 1. Run `codex-limits agents install pi` again.
 2. Confirm that it reports the pi settings file as installed or already installed.
-3. Restart pi or run `/reload`.
+3. Restart pi or run `/reload` in an interactive session.
 4. Check that the global `packages` array contains the Codex Limits local package path or `npm:@simonesiega/codex-limits`.
+5. Run `pi config` if needed and confirm that the bundled `dist/pi.js` extension has not been disabled by package resource filters.
 
-### Setup reports invalid JSON
+### Setup reports invalid settings
 
 Correct the affected pi settings before running the installer again. The installer intentionally does not overwrite malformed JSON or replace an invalid `packages` field.
 

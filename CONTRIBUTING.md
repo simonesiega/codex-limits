@@ -1,53 +1,22 @@
-<p align="center">
-  <img src="docs/assets/logo/logo.png" alt="codex-limits logo" width="180" />
-</p>
+# Contributing to Codex Limits
 
-<h1 align="center">
-  Contributing to Codex Limits
-</h1>
+[← Project README](README.md) · [Documentation hub](docs/README.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
-<p align="center">
-    Guidelines for contributing to <strong>codex-limits</strong>.
-</p>
+Contributions are welcome when they are focused, testable, and aligned with the project's existing architecture and safety boundaries.
 
-Read [`README.md`](README.md) first, follow the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) in every project interaction, then use the [documentation hub](docs/README.md) to find the canonical guide for the area you plan to change.
-
-## Contents
-
-- [Quick start](#quick-start)
-- [Branch naming](#branch-naming)
-- [Finding work](#finding-work)
-- [Issues](#issues)
-- [Local development](#local-development)
-- [Code guidelines](#code-guidelines)
-- [Safety rules](#safety-rules)
-- [Adding a new agent](#adding-a-new-agent)
-- [Documentation changes](#documentation-changes)
-- [Pull requests](#pull-requests)
-- [Community guidelines](#community-guidelines)
-- [Contact](#contact)
+Read [`README.md`](README.md) first, follow [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) in every project interaction, then use the [documentation hub](docs/README.md) to find the canonical guide for the area you plan to change.
 
 ## Quick start
 
 If you are new to the project, start with [Finding work](#finding-work) to see whether a scoped issue is available.
 
-| Step | Action                                                                                                 |
-| ---- | ------------------------------------------------------------------------------------------------------ |
-| 1    | Fork the repository.                                                                                   |
-| 2    | Create a branch from `main`.                                                                           |
-| 3    | Make one focused change.                                                                               |
-| 4    | Run the local checks.                                                                                  |
-| 5    | Open a [Pull Request](https://github.com/simonesiega/codex-limits/compare) with context and rationale. |
-
-## Branch naming
-
-| Type        | Pattern  | Example                     |
-| ----------- | -------- | --------------------------- |
-| Feature     | `feat/`  | `feat/add-agent-adapter`    |
-| Bug fix     | `fix/`   | `fix/usage-window-reset`    |
-| Docs        | `docs/`  | `docs/update-agent-guide`   |
-| Maintenance | `chore/` | `chore/update-build-config` |
-| Tests       | `test/`  | `test/add-coupon-coverage`  |
+| Step | Action                                                                                                                      |
+| ---- | --------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Find a scoped issue or discuss substantial work before implementation.                                                      |
+| 2    | Fork the repository and create a branch from `main`.                                                                        |
+| 3    | Make one focused change with the necessary tests and documentation.                                                         |
+| 4    | Run the relevant local checks, then run `bun run check` before submission.                                                  |
+| 5    | Open a [Pull Request](https://github.com/simonesiega/codex-limits/compare) with context, rationale, and validation details. |
 
 ## Finding work
 
@@ -56,13 +25,17 @@ Maintainers reserve two labels for open issues that are ready for external contr
 - [`good first issue`](https://github.com/simonesiega/codex-limits/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) identifies bounded tasks with a clear expected outcome and limited project context.
 - [`help wanted`](https://github.com/simonesiega/codex-limits/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) identifies accepted work where external implementation or investigation would be useful.
 
-These filters may be empty. In that case, there is no currently advertised contribution task. Follow the [issue process](#issues) only for a genuine bug or focused improvement rather than creating placeholder work. Comment before substantial implementation to confirm that an issue is available and align on its scope.
+These filters may be empty. In that case, there is no currently advertised contribution task. Follow the [issue process](#issues) only for a genuine bug or focused improvement rather than creating placeholder work.
+
+Comment before substantial implementation to confirm that an issue is available and align on its scope.
 
 ## Issues
 
-Before opening a new issue, check existing [Issues](https://github.com/simonesiega/codex-limits/issues) to avoid duplicates. Then use the [issue chooser](https://github.com/simonesiega/codex-limits/issues/new/choose) to open the bug-report or feature-request form. Security vulnerabilities must use the private process in [`SECURITY.md`](SECURITY.md#reporting-a-vulnerability), not a public issue.
+Before opening a new issue, check existing [Issues](https://github.com/simonesiega/codex-limits/issues) to avoid duplicates. Then use the [issue chooser](https://github.com/simonesiega/codex-limits/issues/new/choose) to open the bug-report or feature-request form.
 
-The issue forms prompt for:
+Security vulnerabilities must use the private process in [`SECURITY.md`](SECURITY.md#reporting-a-vulnerability), not a public issue.
+
+The issue forms ask for the information needed to reproduce and evaluate a report:
 
 | Field               | Why it matters                                           |
 | ------------------- | -------------------------------------------------------- |
@@ -74,11 +47,25 @@ The issue forms prompt for:
 
 For architecture-level changes, open an issue first so the design can be discussed before implementation.
 
+## Branch naming
+
+Use a short branch name that describes the scope of the change:
+
+| Type        | Pattern  | Example                     |
+| ----------- | -------- | --------------------------- |
+| Feature     | `feat/`  | `feat/add-agent-adapter`    |
+| Bug fix     | `fix/`   | `fix/usage-window-reset`    |
+| Docs        | `docs/`  | `docs/update-agent-guide`   |
+| Maintenance | `chore/` | `chore/update-build-config` |
+| Tests       | `test/`  | `test/add-coupon-coverage`  |
+
 ## Local development
 
 ### Requirements
 
-Before starting development, read the project [Requirements](README.md#requirements) and make sure your environment meets them. Development also requires [Bun](https://bun.sh/) using the version declared in `package.json`, because this repository uses Bun for dependency management, scripts, builds, and tests.
+Before starting development, read the project [Requirements](README.md#requirements) and make sure your environment meets them.
+
+Development also requires [Bun](https://bun.sh/) using the version declared in `package.json`. The repository uses Bun for dependency management, scripts, builds, and tests.
 
 Install dependencies:
 
@@ -92,69 +79,50 @@ Run the CLI locally:
 bun run dev
 ```
 
-Run the full validation pipeline (format verification, documentation checks, types, coverage-enforced tests, production builds, and packed-artifact smoke checks):
+### Validation
+
+Run the complete local validation pipeline:
 
 ```bash
 bun run check
 ```
 
-Run all documentation checks:
+`bun run check` verifies formatting, documentation, types, coverage-enforced tests, production builds, and the packed npm artifact.
 
-```bash
-bun run docs:check
-```
+Useful focused commands:
 
-Run the documentation checks individually:
+| Command                 | Purpose                                                         |
+| ----------------------- | --------------------------------------------------------------- |
+| `bun run docs:check`    | Run all documentation checks.                                   |
+| `bun run docs:link`     | Validate local documentation links, files, and heading anchors. |
+| `bun run docs:schema`   | Validate documented JSON examples against their schemas.        |
+| `bun run typecheck`     | Type-check the TypeScript project.                              |
+| `bun run audit`         | Audit the locked dependency graph.                              |
+| `bun test`              | Run the test suite.                                             |
+| `bun run test:coverage` | Run tests with source coverage and enforced regression floors.  |
+| `bun run build`         | Build the production package.                                   |
+| `bun run format`        | Format the repository.                                          |
+| `bun run format:check`  | Check formatting without modifying files.                       |
 
-```bash
-bun run docs:link
-bun run docs:schema
-```
+Coverage excludes test files and test-support code under `tests`. Bun enforces per-file regression floors of **84% line coverage** and **33% function coverage** for loaded source files. `bun run check` uses the same coverage command and fails when a loaded source file drops below either floor.
 
-Audit the locked dependency graph:
+CI uploads the generated LCOV report to Codecov using GitHub OIDC without a long-lived Codecov token. Treat coverage as a regression signal rather than a target: tests should protect observable behavior, safety boundaries, or supported integration contracts rather than execute lines only to increase a percentage.
 
-```bash
-bun run audit
-```
+Shell-completion tests pass generated scripts to any locally installed Bash, Zsh, Fish, PowerShell, and Nushell parsers. CI installs all five and requires each renderer to parse successfully. See [Shell completions](docs/guides/shell-completions.md#how-generation-works) and the [tested shell environments](docs/guides/compatibility.md#tested-shell-completion-generation).
 
-Run tests only:
+### Real-agent compatibility checks
 
-```bash
-bun test
-```
+The `Check` workflow also runs `bun run agents:compat` against packed artifacts in real OpenCode, pi, and GitHub Copilot CLI installations. These host probes run outside the normal local `bun run check` gate because they download and launch external host releases.
 
-Run tests with source coverage reporting and the enforced regression floors:
+The compatibility entry point, [`scripts/check-agent-compatibility.ts`](scripts/check-agent-compatibility.ts), owns isolated package setup plus the shared install and uninstall lifecycle. Focused modules under [`scripts/agent-compatibility`](scripts/agent-compatibility) own host-specific behavior:
 
-```bash
-bun run test:coverage
-```
+- each `*-host.ts` file owns one host probe;
+- `interactive-host.ts` owns shared pseudo-terminal dispatch;
+- `harness.ts` owns bounded subprocess lifecycle and diagnostics.
 
-Coverage excludes test files and test support code under `tests`. The reviewed Bun 1.3.14 baseline measures 97.84% aggregate line coverage and 97.98% aggregate function coverage; the minimum loaded-source-file results are 84.48% for lines and 33.33% for functions. Because Bun applies configured thresholds per file, the validation floors round those per-file baselines down to 84% for lines and 33% for functions. `bun run check` uses the same coverage command and fails when a loaded source file drops below either floor.
+Keep host-specific behavior in the matching probe instead of adding it to the entry point.
 
-CI uploads the generated LCOV report to Codecov using GitHub OIDC, without a long-lived Codecov token. The README badge reflects the latest uploaded `main`-branch report; Bun's local thresholds remain the coverage regression gate.
-
-Treat coverage as a regression signal rather than a target. Tests should protect observable behavior, safety boundaries, or supported integration contracts; do not add assertions solely to execute uncovered lines.
-
-Shell-completion tests pass generated scripts to any locally installed Bash, Zsh, Fish, PowerShell, and Nushell parsers. CI installs all five and sets `CODEX_LIMITS_REQUIRE_COMPLETION_SHELLS=true`, so every supported renderer is required there. See [Shell completions](docs/guides/shell-completions.md#how-it-works) and the [tested shell environments](docs/guides/compatibility.md#tested-shell-completion-generation).
-
-Build the package:
-
-```bash
-bun run build
-```
-
-Format the repository or check formatting without changing files:
-
-```bash
-bun run format
-bun run format:check
-```
-
-The `Check` workflow also runs `bun run agents:compat` against packed artifacts in real OpenCode, pi, and GitHub Copilot CLI installations. These external-host probes run outside the normal local `bun run check` gate because they download and launch host releases. The workflow executes the complete matrix in isolated Linux jobs; see [Compatibility](docs/guides/compatibility.md#tested-environments) for the current versions.
-
-The compatibility entry point, [`scripts/check-agent-compatibility.ts`](scripts/check-agent-compatibility.ts), owns isolated package setup plus the shared install and uninstall lifecycle. It delegates host behavior to focused modules under [`scripts/agent-compatibility`](scripts/agent-compatibility): each `*-host.ts` file owns one host probe, `interactive-host.ts` owns shared pseudo-terminal dispatch, and `harness.ts` owns bounded subprocess lifecycle and diagnostics. Keep host-specific behavior in the matching probe instead of adding it to the entry point.
-
-The workflow supplies all required command options. For a deliberate local run, set `AGENT` to `opencode`, `pi`, or `copilot`, then set `HOST_ROOT` and `PACKAGE_TARBALL` to the isolated host installation and packed artifact:
+For a deliberate local run, set `AGENT` to `opencode`, `pi`, or `copilot`, then provide an isolated host installation and packed Codex Limits artifact:
 
 ```bash
 bun run agents:compat \
@@ -163,7 +131,11 @@ bun run agents:compat \
   --package-tarball "$PACKAGE_TARBALL"
 ```
 
-The host root must contain the selected npm host installation under `node_modules`, and the tarball must contain a built Codex Limits package. OpenCode and Copilot probes require the Linux `script` pseudo-terminal utility; the Copilot probe also requires `tmux`. The pi probe uses the host's RPC mode and does not require those terminal tools.
+The host root must contain the selected npm host installation under `node_modules`, and the tarball must contain a built Codex Limits package.
+
+OpenCode and Copilot probes require the Linux `script` pseudo-terminal utility. The Copilot probe also requires `tmux`. The pi probe uses the host's RPC mode and does not require those terminal tools.
+
+See [Compatibility](docs/guides/compatibility.md#tested-environments) for the current tested host matrix.
 
 ## Code guidelines
 
@@ -177,17 +149,23 @@ Keep changes small, readable, and easy to review.
 | Agent integrations | Keep adapters thin and reuse the shared core instead of reimplementing Codex limit parsing.       |
 | Tests              | Add or update tests when behavior, safety rules, or output formatting changes.                    |
 
-When adding a CLI command, create a focused command module and register it in `src/package/commands/command-registry.ts`. Put names, descriptions, usage, options, positional arguments, conflicts, and safety classification in that command definition so the shared parser and help generator stay synchronized. Command factories should accept only the runtime capabilities their handlers use.
+When adding a CLI command, create a focused command module and register it in `src/package/commands/command-registry.ts`.
+
+Put names, descriptions, usage, options, positional arguments, conflicts, and safety classification in the command definition so the shared parser, help generator, and shell-completion model stay synchronized. Command factories should accept only the runtime capabilities their handlers use.
 
 ## Safety rules
 
-[`SECURITY.md`](SECURITY.md#local-data-and-network-behavior) is the canonical reference for local-data, network, redaction, installer, diagnostic, and reset-mutation safeguards. Contributors must preserve those boundaries and use only synthetic or redacted values in output, tests, documentation, and screenshots.
+[`SECURITY.md`](SECURITY.md#local-data-and-network-behavior) is the canonical reference for local-data, network, redaction, installer, diagnostic, and reset-mutation safeguards.
+
+Contributors must preserve those boundaries and use only synthetic or redacted values in output, tests, documentation, and screenshots.
 
 Command handlers should let the router replace unexpected exceptions with their fixed command failure message. Use `AgentInstallError` or `AgentUninstallError` only for bounded, deliberately user-safe adapter messages; never pass through a raw filesystem, network, or credential error.
 
 ## Adding a new agent
 
-New agents should use the same small adapter shape as [`src/agents/opencode`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/opencode), [`src/agents/pi`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/pi), and [`src/agents/copilot`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/copilot): `install.ts`, `integration.ts`, and `plugin.ts`. Reuse presentation and safe configuration behavior from `src/agents/shared`; add an agent-specific formatter only when its host requires different output.
+New agents should use the same small adapter shape as [`src/agents/opencode`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/opencode), [`src/agents/pi`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/pi), and [`src/agents/copilot`](https://github.com/simonesiega/codex-limits/tree/main/src/agents/copilot): `install.ts`, `integration.ts`, and `plugin.ts`.
+
+Reuse presentation and safe configuration behavior from `src/agents/shared`; add an agent-specific formatter only when its host requires different output.
 
 | Step | Action                                                                                                                                 |
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -197,18 +175,20 @@ New agents should use the same small adapter shape as [`src/agents/opencode`](ht
 | 4    | Register the integration descriptor once in `src/agents/index.ts`; shared lifecycle and doctor commands consume it automatically.      |
 | 5    | Add install, conservative uninstall, presentation, and host-behavior tests. Document manual validation when automation is impractical. |
 | 6    | Add `docs/guides/agents/<agent-name>.md`.                                                                                              |
-| 7    | Add the integration to [Agent Integrations](docs/guides/agent-integrations.md).                                                        |
+| 7    | Add the integration to [Agent integrations](docs/guides/agent-integrations.md).                                                        |
 | 8    | Add `src/package/<agent-name>.ts`, its host-only `./<agent-name>` subpath, and the shared package-build metadata.                      |
-| 9    | Add or update screenshots when the visual output changes.                                                                              |
-| 10   | Run the documentation link and schema checks.                                                                                          |
+| 9    | Add or update screenshots when visual output changes.                                                                                  |
+| 10   | Run `bun run docs:check` and the relevant test/build checks.                                                                           |
 
 When real-host automation is practical, add a focused `scripts/agent-compatibility/*-host.ts` probe and matching workflow matrix entry. Otherwise, document the manual host validation performed.
 
-The goal of every integration is the same: show Codex limit information quickly and safely without sending the request or limit data to the LLM.
+The goal of every integration is the same: show Codex limit information quickly and safely without sending the request or limits data to the LLM.
 
 ## Documentation changes
 
-Task-oriented guides live under [`docs/`](docs/README.md), and visual assets live under [`docs/assets/`](docs/assets/). Update the canonical guide whenever behavior, setup, compatibility, output, or safety guarantees change; avoid copying complete procedures into multiple files.
+Task-oriented guides live under [`docs/`](docs/README.md), and visual assets live under [`docs/assets/`](docs/assets/).
+
+Update the canonical guide whenever behavior, setup, compatibility, output, or safety guarantees change. Avoid copying complete procedures into multiple files.
 
 Keep documentation changes consistent with these rules:
 
@@ -232,19 +212,32 @@ Documentation-only changes do not require unrelated runtime changes, but the com
 
 ## Pull requests
 
-Opening a Pull Request loads the repository's [Pull Request template](https://github.com/simonesiega/codex-limits/blob/main/.github/pull_request_template.md). It is the canonical submission checklist for scope, validation, tests, documentation, changelog entries, compatibility, privacy, and screenshots. Complete every applicable item before requesting review.
+Opening a Pull Request loads the repository's [Pull Request template](https://github.com/simonesiega/codex-limits/blob/main/.github/pull_request_template.md). It is the canonical submission checklist for scope, validation, tests, documentation, changelog entries, compatibility, privacy, and screenshots.
+
+Complete every applicable item before requesting review.
 
 ## Community guidelines
 
-Every project interaction is governed by the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Be clear, respectful, and constructive in issues, Pull Requests, and reviews. Report conduct concerns through its private reporting process rather than opening a public issue.
+Every project interaction is governed by [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Be clear, respectful, and constructive in issues, Pull Requests, and reviews.
+
+Report conduct concerns through its private reporting process rather than opening a public issue.
 
 Good contributions are focused, tested, documented, and easy to understand.
 
 ## Contact
 
-For direct contact:
+For contribution questions that do not fit an existing issue:
 
 - Email: [simonesiega1@gmail.com](mailto:simonesiega1@gmail.com)
 - GitHub: [@simonesiega](https://github.com/simonesiega)
+
+## Related documentation
+
+- [Project README](README.md) — Product overview, installation, commands, and configuration.
+- [Documentation hub](docs/README.md) — Task-oriented project documentation.
+- [Compatibility](docs/guides/compatibility.md) — Runtime, operating-system, terminal, network, and agent-host requirements.
+- [Security policy](SECURITY.md) — Canonical safety behavior and private vulnerability reporting.
+- [Code of Conduct](CODE_OF_CONDUCT.md) — Community behavior and conduct reporting.
+- [Changelog](CHANGELOG.md) — Released behavior and current unreleased changes.
 
 Thanks for contributing to **`codex-limits`**.
