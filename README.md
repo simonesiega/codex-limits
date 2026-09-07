@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start">Installation</a> · <a href="SHOWCASE.md">Showcase</a> · <a href="#usage">Usage</a> · <a href="#agent-integrations">Integrations</a> · <a href="docs/README.md">Documentation</a> · <a href="CONTRIBUTING.md#finding-work">Contributing</a>
+  <a href="#quick-start">Quick start</a> · <a href="#installation">Installation</a> · <a href="#usage">Usage</a> · <a href="#agent-integrations">Integrations</a> · <a href="docs/README.md">Documentation</a> · <a href="SHOWCASE.md">Showcase</a>
 </p>
 
 <p align="center">
@@ -31,6 +31,20 @@ It also provides stable JSON output for automation, safe diagnostics, shell comp
 See the dedicated [visual showcase](SHOWCASE.md) to compare the dashboard, compact CLI, and agent-integrated experience.
 
 ## Quick start
+
+Launch the latest dashboard directly—no installation required:
+
+```bash
+npx -y @simonesiega/codex-limits@latest
+```
+
+For a quick non-interactive check:
+
+```bash
+npx -y @simonesiega/codex-limits@latest status
+```
+
+## Installation
 
 Install the published npm package globally:
 
