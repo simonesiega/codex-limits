@@ -8,6 +8,18 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [1.3.0] - 2026-09-07
+
+### Added
+
 - Added repeatable `--threshold` usage checks to `status` and root JSON output, with deterministic exit codes for breached conditions and unavailable usage data.
 - Added an automated Codecov badge backed by LCOV reports from the existing coverage-enforced CI run.
 - Added built-in Bun coverage reporting with baseline-derived per-file regression floors enforced by local validation and CI.
@@ -24,8 +36,6 @@ All notable changes to codex-limits are documented in this file.
 - Fixed type checking to cover every TypeScript build, documentation, package-validation, and compatibility script.
 - Fixed agent lifecycle writes to keep serialized OpenCode and pi configuration within host file limits and reject changes that cannot fit safely.
 - Fixed install restart guidance to appear only when at least one selected agent configuration changed, including partial multi-agent successes.
-
-### Removed
 
 ### Security
 

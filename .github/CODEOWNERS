@@ -1,0 +1,13 @@
+# Default owner for every repository path.
+* @simonesiega
+
+# Security, release, and repository automation require maintainer review.
+/.github/ @simonesiega
+/SECURITY.md @simonesiega
+/package.json @simonesiega
+/bun.lock @simonesiega
+/scripts/ @simonesiega
+
+# Core behavior and supported agent integrations require maintainer review.
+/src/package/core/ @simonesiega
+/src/agents/ @simonesiega

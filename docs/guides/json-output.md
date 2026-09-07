@@ -202,7 +202,7 @@ Sanitized example ([see the JSON example](../examples/codex-limits-doctor-output
 
 ```json
 {
-  "packageVersion": "1.2.0",
+  "packageVersion": "1.3.0",
   "nodeVersion": "22.0.0",
   "operatingSystem": "Windows",
   "codexHomeDetected": true,

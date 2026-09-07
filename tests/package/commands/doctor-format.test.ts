@@ -7,7 +7,7 @@ import {formatDoctor} from "@/package/commands/doctor/format";
 test("formatDoctor labels unavailable and unknown diagnostic states", () => {
   const output = formatDoctor(
     {
-      packageVersion: "1.2.0",
+      packageVersion: "1.3.0",
       nodeVersion: "20.0.0",
       operatingSystem: "Linux",
       codexHomeDetected: false,
@@ -38,7 +38,7 @@ test("formatDoctor labels unavailable and unknown diagnostic states", () => {
 test("formatDoctor labels an endpoint that was not checked", () => {
   const output = formatDoctor(
     {
-      packageVersion: "1.2.0",
+      packageVersion: "1.3.0",
       nodeVersion: "20.0.0",
       operatingSystem: "Linux",
       codexHomeDetected: false,
