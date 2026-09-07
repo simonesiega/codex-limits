@@ -107,14 +107,23 @@ test("generated declarations expose only the agent-host contracts", async () => 
   expect(copilotDeclaration).not.toContain("@github/copilot-sdk");
 });
 
-test("package metadata includes runtime documentation and excludes bundled runtime dependencies", async () => {
+test("package metadata includes runtime and offline reference files only", async () => {
   const packageJson = await readPackageMetadata();
 
-  expect(packageJson.files).toContain("types");
-  expect(packageJson.files).toContain("docs");
-  expect(packageJson.files).toContain("CONTRIBUTING.md");
-  expect(packageJson.files).toContain("CODE_OF_CONDUCT.md");
-  expect(packageJson.files).toContain("SECURITY.md");
+  expect(packageJson.files).toEqual([
+    "dist",
+    "types",
+    "docs/README.md",
+    "docs/examples",
+    "docs/guides",
+    "docs/schema",
+    "scripts/postinstall.cjs",
+    "README.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    ".env.example",
+    "LICENSE",
+  ]);
   expect(packageJson.dependencies ?? {}).toEqual({});
   expect(packageJson.overrides).toMatchObject({
     "fast-uri": "3.1.7",

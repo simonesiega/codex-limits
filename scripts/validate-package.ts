@@ -11,6 +11,7 @@ import {pathToFileURL} from "node:url";
 interface PackFile {
   path: string;
   mode: number;
+  size: number;
 }
 
 interface PackResult {
@@ -153,6 +154,11 @@ try {
   assert(packed, "npm pack returned no artifact.");
 
   const paths = new Set(packed.files.map((file) => file.path));
+  const unpackedSize = packed.files.reduce((total, file) => total + file.size, 0);
+  assert(
+    unpackedSize <= 2 * 1024 * 1024,
+    "Packed artifact exceeds the 2 MiB unpacked size budget."
+  );
   assert(!paths.has("dist/index.js"), "Packed artifact contains the legacy OpenCode bundle.");
   assert(!paths.has("types/index.d.ts"), "Packed artifact contains the legacy root declaration.");
   const packedCli = packed.files.find((file) => file.path === "dist/cli.js");
@@ -186,20 +192,7 @@ try {
     "docs/schema/codex-limits.schema.json",
     "docs/schema/codex-limits-coupons.schema.json",
     "docs/schema/codex-limits-doctor.schema.json",
-    "docs/assets/agents/copilot/copilot_result.png",
-    "docs/assets/agents/opencode/opencode_result.png",
-    "docs/assets/agents/pi/pi_result.png",
-    "docs/assets/logo/title-animation.svg",
-    "docs/assets/promo/promotional-demo.gif",
-    "docs/assets/promo/screenshots/compact-cli.png",
-    "docs/assets/promo/screenshots/dashboard.png",
-    "docs/assets/promo/screenshots/opencode.png",
-    "docs/assets/terminal/final_result_large.png",
-    "docs/assets/terminal/final_result_small.png",
     "README.md",
-    "SHOWCASE.md",
-    "CONTRIBUTING.md",
-    "CODE_OF_CONDUCT.md",
     "SECURITY.md",
     "CHANGELOG.md",
     "LICENSE",
@@ -216,6 +209,19 @@ try {
         !path.startsWith(".agents/") &&
         !(path.startsWith("scripts/") && path !== "scripts/postinstall.cjs"),
       `Packed artifact contains development-only file ${path}.`
+    );
+    const isOfflineReference =
+      path === "docs/README.md" ||
+      (path.startsWith("docs/guides/") && path.endsWith(".md")) ||
+      (path.startsWith("docs/examples/") && path.endsWith(".json")) ||
+      (path.startsWith("docs/schema/") && path.endsWith(".json"));
+    assert(
+      !path.startsWith("docs/") || isOfflineReference,
+      `Packed artifact contains non-reference documentation ${path}.`
+    );
+    assert(
+      !["SHOWCASE.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md"].includes(path),
+      `Packed artifact contains repository-only documentation ${path}.`
     );
   }
 

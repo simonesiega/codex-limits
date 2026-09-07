@@ -10,6 +10,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Changed
 
+- Reduced the published npm package by excluding GitHub-only promotional media and repository-focused documentation while retaining runtime files and offline reference guides.
+
 ### Fixed
 
 ### Removed
