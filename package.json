@@ -40,6 +40,7 @@
     "docs",
     "scripts/postinstall.cjs",
     "README.md",
+    "SHOWCASE.md",
     "CONTRIBUTING.md",
     "CODE_OF_CONDUCT.md",
     "CHANGELOG.md",

@@ -50,9 +50,10 @@ This documentation is organized by task. The root README is the product overview
 
 ### Schemas, examples and assets
 
-| Resource                                                                                                                  | Purpose                                                |
-| ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [Complete limits example](examples/codex-limits-output.example.json) and [schema](schema/codex-limits.schema.json)        | Resources for validating `codex-limits --json`.        |
-| [Coupon example](examples/codex-limits-coupons-output.example.json) and [schema](schema/codex-limits-coupons.schema.json) | Resources for validating `coupons --json`.             |
-| [Doctor example](examples/codex-limits-doctor-output.example.json) and [schema](schema/codex-limits-doctor.schema.json)   | Resources for validating `doctor --json`.              |
-| [`assets/`](assets/)                                                                                                      | Documentation screenshots and project identity assets. |
+| Resource                                                                                                                  | Purpose                                                           |
+| ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [Complete limits example](examples/codex-limits-output.example.json) and [schema](schema/codex-limits.schema.json)        | Resources for validating `codex-limits --json`.                   |
+| [Coupon example](examples/codex-limits-coupons-output.example.json) and [schema](schema/codex-limits-coupons.schema.json) | Resources for validating `coupons --json`.                        |
+| [Doctor example](examples/codex-limits-doctor-output.example.json) and [schema](schema/codex-limits-doctor.schema.json)   | Resources for validating `doctor --json`.                         |
+| [Product showcase](../SHOWCASE.md)                                                                                        | Visual tour of the dashboard, compact CLI, and agent integration. |
+| [`assets/`](assets/)                                                                                                      | Documentation screenshots and project identity assets.            |

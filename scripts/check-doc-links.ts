@@ -8,6 +8,7 @@ import {stripHtmlTags} from "./documentation-heading";
 
 const ROOT_DOCUMENTS = [
   "README.md",
+  "SHOWCASE.md",
   "CONTRIBUTING.md",
   "CODE_OF_CONDUCT.md",
   "SECURITY.md",

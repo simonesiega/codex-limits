@@ -95,6 +95,7 @@ Testing:
 
 ```text
 README.md                                   → Product overview, setup, commands, and documentation routing.
+SHOWCASE.md                                 → Dedicated visual tour of the dashboard, compact CLI, and agent integrations.
 CONTRIBUTING.md                             → Development workflow and contribution standards.
 CODE_OF_CONDUCT.md                          → Community behavior, reporting, and enforcement standards.
 CHANGELOG.md                                → Released and unreleased user-facing changes.

@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start">Installation</a> · <a href="#usage">Usage</a> · <a href="#agent-integrations">Integrations</a> · <a href="docs/README.md">Documentation</a> · <a href="CONTRIBUTING.md#finding-work">Contributing</a>
+  <a href="#quick-start">Installation</a> · <a href="SHOWCASE.md">Showcase</a> · <a href="#usage">Usage</a> · <a href="#agent-integrations">Integrations</a> · <a href="docs/README.md">Documentation</a> · <a href="CONTRIBUTING.md#finding-work">Contributing</a>
 </p>
 
 <p align="center">
@@ -27,6 +27,8 @@
 **Codex Limits** gives you a fast view of your Codex usage without interrupting your coding flow. Check remaining capacity, reset times, and reset credits through an interactive dashboard or lightweight terminal commands.
 
 It also provides stable JSON output for automation, safe diagnostics, shell completions, and optional integrations for supported coding agents. Reset-credit redemption is isolated behind an explicit interactive confirmation flow, and public output excludes sensitive credentials, account IDs, private paths, and raw local files.
+
+See the dedicated [visual showcase](SHOWCASE.md) to compare the dashboard, compact CLI, and agent-integrated experience.
 
 ## Quick start
 
