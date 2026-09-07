@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/terminal/final_result_large.png" alt="Codex Limits terminal dashboard showing usage windows and reset credits" width="760" />
+  <img src="docs/assets/terminal/promotional-demo.gif" alt="Animated Codex Limits terminal dashboard showing usage windows and reset credits" width="100%" />
 </p>
 
 ## Overview
