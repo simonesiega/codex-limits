@@ -36,9 +36,7 @@ export async function startCopilotExtension(
   dependencies: CopilotExtensionDependencies = {}
 ): Promise<void> {
   const loadLimits = dependencies.getLimits ?? getCodexLimits;
-  const joinSession =
-    dependencies.joinSession ??
-    ((options: CopilotJoinOptions): Promise<CopilotTimeline> => joinCopilotSession(options));
+  const joinSession = dependencies.joinSession ?? joinCopilotSession;
   let session: CopilotTimeline | undefined;
 
   session = await joinSession({

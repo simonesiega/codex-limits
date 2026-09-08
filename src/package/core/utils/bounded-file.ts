@@ -112,7 +112,13 @@ async function readVerifiedUtf8File(
     }
     throw new BoundedFileError("read-error");
   } finally {
-    await handle?.close().catch(() => undefined);
+    if (handle) {
+      try {
+        await handle.close();
+      } catch {
+        // Cleanup failures must not replace the bounded read result.
+      }
+    }
   }
 }
 

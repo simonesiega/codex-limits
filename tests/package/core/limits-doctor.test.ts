@@ -69,19 +69,21 @@ test("getCodexDiagnostics skips the endpoint safely when authentication is missi
 });
 
 test("getCodexDiagnostics treats an HTTP response as reachable", async () => {
-  const result = await getCodexDiagnostics({
-    env: {
-      CODEX_LIMITS_ACCESS_TOKEN: "fake-secret-token",
-      CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
-    },
-    homeDirectory: "doctor-missing-home",
-    appData: "doctor-missing-app-data",
-    localAppData: "doctor-missing-local-app-data",
-    transport: async () => ({ok: false, code: "http-error", status: 401}),
-  });
+  await withTempDirectory("codex-limits-doctor-http-", async (directory) => {
+    const result = await getCodexDiagnostics({
+      env: {
+        CODEX_LIMITS_ACCESS_TOKEN: "fake-secret-token",
+        CODEX_LIMITS_ACCOUNT_ID: "fake-account-id",
+      },
+      homeDirectory: join(directory, "missing-home"),
+      appData: join(directory, "missing-app-data"),
+      localAppData: join(directory, "missing-local-app-data"),
+      transport: async () => ({ok: false, code: "http-error", status: 401}),
+    });
 
-  expect(result.authenticationFound).toBe(true);
-  expect(result.liveEndpoint).toBe("reachable");
+    expect(result.authenticationFound).toBe(true);
+    expect(result.liveEndpoint).toBe("reachable");
+  });
 });
 
 test("getCodexLimits starts independent live requests concurrently", async () => {

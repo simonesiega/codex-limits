@@ -104,7 +104,7 @@ Useful focused commands:
 | `bun run format`        | Format the repository.                                          |
 | `bun run format:check`  | Check formatting without modifying files.                       |
 
-Coverage excludes test files and test-support code under `tests`. Bun enforces per-file regression floors of **84% line coverage** and **33% function coverage** for loaded source files. `bun run check` uses the same coverage command and fails when a loaded source file drops below either floor.
+Coverage excludes test files and test-support code under `tests`. Bun enforces per-file regression floors of **84% line coverage** and **90% function coverage** for loaded source files. `bun run check` uses the same coverage command and fails when a loaded source file drops below either floor.
 
 CI uploads the generated LCOV report to Codecov using GitHub OIDC without a long-lived Codecov token. Treat coverage as a regression signal rather than a target: tests should protect observable behavior, safety boundaries, or supported integration contracts rather than execute lines only to increase a percentage.
 

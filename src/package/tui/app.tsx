@@ -20,6 +20,8 @@ export interface AppProps {
   now?: Date;
 }
 
+type DashboardRenderer = (node: ReactElement) => {waitUntilExit: () => Promise<unknown>};
+
 /** Maps normalized core data into the responsive Ink dashboard. */
 export function App({result, terminalColumns, terminalRows, width, now}: AppProps): ReactElement {
   const columns = terminalColumns ?? width ?? process.stdout.columns ?? 80;
@@ -133,10 +135,13 @@ function formatUsageTitle(title: string): string {
 }
 
 /** Renders the dashboard and waits until Ink exits. */
-export async function renderApp(result: CodexLimitsResult): Promise<void> {
+export async function renderApp(
+  result: CodexLimitsResult,
+  renderDashboard: DashboardRenderer = render
+): Promise<void> {
   const terminalColumns = process.stdout.columns ?? 80;
   const terminalRows = process.stdout.rows ?? 24;
-  const instance = render(
+  const instance = renderDashboard(
     <App result={result} terminalColumns={terminalColumns} terminalRows={terminalRows} />
   );
   await instance.waitUntilExit();

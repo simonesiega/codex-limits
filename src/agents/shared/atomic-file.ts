@@ -39,7 +39,11 @@ export async function writeAgentFilesAtomically(
       try {
         await handle.writeFile(update.content, "utf8");
       } finally {
-        await handle.close().catch(() => undefined);
+        try {
+          await handle.close();
+        } catch {
+          // Cleanup failures must not replace the write or validation outcome.
+        }
       }
     }
 
@@ -56,9 +60,7 @@ export async function writeAgentFilesAtomically(
     await rollbackAgentFileUpdates(committed);
     throw error;
   } finally {
-    await Promise.all(
-      prepared.map((update) => rm(update.temporaryPath, {force: true}).catch(() => undefined))
-    );
+    await Promise.allSettled(prepared.map((update) => rm(update.temporaryPath, {force: true})));
   }
 }
 

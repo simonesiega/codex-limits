@@ -1,10 +1,10 @@
 /**
  * @fileoverview Behavioral coverage for app. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
  */
-import {expect, test} from "bun:test";
+import {expect, mock, test} from "bun:test";
 import {render} from "ink-testing-library";
 import type {CodexLimitsResult} from "@/package/core/types";
-import {App} from "@/package/tui/app";
+import {App, renderApp} from "@/package/tui/app";
 import {buildProgressBar} from "@/package/tui/components/primitives/progress-bar";
 import {createTuiLayout} from "@/package/tui/layout";
 import {createTuiViewModel} from "@/package/tui/view-model";
@@ -22,6 +22,29 @@ function renderFrame(result: CodexLimitsResult, columns: number, rows: number): 
     instance.unmount();
   }
 }
+
+test("renderApp renders once and waits for the terminal view to exit", async () => {
+  let releaseExit: () => void = () => undefined;
+  const exit = new Promise<void>((resolve) => {
+    releaseExit = resolve;
+  });
+  const waitUntilExit = mock(() => exit);
+  const renderDashboard = mock(() => ({waitUntilExit}));
+  let completed = false;
+
+  const pending = renderApp(createFakeLimitsResult(), renderDashboard).then(() => {
+    completed = true;
+  });
+
+  expect(renderDashboard).toHaveBeenCalledTimes(1);
+  expect(waitUntilExit).toHaveBeenCalledTimes(1);
+  expect(completed).toBe(false);
+
+  releaseExit();
+  await pending;
+
+  expect(completed).toBe(true);
+});
 
 test("App renders available data without footer actions", () => {
   const frame = renderFrame(createFakeLimitsResult(), 132, 40);

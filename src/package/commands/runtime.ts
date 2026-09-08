@@ -2,7 +2,11 @@
  * @fileoverview CLI command-layer support for runtime. It translates validated command input and shared core results into stable terminal or JSON behavior.
  */
 import {platform} from "node:os";
-import {stdin as processStdin, stdout as processStdout} from "node:process";
+import {
+  stderr as processStderr,
+  stdin as processStdin,
+  stdout as processStdout,
+} from "node:process";
 import {createInterface} from "node:readline/promises";
 import {AGENT_INTEGRATIONS, type AgentIntegration} from "@/agents";
 import {consumeResetCoupon, getResetCoupons} from "@/package/core/coupons/reset-coupons";
@@ -81,12 +85,19 @@ export interface CliRuntimeOverrides {
   packageInfo?: Partial<PackageServices>;
 }
 
-/** Creates the production runtime while allowing capability-scoped test overrides. */
-export function createCliRuntime(overrides: CliRuntimeOverrides = {}): CliRuntime {
+interface DashboardModule {
+  renderApp: (result: CodexLimitsResult) => Promise<void>;
+}
+
+/** Creates the production runtime while allowing capability-scoped overrides. */
+export function createCliRuntime(
+  overrides: CliRuntimeOverrides = {},
+  loadDashboard?: () => Promise<DashboardModule>
+): CliRuntime {
   const defaults: CliRuntime = {
     io: {
-      stdout: (text) => process.stdout.write(text),
-      stderr: (text) => process.stderr.write(text),
+      stdout: processStdout.write.bind(processStdout),
+      stderr: processStderr.write.bind(processStderr),
       interactive: Boolean(processStdin.isTTY && processStdout.isTTY),
       createPrompt: createTerminalPrompt,
     },
@@ -99,7 +110,13 @@ export function createCliRuntime(overrides: CliRuntimeOverrides = {}): CliRuntim
       nodeVersion: process.versions.node,
       operatingSystem: getOperatingSystemName(platform()),
     },
-    ui: {renderDashboard: renderDefaultDashboard},
+    ui: {
+      renderDashboard: async (result) => {
+        // Keep Ink out of startup paths used by plain-text, JSON, and agent commands.
+        const {renderApp} = await (loadDashboard?.() ?? import("@/package/tui/app"));
+        await renderApp(result);
+      },
+    },
     packageInfo: {version: PACKAGE_VERSION},
   };
 
@@ -133,14 +150,7 @@ function getOperatingSystemName(value: NodeJS.Platform): string {
 /** Creates the interactive prompt lazily so non-interactive commands avoid terminal side effects. */
 function createTerminalPrompt(): Prompt {
   const reader = createInterface({input: processStdin, output: processStdout});
-  const prompt: Prompt = (question) => reader.question(question);
-  prompt.close = () => reader.close();
+  const prompt = reader.question.bind(reader) as Prompt;
+  prompt.close = reader.close.bind(reader);
   return prompt;
-}
-
-/** Loads Ink only when the dashboard command actually needs terminal rendering. */
-async function renderDefaultDashboard(result: CodexLimitsResult): Promise<void> {
-  // Keep Ink out of startup paths used by plain-text, JSON, and agent commands.
-  const {renderApp} = await import("@/package/tui/app");
-  await renderApp(result);
 }

@@ -334,17 +334,21 @@ test("authenticatedJsonGet closes native HTTP error bodies without draining them
         connection: "close",
         "content-type": "application/octet-stream",
       });
-      const interval = setInterval(() => {
+      let nextChunk: NodeJS.Immediate | undefined;
+      const writeNextChunk = () => {
         chunksSent += 1;
         if (chunksSent >= totalChunks) {
-          clearInterval(interval);
           response.end("x".repeat(8_192));
           return;
         }
         response.write("x".repeat(8_192));
-      }, 2);
+        nextChunk = setImmediate(writeNextChunk);
+      };
+      nextChunk = setImmediate(writeNextChunk);
       incoming.socket.once("close", () => {
-        clearInterval(interval);
+        if (nextChunk) {
+          clearImmediate(nextChunk);
+        }
         markResponseClosed();
       });
     },

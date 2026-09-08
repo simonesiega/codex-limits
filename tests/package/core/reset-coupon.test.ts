@@ -2,6 +2,8 @@
  * @fileoverview Behavioral coverage for reset coupon. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
  */
 import {expect, test} from "bun:test";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
 import {
   consumeResetCoupon,
   LIVE_RESET_COUPONS_CONSUME_ENDPOINT,
@@ -142,7 +144,7 @@ test("consumeResetCoupon rejects unverifiable requests before transport", async 
       couponId: "coupon-1",
       env: {},
       redeemRequestId: REDEEM_REQUEST_ID,
-      homeDirectory: "Z:/missing-codex-home",
+      homeDirectory: join(tmpdir(), `codex-limits-missing-reset-${crypto.randomUUID()}`),
     },
   ];
 

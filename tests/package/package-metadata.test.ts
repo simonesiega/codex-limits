@@ -178,7 +178,7 @@ test("source coverage is reported, enforced, and published by the validation wor
     coverageReporter: ["text", "lcov"],
     coverageSkipTestFiles: true,
     coveragePathIgnorePatterns: ["tests/**"],
-    coverageThreshold: {lines: 0.84, functions: 0.33},
+    coverageThreshold: {lines: 0.84, functions: 0.9},
   });
   expect(checkWorkflow).toContain("run: bun run check");
   expect(checkWorkflow).toContain("id-token: write");

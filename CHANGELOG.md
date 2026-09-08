@@ -11,6 +11,7 @@ All notable changes to codex-limits are documented in this file.
 ### Changed
 
 - Reduced the published npm package by excluding GitHub-only promotional media and repository-focused documentation while retaining runtime files and offline reference guides.
+- Raised the enforced per-file function coverage floor from 33% to 90%.
 
 ### Fixed
 
