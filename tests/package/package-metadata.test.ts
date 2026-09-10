@@ -163,6 +163,66 @@ test("CI and publishing audit the locked dependency graph", async () => {
   expect(publishWorkflow).toContain("run: bun run audit");
 });
 
+test("CI gives Linux, Windows, and macOS equal source and packed-package coverage", async () => {
+  const checkWorkflow = await readFile(
+    resolve(import.meta.dir, "../../.github/workflows/check.yml"),
+    "utf8"
+  );
+  const workflow = Bun.YAML.parse(checkWorkflow) as {
+    jobs?: Record<
+      string,
+      {
+        defaults?: {run?: {shell?: string}};
+        strategy?: {matrix?: {include?: Array<Record<string, unknown>>}};
+      }
+    >;
+  };
+
+  expect(workflow.jobs?.check?.strategy?.matrix?.include).toEqual([
+    {
+      label: "Linux",
+      os: "ubuntu-latest",
+      shell: "bash",
+      completion_shells: "bash,zsh,fish,powershell,nushell",
+      publish_artifacts: true,
+    },
+    {
+      label: "Windows",
+      os: "windows-latest",
+      shell: "pwsh",
+      completion_shells: "powershell",
+      publish_artifacts: false,
+    },
+    {
+      label: "macOS",
+      os: "macos-latest",
+      shell: "bash",
+      completion_shells: "bash,zsh",
+      publish_artifacts: false,
+    },
+  ]);
+  expect(workflow.jobs?.["packed-runtime"]?.strategy?.matrix?.include).toEqual(
+    [
+      ["Linux", "ubuntu-latest", "bash"],
+      ["Windows", "windows-latest", "pwsh"],
+      ["macOS", "macos-latest", "bash"],
+    ].flatMap(([label, os, shell]) =>
+      [20, 22].map((nodeVersion) => ({
+        label,
+        os,
+        "node-version": nodeVersion,
+        shell,
+      }))
+    )
+  );
+  expect(workflow.jobs?.check?.defaults?.run?.shell).toBe("${{ matrix.shell }}");
+  expect(workflow.jobs?.["packed-runtime"]?.defaults?.run?.shell).toBe("${{ matrix.shell }}");
+  expect(checkWorkflow).toContain("name: Source checks and build (${{ matrix.label }}, Node 24)");
+  expect(checkWorkflow).toContain(
+    "name: Packed runtime (${{ matrix.label }}, Node ${{ matrix.node-version }})"
+  );
+});
+
 test("source coverage is reported, enforced, and published by the validation workflow", async () => {
   const [packageJson, bunfigText, checkWorkflow, readme] = await Promise.all([
     readPackageMetadata(),

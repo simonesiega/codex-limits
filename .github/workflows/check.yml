@@ -20,14 +20,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Run the canonical source gate once and share its accepted build with downstream jobs.
+  # Give Linux, Windows, and macOS the same canonical source, test, build, and package gate.
   check:
-    name: Source checks and build (Node 24)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    name: Source checks and build (${{ matrix.label }}, Node 24)
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      # Platform failures are independent and every supported operating system must report.
+      fail-fast: false
+      matrix:
+        include:
+          - label: Linux
+            os: ubuntu-latest
+            shell: bash
+            completion_shells: bash,zsh,fish,powershell,nushell
+            publish_artifacts: true
+          - label: Windows
+            os: windows-latest
+            shell: pwsh
+            completion_shells: powershell
+            publish_artifacts: false
+          - label: macOS
+            os: macos-latest
+            shell: bash
+            completion_shells: bash,zsh
+            publish_artifacts: false
     permissions:
       contents: read
       id-token: write
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
 
     steps:
       # Use immutable action revisions and do not retain repository credentials.
@@ -47,8 +70,10 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
 
-      # Make every supported completion parser available to the source test suite.
-      - name: Install completion shell parsers
+      # Linux remains the all-shell completion gate; Windows and macOS require their native shells below.
+      - name: Install all completion shell parsers on Linux
+        if: runner.os == 'Linux'
+        shell: bash
         env:
           NUSHELL_VERSION: 0.115.1
           NUSHELL_SHA256: d11d825241f6504a3617c535fa725a9dd6d009c86d7b19fb3168b47635b9d8b0
@@ -79,15 +104,15 @@ jobs:
       - name: Audit dependencies
         run: bun run audit
 
-      # Run formatting, docs, types, coverage, build, and package validation.
+      # Run the identical formatting, docs, types, coverage, build, and package gate on every OS.
       - name: Run project checks and enforce coverage
         env:
-          # Fail instead of skipping syntax validation when any supported shell parser is unavailable.
-          CODEX_LIMITS_REQUIRE_COMPLETION_SHELLS: "true"
+          CODEX_LIMITS_REQUIRED_COMPLETION_SHELLS: ${{ matrix.completion_shells }}
         run: bun run check
 
-      # Publish the generated LCOV report without storing a long-lived upload token.
+      # Publish one canonical LCOV report without storing a long-lived upload token.
       - name: Upload coverage to Codecov
+        if: matrix.publish_artifacts
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           disable_search: true
@@ -96,12 +121,15 @@ jobs:
           use_oidc: true
           version: v11.3.1
 
-      # Reuse exactly the build accepted above in every packed-runtime job.
+      # Reuse the Linux publication-shaped build in every packed-runtime consumer job.
       - name: Archive validated build
+        if: matrix.publish_artifacts
+        shell: bash
         run: tar -czf package-build.tar.gz dist types
 
       # Keep the intermediate artifact only long enough for dependent jobs.
       - name: Upload validated build
+        if: matrix.publish_artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: package-build
@@ -111,7 +139,7 @@ jobs:
 
   # Exercise the packed npm artifact across supported operating systems and Node.js releases.
   packed-runtime:
-    name: Packed runtime (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    name: Packed runtime (${{ matrix.label }}, Node ${{ matrix.node-version }})
     needs: check
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
@@ -120,14 +148,33 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - label: Linux
+            os: ubuntu-latest
             node-version: 20
-          - os: ubuntu-latest
+            shell: bash
+          - label: Linux
+            os: ubuntu-latest
             node-version: 22
-          - os: windows-latest
+            shell: bash
+          - label: Windows
+            os: windows-latest
             node-version: 20
-          - os: macos-latest
+            shell: pwsh
+          - label: Windows
+            os: windows-latest
             node-version: 22
+            shell: pwsh
+          - label: macOS
+            os: macos-latest
+            node-version: 20
+            shell: bash
+          - label: macOS
+            os: macos-latest
+            node-version: 22
+            shell: bash
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
 
     steps:
       # Package validation still needs repository metadata and validation scripts.
@@ -157,8 +204,8 @@ jobs:
       - name: Extract validated build
         run: tar -xzf package-build.tar.gz
 
-      # Pack, extract, and smoke-test the package as an npm consumer receives it.
-      - name: Validate packed runtime
+      # Pack, install, and launch the package from each platform's native shell.
+      - name: Validate packed runtime and npm execution
         run: bun run package:validate
 
   # Test packed integrations against pinned and moving real agent-host releases.

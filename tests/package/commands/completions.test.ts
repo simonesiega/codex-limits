@@ -127,6 +127,12 @@ test("completion candidates are derived from awkward but valid registry metadata
 });
 
 test("generated scripts pass every available native shell parser", async () => {
+  const requiredShells = new Set(
+    (process.env.CODEX_LIMITS_REQUIRED_COMPLETION_SHELLS ?? "")
+      .split(",")
+      .map((shell) => shell.trim())
+      .filter(Boolean)
+  );
   const syntaxChecks: Array<{
     shell: CompletionShell;
     extension: string;
@@ -185,10 +191,10 @@ test("generated scripts pass every available native shell parser", async () => {
         .map((candidate) => Bun.which(candidate))
         .find((candidate): candidate is string => Boolean(candidate));
       if (!executable) {
-        expect(
-          process.env.CODEX_LIMITS_REQUIRE_COMPLETION_SHELLS,
-          `${check.shell} parser is required`
-        ).not.toBe("true");
+        const isRequired =
+          process.env.CODEX_LIMITS_REQUIRE_COMPLETION_SHELLS === "true" ||
+          requiredShells.has(check.shell);
+        expect(isRequired, `${check.shell} parser is required`).toBe(false);
         continue;
       }
 

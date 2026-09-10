@@ -1,12 +1,13 @@
 /**
- * @fileoverview Packed-artifact validation harness. It inspects the publishable package and exercises supported Node entry points without relying on repository-only files.
+ * @fileoverview Packed-artifact validation harness. It inspects, installs, and exercises the publishable package without relying on repository-only files.
  */
-import {spawn} from "node:child_process";
 import {copyFile, mkdtemp, mkdir, readFile, realpath, rm, stat, writeFile} from "node:fs/promises";
 import {builtinModules} from "node:module";
 import {tmpdir} from "node:os";
-import {join} from "node:path";
+import {join, resolve} from "node:path";
 import {pathToFileURL} from "node:url";
+import {runCommand as runResult} from "./package-validation/command";
+import {smokeNpmInstallations} from "./package-validation/npm-installation";
 
 interface PackFile {
   path: string;
@@ -17,17 +18,6 @@ interface PackFile {
 interface PackResult {
   filename: string;
   files: PackFile[];
-}
-
-interface CommandResult {
-  exitCode: number;
-  stdout: string;
-  stderr: string;
-}
-
-interface RunResultOptions {
-  /** Closes the parent read end immediately to exercise the CLI's broken-pipe handling. */
-  closeStdout?: boolean;
 }
 
 const root = join(import.meta.dir, "..");
@@ -278,6 +268,12 @@ try {
   );
   assert(subpathImport.exitCode === 0, "Node could not resolve the packed agent subpaths.");
   assert(subpathImport.stderr === "", "Packed subpath import unexpectedly wrote to stderr.");
+
+  await smokeNpmInstallations({
+    tarballPath: resolve(temporaryRoot, packed.filename),
+    temporaryRoot,
+    version: packageJson.version,
+  });
 } finally {
   await rm(temporaryRoot, {recursive: true, force: true});
 }
@@ -332,12 +328,7 @@ async function smokeCopilotExtensionBundle(): Promise<void> {
       ),
     ]);
 
-    const env = {...process.env};
-    for (const key of Object.keys(env)) {
-      if (key.startsWith("CODEX_LIMITS_") || key === "CODEX_HOME") {
-        delete env[key];
-      }
-    }
+    const env = environmentWithoutCodexOverrides();
     Object.assign(env, {
       HOME: join(temporaryRoot, "missing-home"),
       USERPROFILE: join(temporaryRoot, "missing-home"),
@@ -426,12 +417,7 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
   const home = join(packedRoot, ".smoke-home");
   await mkdir(home, {recursive: true});
 
-  const env = {...process.env};
-  for (const key of Object.keys(env)) {
-    if (key.startsWith("CODEX_LIMITS_") || key === "CODEX_HOME") {
-      delete env[key];
-    }
-  }
+  const env = environmentWithoutCodexOverrides();
   Object.assign(env, {
     HOME: home,
     USERPROFILE: home,
@@ -443,6 +429,7 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
   });
 
   const commands: Array<{args: string[]; json?: boolean; includes?: string}> = [
+    {args: [], includes: "CODEX LIMITS"},
     {args: ["--help"], includes: "codex-limits status"},
     {args: ["--version"], includes: `${version}\n`},
     {args: ["status"], includes: "Usage Limits"},
@@ -485,7 +472,8 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
       "node",
       [join(packedRoot, "dist", "cli.js"), ...command.args],
       packedRoot,
-      env
+      env,
+      command.args.length === 0 ? {timeoutMs: 15_000} : undefined
     );
     assert(result.exitCode === 0, `Packed CLI failed for ${command.args.join(" ")}.`);
     assert(result.stderr === "", `Packed CLI wrote stderr for ${command.args.join(" ")}.`);
@@ -582,6 +570,17 @@ async function smokeCli(packedRoot: string, version: string): Promise<void> {
   );
 }
 
+function environmentWithoutCodexOverrides(): NodeJS.ProcessEnv {
+  const env = {...process.env};
+  for (const key of Object.keys(env)) {
+    const normalizedKey = key.toLowerCase();
+    if (normalizedKey.startsWith("codex_limits_") || normalizedKey === "codex_home") {
+      delete env[key];
+    }
+  }
+  return env;
+}
+
 async function pathExists(path: string): Promise<boolean> {
   try {
     await stat(path);
@@ -602,35 +601,6 @@ async function run(command: string, args: string[], cwd: string): Promise<string
     );
   }
   return result.stdout;
-}
-
-function runResult(
-  command: string,
-  args: string[],
-  cwd: string,
-  env: NodeJS.ProcessEnv,
-  options: RunResultOptions = {}
-): Promise<CommandResult> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {cwd, env, stdio: ["ignore", "pipe", "pipe"]});
-    const stdout: Buffer[] = [];
-    const stderr: Buffer[] = [];
-
-    if (options.closeStdout) {
-      child.stdout.destroy();
-    } else {
-      child.stdout.on("data", (chunk: Buffer) => stdout.push(chunk));
-    }
-    child.stderr.on("data", (chunk: Buffer) => stderr.push(chunk));
-    child.on("error", reject);
-    child.on("close", (exitCode) =>
-      resolve({
-        exitCode: exitCode ?? 1,
-        stdout: Buffer.concat(stdout).toString("utf8"),
-        stderr: Buffer.concat(stderr).toString("utf8"),
-      })
-    );
-  });
 }
 
 function assert(condition: unknown, message: string): asserts condition {

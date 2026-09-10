@@ -52,18 +52,20 @@ The following environments are covered by the repository's automated checks or l
 
 | Area                             | Tested environments                                                                                                                         |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Source checks and build          | GitHub Actions on `ubuntu-latest` with Node.js 24                                                                                           |
-| Automated packaged CLI           | GitHub Actions on `ubuntu-latest` with Node.js 20 and 22, `windows-latest` with Node.js 20, and `macos-latest` with Node.js 22              |
-| Latest recorded local validation | Windows build `10.0.26200.9168` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-09-07)                                                   |
-| Terminal rendering               | Automated Ink rendering and layout tests; no named terminal application is included in the per-release test matrix                          |
-| Shell completion generation      | Native syntax validation for Bash, Zsh, Fish, PowerShell, and Nushell on `ubuntu-latest`                                                    |
+| Source checks and build          | The complete source gate on `ubuntu-latest`, `windows-latest`, and `macos-latest` with Node.js 24                                           |
+| Automated packaged CLI           | The same packed-package validation on all three runner operating systems with Node.js 20 and 22                                             |
+| npm installation and execution   | Isolated local and global installs, npm-generated binaries, `npm exec`, and local plus ephemeral `npx` on all three operating systems       |
+| Filesystem paths                 | Native platform paths plus install, profile, npm cache, and Codex-data paths containing spaces and Unicode                                  |
+| Latest recorded local validation | Windows build `10.0.26200.9445` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-09-10)                                                   |
+| Terminal rendering               | Ink rendering and layout tests on all three operating systems plus non-interactive packed-dashboard startup on every runtime matrix entry   |
+| Shell completion generation      | All five parsers on Linux, native PowerShell on Windows, and native Bash and Zsh on macOS                                                   |
 | OpenCode agent adapter           | Mocked API coverage plus packed install, plugin loading, `/codex-limits` dispatch, and removal in real OpenCode 1.18.14 and latest hosts    |
 | pi agent adapter                 | Mocked UI coverage plus packed install, command discovery, dispatch, removal, and post-removal discovery in real pi 0.81.1 and latest hosts |
 | Copilot CLI adapter              | Mocked SDK coverage plus packed install, extension loading, `/codex-limits` dispatch, and removal in the latest real Copilot CLI host       |
 
-The supported runtime and operating-system ranges are broader than this test matrix. Automated checks sample each supported operating system but do not test every supported Node.js version on every platform.
+Linux, Windows, and macOS run the same formatting, documentation, type, coverage, build, and package gate with Node.js 24. Each then receives the same publication-shaped build for packed-runtime checks with Node.js 20 and 22. Package checks exercise ordinary native paths, paths with spaces, Unicode paths, local and isolated global npm installs, `npm exec`, `npx`, CLI commands, and non-interactive dashboard startup.
 
-The real-agent matrix runs on `ubuntu-latest` with Node.js 24 for normal repository checks and on the weekly workflow schedule, so moving `latest` host releases are exercised even when the project has no new commits.
+The supported runtime range is broader than this balanced matrix, so not every future Node.js release is tested. Real-agent compatibility remains on `ubuntu-latest` because the OpenCode and Copilot probes depend on Unix pseudo-terminal tooling; it runs for normal checks and on the weekly schedule so moving `latest` host releases are exercised even when the project has no new commits.
 
 ## Operating systems
 
@@ -146,17 +148,17 @@ Usage thresholds can also return documented non-zero condition codes while prese
 
 The source-check job generates scripts from registry metadata containing quotes, spaces, shell metacharacters, and Unicode, then passes each script to its native parser.
 
-| Shell      | CI environment                                                | Validation                     |
-| ---------- | ------------------------------------------------------------- | ------------------------------ |
-| Bash       | Runner-provided Bash on `ubuntu-latest`                       | `bash --noprofile --norc -n`   |
-| Zsh        | Ubuntu package on `ubuntu-latest`                             | `zsh -f -n`                    |
-| Fish       | Ubuntu package on `ubuntu-latest`                             | `fish --no-execute`            |
-| PowerShell | Runner-provided PowerShell (`pwsh`) on `ubuntu-latest`        | PowerShell language parser API |
-| Nushell    | Nushell 0.115.1 pinned by release archive digest in the build | `nu -n`                        |
+| Shell      | Required CI environments                                                       | Validation                     |
+| ---------- | ------------------------------------------------------------------------------ | ------------------------------ |
+| Bash       | Runner-provided Bash on `ubuntu-latest` and `macos-latest`                     | `bash --noprofile --norc -n`   |
+| Zsh        | Ubuntu package and runner-provided Zsh on `macos-latest`                       | `zsh -f -n`                    |
+| Fish       | Ubuntu package on `ubuntu-latest`                                              | `fish --no-execute`            |
+| PowerShell | Runner-provided PowerShell on `ubuntu-latest` and native `windows-latest` jobs | PowerShell language parser API |
+| Nushell    | Nushell 0.115.1 pinned by release archive digest on `ubuntu-latest`            | `nu -n`                        |
 
-Bash, Zsh, Fish, and PowerShell versions follow the `ubuntu-latest` runner or its package repositories rather than defining minimum supported versions. Nushell is pinned because it is downloaded separately for syntax validation.
+Bash, Zsh, Fish, and PowerShell versions follow their runner or package repositories rather than defining minimum supported versions. Nushell is pinned because it is downloaded separately for syntax validation.
 
-Local tests perform the same validation for whichever native parsers are installed; CI requires all five.
+Local tests validate whichever native parsers are installed. CI requires all five on Linux, PowerShell on Windows, and Bash plus Zsh on macOS; this preserves complete renderer coverage while also exercising the shells native to each supported operating system.
 
 ## OpenCode compatibility
 

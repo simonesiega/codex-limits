@@ -8,6 +8,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+- Added equal native Linux, Windows, and macOS CI gates, including PowerShell, npm installation and execution, path-with-spaces and Unicode-path coverage, and basic packed CLI and dashboard startup checks.
+
 ### Changed
 
 - Reduced the published npm package by excluding GitHub-only promotional media and repository-focused documentation while retaining runtime files and offline reference guides.
@@ -18,6 +20,9 @@ All notable changes to codex-limits are documented in this file.
 ### Removed
 
 ### Security
+
+- Added explicit timeouts and bounded output capture to packed-package command validation so stalled child processes cannot hang release checks indefinitely.
+- Replaced personal workstation paths in public documentation media with synthetic examples.
 
 ## [1.3.0] - 2026-09-07
 

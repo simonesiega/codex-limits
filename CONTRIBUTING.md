@@ -108,7 +108,9 @@ Coverage excludes test files and test-support code under `tests`. Bun enforces p
 
 CI uploads the generated LCOV report to Codecov using GitHub OIDC without a long-lived Codecov token. Treat coverage as a regression signal rather than a target: tests should protect observable behavior, safety boundaries, or supported integration contracts rather than execute lines only to increase a percentage.
 
-Shell-completion tests pass generated scripts to any locally installed Bash, Zsh, Fish, PowerShell, and Nushell parsers. CI installs all five and requires each renderer to parse successfully. See [Shell completions](docs/guides/shell-completions.md#how-generation-works) and the [tested shell environments](docs/guides/compatibility.md#tested-shell-completion-generation).
+Shell-completion tests pass generated scripts to any locally installed Bash, Zsh, Fish, PowerShell, and Nushell parsers. CI requires all five on Linux, native PowerShell on Windows, and Bash plus Zsh on macOS. See [Shell completions](docs/guides/shell-completions.md#how-generation-works) and the [tested shell environments](docs/guides/compatibility.md#tested-shell-completion-generation).
+
+The complete source gate runs equally on Linux, Windows, and macOS with Node.js 24. Packed-package jobs then run the same validation on all three with Node.js 20 and 22. Package validation uses isolated local and global npm installs and exercises npm-generated binaries, `npm exec`, `npx`, CLI output, and non-interactive dashboard startup from ordinary paths and paths containing spaces and Unicode.
 
 ### Real-agent compatibility checks
 
