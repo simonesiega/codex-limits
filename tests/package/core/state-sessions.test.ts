@@ -243,6 +243,38 @@ test("readCodexSessions prefers event timestamps over file modification times", 
   });
 });
 
+test("readCodexSessions selects the newest timestamped snapshot within one file", async () => {
+  await withTempDirectory("codex-limits-session-event-order-", async (home) => {
+    const sessionDir = join(home, "sessions", "2026", "07", "05");
+    await mkdir(sessionDir, {recursive: true});
+    await writeFile(
+      join(sessionDir, "rollout-events.jsonl"),
+      [
+        {timestamp: "2026-07-05T12:00:00.000Z", usedPercent: 20},
+        {timestamp: "2026-07-05T11:00:00.000Z", usedPercent: 90},
+        {timestamp: "2026-07-05T12:00:00.000Z", usedPercent: 25},
+        {timestamp: null, usedPercent: 99},
+      ]
+        .map(({timestamp, usedPercent}) =>
+          JSON.stringify({
+            type: "event_msg",
+            ...(timestamp ? {timestamp} : {}),
+            payload: {
+              type: "token_count",
+              rate_limits: {primary: {used_percent: usedPercent}},
+            },
+          })
+        )
+        .join("\n"),
+      "utf8"
+    );
+
+    const sessions = await readCodexSessions(home);
+    expect(sessions.latestSnapshot?.eventTimestamp).toBe("2026-07-05T12:00:00.000Z");
+    expect(sessions.latestSnapshot?.rateLimits.primary).toEqual({used_percent: 25});
+  });
+});
+
 test("readCodexSessions skips an oversized JSONL line without losing later snapshots", async () => {
   await withTempDirectory("codex-limits-session-lines-", async (home) => {
     const sessionDir = join(home, "sessions", "2026", "07", "05");

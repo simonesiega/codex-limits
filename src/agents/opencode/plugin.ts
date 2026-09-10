@@ -9,6 +9,7 @@ import type {CodexLimitsResult} from "@/package/core/types";
 const TITLE = "Codex Limits";
 const DESCRIPTION = "Check Codex limits, resets, and credits.";
 const SAFE_LOAD_ERROR = "Could not load Codex limits.";
+const SAFE_DISPLAY_ERROR = "Could not display Codex limits.";
 
 interface OpencodePluginDependencies {
   getLimits?: () => Promise<CodexLimitsResult>;
@@ -80,26 +81,31 @@ function createCommand(
     onSelect: async (dialog) => {
       // The shared dialog must only show the newest request when earlier requests finish later.
       const currentInvocation = ++invocation;
-      dialog?.clear();
-      api.ui.dialog.clear();
-      await waitForNextFrame();
-
-      const target = api.ui.dialog;
-      const show = (message: string): void =>
-        target.replace(() => api.ui.DialogAlert({title: TITLE, message}));
-      target.setSize("large");
-      show("Loading Codex limits...");
 
       try {
-        const result = await loadLimits();
-        if (currentInvocation === invocation) {
-          show(formatAgentLimits(result));
+        dialog?.clear();
+        api.ui.dialog.clear();
+        await waitForNextFrame();
+
+        const target = api.ui.dialog;
+        const show = (message: string): void =>
+          target.replace(() => api.ui.DialogAlert({title: TITLE, message}));
+        target.setSize("large");
+        show("Loading Codex limits...");
+
+        try {
+          const result = await loadLimits();
+          if (currentInvocation === invocation) {
+            show(formatAgentLimits(result));
+          }
+        } catch {
+          if (currentInvocation === invocation) {
+            api.ui.toast({variant: "error", title: TITLE, message: SAFE_LOAD_ERROR});
+            show(SAFE_LOAD_ERROR);
+          }
         }
       } catch {
-        if (currentInvocation === invocation) {
-          api.ui.toast({variant: "error", title: TITLE, message: SAFE_LOAD_ERROR});
-          show(SAFE_LOAD_ERROR);
-        }
+        throw new Error(SAFE_DISPLAY_ERROR);
       }
     },
   };

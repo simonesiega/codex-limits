@@ -297,6 +297,7 @@ async function extractSnapshotFromSessionFile(
   const stream = await openVerifiedSessionStream(candidate);
   let threadId: string | null = null;
   let latest: CodexSessionSnapshot | null = null;
+  let latestTimestampMs: number | null = null;
   let pending = "";
   let pendingBytes = 0;
   let totalBytes = 0;
@@ -309,13 +310,24 @@ async function extractSnapshotFromSessionFile(
       threadId = parsed.threadId;
     }
     if (parsed.rateLimits) {
-      latest = {
+      const candidateSnapshot: CodexSessionSnapshot = {
         sessionFile,
         relativePath,
         threadId,
         eventTimestamp: parsed.timestamp,
         rateLimits: parsed.rateLimits,
       };
+      const candidateTimestampMs = parseDateValue(parsed.timestamp)?.getTime() ?? null;
+      // Timestamped events are authoritative; later lines win only ties or wholly undated logs.
+      const shouldReplace =
+        !latest ||
+        (candidateTimestampMs === null
+          ? latestTimestampMs === null
+          : latestTimestampMs === null || candidateTimestampMs >= latestTimestampMs);
+      if (shouldReplace) {
+        latest = candidateSnapshot;
+        latestTimestampMs = candidateTimestampMs;
+      }
     }
   };
 

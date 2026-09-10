@@ -292,6 +292,46 @@ test("/codex-limits keeps the newest result when requests finish out of order", 
   expect(renderedResults[0]).not.toContain("93% remaining");
 });
 
+test("/codex-limits hides host display failures", async () => {
+  let command: {onSelect?: () => Promise<void>} | undefined;
+  const localPlugin = createOpencodePlugin({
+    getLimits: async () => createFakeLimitsResult(),
+    nextFrame: async () => undefined,
+  });
+  const api = {
+    command: {
+      register: (callback: () => Array<typeof command>) => {
+        command = callback()[0];
+        return () => undefined;
+      },
+    },
+    lifecycle: {onDispose: keepPluginActive},
+    ui: {
+      DialogAlert: ({message}: {message: string}) => ({message}),
+      dialog: {
+        clear: () => undefined,
+        setSize: () => undefined,
+        replace: () => {
+          throw new Error("Bearer fake-secret-token at C:/private/opencode.json");
+        },
+      },
+      toast: () => undefined,
+    },
+  };
+
+  await initialize(localPlugin, api);
+  let message = "";
+  try {
+    await command?.onSelect?.();
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+
+  expect(message).toBe("Could not display Codex limits.");
+  expect(message).not.toContain("fake-secret-token");
+  expect(message).not.toContain("private");
+});
+
 test("/codex-limits presents a safe static error", async () => {
   let command: {onSelect?: () => Promise<void>} | undefined;
   const messages: string[] = [];

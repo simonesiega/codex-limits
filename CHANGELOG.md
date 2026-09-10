@@ -17,12 +17,15 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
+- Fixed local session fallback to select the newest timestamped rate-limit event even when records within one session file are out of order.
+
 ### Removed
 
 ### Security
 
 - Added explicit timeouts and bounded output capture to packed-package command validation so stalled child processes cannot hang release checks indefinitely.
 - Replaced personal workstation paths in public documentation media with synthetic examples.
+- Prevented OpenCode dialog failures from exposing raw host error details.
 
 ## [1.3.0] - 2026-09-07
 
