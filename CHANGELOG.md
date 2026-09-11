@@ -17,6 +17,7 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
+- Fixed native completion-parser validation timing out under slower CI load or invoking unusable shell launchers.
 - Fixed local session fallback to select the newest timestamped rate-limit event even when records within one session file are out of order.
 
 ### Removed

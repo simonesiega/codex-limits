@@ -7,14 +7,7 @@ import {piIntegration} from "@/agents/pi/integration";
 import type {AgentIntegration} from "@/agents/types";
 
 export {AgentInstallError, AgentUninstallError} from "@/agents/types";
-export type {
-  AgentEnvironmentVariable,
-  AgentInstallResult,
-  AgentIntegration,
-  AgentIntegrationStatus,
-  AgentLifecycleResult,
-  AgentUninstallResult,
-} from "@/agents/types";
+export type {AgentIntegration, AgentIntegrationStatus, AgentLifecycleResult} from "@/agents/types";
 
 /** Optional integrations available through every agent-aware command. */
 export const AGENT_INTEGRATIONS: readonly AgentIntegration[] = [

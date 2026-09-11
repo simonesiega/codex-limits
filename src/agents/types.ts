@@ -13,7 +13,7 @@ export interface AgentLifecycleResult {
 export type AgentInstallResult = AgentLifecycleResult;
 export type AgentUninstallResult = AgentLifecycleResult;
 
-export interface AgentEnvironmentVariable {
+interface AgentEnvironmentVariable {
   readonly name: string;
   readonly description: string;
 }

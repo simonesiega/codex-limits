@@ -5,7 +5,7 @@
 export type AvailabilityStatus = "available" | "partial" | "unavailable";
 
 /** Source category for a Codex home candidate path. */
-export type CodexHomeCandidateSource = "env" | "default";
+type CodexHomeCandidateSource = "env" | "default";
 
 /** Environment object shape used by filesystem discovery and credential checks. */
 export type EnvironmentMap = Record<string, string | undefined>;
@@ -179,7 +179,7 @@ export interface LocalUsageResult {
 }
 
 /** Source for usage-limit windows. */
-export type UsageSourceKind = "api" | "local" | "unavailable";
+type UsageSourceKind = "api" | "local" | "unavailable";
 
 /** Usage-limit window source metadata. */
 export interface UsageSource {
@@ -255,7 +255,7 @@ export interface CouponSummary {
 }
 
 /** Source metadata for live reset-credit coupon data. */
-export interface CouponSource {
+interface CouponSource {
   /** Whether the live endpoint was successfully used. */
   live: boolean;
   /** Human-readable source label. */
@@ -273,7 +273,7 @@ export interface CouponResult extends CouponSummary {
 }
 
 /** Safe outcome of attempting to consume one reset coupon. */
-export type ResetCouponOutcome =
+type ResetCouponOutcome =
   "reset" | "already-redeemed" | "nothing-to-reset" | "no-credit" | "unconfirmed";
 
 /** Result of consuming one reset coupon without exposing response or credential data. */
@@ -295,13 +295,13 @@ export interface CodexLimitsResult {
 }
 
 /** Header reader exposed by platform fetch responses. */
-export interface FetchHeadersLike {
+interface FetchHeadersLike {
   /** Reads one response header by name. */
   get: (name: string) => string | null;
 }
 
 /** Streaming body reader exposed by platform fetch responses. */
-export interface FetchBodyReaderLike {
+interface FetchBodyReaderLike {
   /** Reads the next response body chunk. */
   read: () => Promise<{done: boolean; value?: Uint8Array}>;
   /** Cancels body consumption. */
@@ -346,7 +346,7 @@ export type JsonGetFailureCode =
   | "unsupported-protocol";
 
 /** Successful authenticated JSON response. */
-export interface JsonGetSuccess {
+interface JsonGetSuccess {
   ok: true;
   status: number;
   payload: unknown;
@@ -379,6 +379,4 @@ export interface AuthenticatedJsonRequest {
 }
 
 /** Injectable authenticated JSON transport boundary. */
-export type AuthenticatedJsonTransport = (
-  request: AuthenticatedJsonRequest
-) => Promise<JsonGetResult>;
+type AuthenticatedJsonTransport = (request: AuthenticatedJsonRequest) => Promise<JsonGetResult>;

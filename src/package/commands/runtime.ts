@@ -20,7 +20,7 @@ import type {
 } from "@/package/core/types";
 import {PACKAGE_VERSION} from "@/package/version";
 
-export type WriteOutput = (text: string) => void;
+type WriteOutput = (text: string) => void;
 export type Prompt = ((question: string) => Promise<string>) & {
   close?: () => Promise<void> | void;
 };

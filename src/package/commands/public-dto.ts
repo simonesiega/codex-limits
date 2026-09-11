@@ -12,7 +12,7 @@ import type {
 import {redactWarnings} from "@/package/core/utils/redact";
 
 /** Stable JSON representation of a usage window. */
-export interface UsageWindowDto {
+interface UsageWindowDto {
   label: string;
   remainingPercent: number | null;
   usedPercent: number | null;
@@ -21,7 +21,7 @@ export interface UsageWindowDto {
 }
 
 /** Stable JSON representation of one reset-credit coupon. */
-export interface CouponItemDto {
+interface CouponItemDto {
   index: number;
   status: string | null;
   grantedAt: string | null;

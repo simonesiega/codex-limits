@@ -81,12 +81,12 @@ export interface CommandGroupDefinition {
 
 export type HelpSubject = CommandDefinition | CommandGroupDefinition | null;
 
-export interface EnvironmentDefinition {
+interface EnvironmentDefinition {
   name: string;
   description: string;
 }
 
-export interface CliProgramDefinition {
+interface CliProgramDefinition {
   name: string;
   description: string;
   environment: readonly EnvironmentDefinition[];

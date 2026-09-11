@@ -12,7 +12,7 @@ import {
 } from "@/package/commands/command";
 import {sanitizeArguments} from "@/package/commands/safe-error";
 
-export interface CliParseError {
+interface CliParseError {
   code:
     | "conflicting-options"
     | "duplicate-option"

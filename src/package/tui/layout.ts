@@ -2,7 +2,7 @@
  * @fileoverview Terminal UI support for layout. This rendering layer consumes normalized data and does not perform local discovery or authenticated requests.
  */
 /** Responsive breakpoint selected from the terminal dimensions captured at startup. */
-export type LayoutMode = "compact" | "standard" | "ultra" | "wide";
+type LayoutMode = "compact" | "standard" | "ultra" | "wide";
 
 /** Render decisions shared by the dashboard and its responsive components. */
 export interface TuiLayout {
