@@ -27,6 +27,7 @@ interface PackageMetadata {
   files: string[];
   types: string;
   engines: {node: string};
+  devDependencies: Record<string, string>;
   scripts: Record<string, string>;
   keywords: string[];
   dependencies?: Record<string, string>;
@@ -62,6 +63,7 @@ test("package metadata preserves the CLI and agent-host module contracts", async
   ).toEqual(AGENT_INTEGRATIONS.map((integration) => `./${integration.id}`).sort());
   expect(packageJson.types).toBe("./types/opencode.d.ts");
   expect(packageJson.engines.node).toBe(">=20");
+  expect(packageJson.devDependencies["@types/node"]).toMatch(/^\^20\./);
   expect(packageJson.pi).toEqual({extensions: ["./dist/pi.js"]});
   expect(packageJson.keywords).toContain("pi-package");
   expect(packageJson.keywords).toContain("github-copilot-cli");
@@ -140,15 +142,36 @@ test("package metadata includes runtime and offline reference files only", async
   });
 });
 
-test("manual publishing requires the matching version tag", async () => {
-  const workflow = await readFile(
-    resolve(import.meta.dir, "../../.github/workflows/publish.yml"),
-    "utf8"
-  );
+test("publishing requires a new tagged version and the complete release matrix", async () => {
+  const [publishText, checkText, changelog, packageJson] = await Promise.all([
+    readFile(resolve(import.meta.dir, "../../.github/workflows/publish.yml"), "utf8"),
+    readFile(resolve(import.meta.dir, "../../.github/workflows/check.yml"), "utf8"),
+    readFile(resolve(import.meta.dir, "../../CHANGELOG.md"), "utf8"),
+    readPackageMetadata(),
+  ]);
+  const publish = Bun.YAML.parse(publishText) as {
+    permissions?: Record<string, string>;
+    jobs?: Record<
+      string,
+      {needs?: string | string[]; uses?: string; permissions?: Record<string, string>}
+    >;
+  };
+  const check = Bun.YAML.parse(checkText) as {on?: Record<string, unknown>};
 
-  expect(workflow).toContain('if [ "$REF_TYPE" != "tag" ]; then');
-  expect(workflow).toContain('PUBLISH_TAG="$REF_NAME"');
-  expect(workflow).toContain('if [ "$PUBLISH_TAG" != "v$PACKAGE_VERSION" ]; then');
+  expect("workflow_call" in (check.on ?? {})).toBe(true);
+  expect(publish.jobs?.verify?.needs).toBe("preflight");
+  expect(publish.jobs?.verify?.uses).toBe("./.github/workflows/check.yml");
+  expect(publish.jobs?.publish?.needs).toEqual(["preflight", "verify"]);
+  expect(publish.permissions).toEqual({contents: "read"});
+  expect(publish.jobs?.publish?.permissions).toEqual({contents: "read", "id-token": "write"});
+  expect(publishText).toContain('if [ "$REF_TYPE" != "tag" ]; then');
+  expect(publishText).toContain('PUBLISH_TAG="$REF_NAME"');
+  expect(publishText).toContain('if [ "$PUBLISH_TAG" != "v$PACKAGE_VERSION" ]; then');
+  expect(publishText).toContain(
+    'npm view "$PACKAGE_NAME" versions --json --registry=https://registry.npmjs.org'
+  );
+  expect(publishText).toContain("versions.includes(process.env.PACKAGE_VERSION)");
+  expect(changelog).toContain(`## [${packageJson.version}] - `);
 });
 
 test("CI and publishing audit the locked dependency graph", async () => {

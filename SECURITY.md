@@ -121,7 +121,7 @@ The project should:
 - Use CodeQL's default JavaScript and TypeScript security queries for pull requests, main-branch changes, and scheduled source scanning.
 - Upload generated LCOV coverage metadata to Codecov with GitHub OIDC instead of storing a long-lived Codecov token. Reports contain source paths and execution counts, not credentials or private runtime data.
 - Run `bun run audit` and `bun run check` before publishing. CI and publishing enforce the dependency audit; the project check rebuilds every bundle, validates generated declarations and notices, packs the npm artifact, and smoke-tests supported runtime surfaces.
-- Publish only from a validated release tag whose version matches `package.json` and `src/package/version.ts`.
+- Publish only from a release tag whose version matches `package.json` and `src/package/version.ts`, has dated changelog notes, has not already been published on npm, and passes the full tagged-source platform, packed-runtime, and real-agent compatibility matrix.
 - Use npm Trusted Publishing with provenance rather than a long-lived npm token.
 - Keep agent host SDKs external where the host owns them, and keep bundled third-party license notices synchronized with production artifacts.
 - Do not publish from a dirty tree or bypass package validation, release-version checks, lifecycle-script restrictions, or provenance.

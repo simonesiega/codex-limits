@@ -8,6 +8,20 @@ All notable changes to codex-limits are documented in this file.
 
 ### Added
 
+### Changed
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [1.3.1] - 2026-09-23
+
+### Breaking Changes
+
+### Added
+
 - Added equal native Linux, Windows, and macOS CI gates, including PowerShell, npm installation and execution, path-with-spaces and Unicode-path coverage, and basic packed CLI and dashboard startup checks.
 
 ### Changed
@@ -19,6 +33,7 @@ All notable changes to codex-limits are documented in this file.
 
 - Fixed native completion-parser validation timing out under slower CI load or invoking unusable shell launchers.
 - Fixed local session fallback to select the newest timestamped rate-limit event even when records within one session file are out of order.
+- Restored Node.js 20 type checks so development validation matches the CLI's minimum supported runtime.
 
 ### Removed
 
@@ -27,6 +42,7 @@ All notable changes to codex-limits are documented in this file.
 - Added explicit timeouts and bounded output capture to packed-package command validation so stalled child processes cannot hang release checks indefinitely.
 - Replaced personal workstation paths in public documentation media with synthetic examples.
 - Prevented OpenCode dialog failures from exposing raw host error details.
+- Required release-tagged platform and agent checks before publishing and rejected npm versions that were already published.
 
 ## [1.3.0] - 2026-09-07
 

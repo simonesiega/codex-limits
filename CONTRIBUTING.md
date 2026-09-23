@@ -112,6 +112,15 @@ Shell-completion tests pass generated scripts to any locally installed Bash, Zsh
 
 The complete source gate runs equally on Linux, Windows, and macOS with Node.js 24. Packed-package jobs then run the same validation on all three with Node.js 20 and 22. Package validation uses isolated local and global npm installs and exercises npm-generated binaries, `npm exec`, `npx`, CLI output, and non-interactive dashboard startup from ordinary paths and paths containing spaces and Unicode.
 
+### Release preparation
+
+1. Choose a version that has not been published to npm. Update `package.json`, `src/package/version.ts`, and the sanitized doctor example in both `docs/examples` and `docs/guides/json-output.md`.
+2. Move the current `[Unreleased]` notes into a new dated version section in `CHANGELOG.md`, leaving the `[Unreleased]` headings for future work. Do not change existing released sections.
+3. Run `bun run audit`, `bun test`, `bun run check`, and `bun run build` from the repository root. Inspect documentation media for private data before committing it.
+4. Commit the reviewed release source before creating its `v<version>` tag. Publish from a GitHub release for that tag or run the manual Publish workflow **from the tag**, never from a branch. Publication checks the npm version history and waits for the full Linux, Windows, macOS, packed-runtime, and real-agent matrix on the tagged commit.
+
+The release workflow will refuse a reused version, a missing dated changelog section, or a failing tagged-source gate. See [release security](SECURITY.md#dependency-and-release-security) for the canonical safeguards.
+
 ### Real-agent compatibility checks
 
 The `Check` workflow also runs `bun run agents:compat` against packed artifacts in real OpenCode, pi, and GitHub Copilot CLI installations. These host probes run outside the normal local `bun run check` gate because they download and launch external host releases.

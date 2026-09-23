@@ -14,7 +14,7 @@ This page is the canonical compatibility reference for the runtime, operating-sy
 | Source development  | Bun 1.3.14, as declared in `package.json`               |
 | TypeScript target   | ES2022                                                  |
 
-Bun is used for dependency management, tests, development commands, and production builds. It is not required to run the published CLI. Runtime dependencies are bundled into `dist`, so the published package does not declare separate production dependencies.
+Bun is used for dependency management, tests, development commands, and production builds. It is not required to run the published CLI. Source checks use Node.js 20 type definitions to match the minimum published CLI runtime. Runtime dependencies are bundled into `dist`, so the published package does not declare separate production dependencies.
 
 ### Package interfaces
 
@@ -56,7 +56,7 @@ The following environments are covered by the repository's automated checks or l
 | Automated packaged CLI           | The same packed-package validation on all three runner operating systems with Node.js 20 and 22                                             |
 | npm installation and execution   | Isolated local and global installs, npm-generated binaries, `npm exec`, and local plus ephemeral `npx` on all three operating systems       |
 | Filesystem paths                 | Native platform paths plus install, profile, npm cache, and Codex-data paths containing spaces and Unicode                                  |
-| Latest recorded local validation | Windows build `10.0.26200.9445` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-09-10)                                                   |
+| Latest recorded local validation | Windows build `10.0.26200` with Node.js 22.20.0 and Bun 1.3.14 (verified 2026-09-23)                                                        |
 | Terminal rendering               | Ink rendering and layout tests on all three operating systems plus non-interactive packed-dashboard startup on every runtime matrix entry   |
 | Shell completion generation      | All five parsers on Linux, native PowerShell on Windows, and native Bash and Zsh on macOS                                                   |
 | OpenCode agent adapter           | Mocked API coverage plus packed install, plugin loading, `/codex-limits` dispatch, and removal in real OpenCode 1.18.14 and latest hosts    |
@@ -170,7 +170,7 @@ See the [OpenCode integration guide](agents/opencode.md) for canonical installat
 
 ## pi compatibility
 
-The extension is developed against `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 0.81.x, which require Node.js 22.19 or newer. Those optional peers are supplied by the pi host and do not change the standalone CLI's Node.js 20 requirement.
+The extension is type-checked against `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 0.86.x, which require Node.js 22.19 or newer. The real-host matrix also checks compatibility with pi 0.81.1. Those optional peers are supplied by the pi host and do not change the standalone CLI's Node.js 20 requirement.
 
 Automated real-host checks install the packed package into pi 0.81.1 and the latest npm release, verify that the host discovers `/codex-limits` as an extension command, dispatch it through pi's RPC command path without creating a model-conversation message, uninstall it, and verify that a fresh pi host no longer discovers the command.
 

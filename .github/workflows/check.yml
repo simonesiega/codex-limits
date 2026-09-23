@@ -9,6 +9,7 @@ on:
   schedule:
     - cron: "23 6 * * 1"
   workflow_dispatch:
+  workflow_call:
 
 # Default every job to read-only repository access; the source job adds OIDC for coverage upload.
 permissions:
