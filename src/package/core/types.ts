@@ -318,8 +318,6 @@ export interface FetchResponseLike {
   headers?: FetchHeadersLike;
   /** Streaming response body when available. */
   body?: {getReader: () => FetchBodyReaderLike} | null;
-  /** Reads the response body as text when streaming is unavailable. */
-  text?: () => Promise<string>;
 }
 
 /** Minimal fetch function shape used by the authenticated JSON transport. */

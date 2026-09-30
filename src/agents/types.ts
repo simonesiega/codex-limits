@@ -1,5 +1,5 @@
 /**
- * @fileoverview Agent adapter support for types. The adapter stays thin, delegates Codex data handling to the shared core, and preserves the host integration safety boundary.
+ * @fileoverview Shared host-adapter contracts for lifecycle results, inspection states, and safe errors.
  */
 /** Safe read-only integration state used by diagnostics and interactive lifecycle commands. */
 export type AgentIntegrationStatus = "installed" | "not-installed" | "unknown";

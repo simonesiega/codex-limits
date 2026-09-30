@@ -9,6 +9,7 @@ import {getUsageLimits} from "@/package/core/limits";
 import type {FetchLike} from "@/package/core/types";
 import {mapLiveUsagePayload} from "@/package/core/usage/live-payload";
 import {getLiveUsage} from "@/package/core/usage/live";
+import {createFetchResponse} from "@tests/helpers/fetch-response";
 import {withLoopbackServer} from "@tests/helpers/http-server";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
 
@@ -21,17 +22,14 @@ test("getLiveUsage fetches current usage with Codex credentials", async () => {
       accountId: init.headers["ChatGPT-Account-ID"] ?? "",
     });
 
-    return {
-      ok: true,
-      status: 200,
-      text: async () =>
-        JSON.stringify({
-          rate_limit: {
-            primary_window: {used_percent: 20, reset_at: 1_767_229_200},
-            secondary_window: {used_percent: 69, reset_at: 1_767_232_800},
-          },
-        }),
-    };
+    return createFetchResponse(
+      JSON.stringify({
+        rate_limit: {
+          primary_window: {used_percent: 20, reset_at: 1_767_229_200},
+          secondary_window: {used_percent: 69, reset_at: 1_767_232_800},
+        },
+      })
+    );
   };
 
   const result = await getLiveUsage({

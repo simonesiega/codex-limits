@@ -10,6 +10,7 @@ import {
 } from "@/package/core/coupons/reset-coupons";
 import {selectResetCoupon} from "@/package/core/coupons/selection";
 import type {AuthenticatedJsonRequest, CouponResult, FetchLike} from "@/package/core/types";
+import {createFetchResponse} from "@tests/helpers/fetch-response";
 import {createFakeCouponResult} from "@tests/package/fixtures/fake-results";
 
 const ENV = {
@@ -59,11 +60,7 @@ test("consumeResetCoupon uses the bounded POST transport and default consume end
     fetch: async (url, init) => {
       requestUrls.push(url);
       requestInits.push(init);
-      return {
-        ok: true,
-        status: 200,
-        text: async () => JSON.stringify({code: "nothing_to_reset"}),
-      };
+      return createFetchResponse(JSON.stringify({code: "nothing_to_reset"}));
     },
   });
 

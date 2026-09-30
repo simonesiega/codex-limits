@@ -287,9 +287,27 @@ jobs:
           npm install \
             --prefix "$HOST_ROOT" \
             --ignore-scripts \
+            --include=optional \
             --no-audit \
             --no-fund \
             "$HOST_PACKAGE@$HOST_VERSION"
+
+          if [[ "$HOST_PACKAGE" == "@github/copilot" ]]; then
+            # Copilot publishes its launcher separately from optional native binaries; npm treats a failed optional install as non-fatal.
+            COPILOT_VERSION="$(node -p 'require(process.argv[1]).version' "$HOST_ROOT/node_modules/@github/copilot/package.json")"
+            npm install \
+              --prefix "$HOST_ROOT" \
+              --ignore-scripts \
+              --no-audit \
+              --no-fund \
+              --no-save \
+              "@github/copilot-linux-x64@$COPILOT_VERSION"
+            (
+              cd "$HOST_ROOT"
+              node --input-type=module -e 'console.log(import.meta.resolve("@github/copilot-linux-x64"))'
+            )
+          fi
+
           echo "HOST_ROOT=$HOST_ROOT" >> "$GITHUB_ENV"
 
       # Produce the same tarball shape users install from npm.

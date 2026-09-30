@@ -1,5 +1,5 @@
 /**
- * @fileoverview CLI command-layer support for command. It translates validated command input and shared core results into stable terminal or JSON behavior.
+ * @fileoverview Declarative command metadata and parsed-value types shared by the parser, help renderer, and handlers.
  */
 export type OptionValue = true | string | readonly string[];
 

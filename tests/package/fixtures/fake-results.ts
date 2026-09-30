@@ -1,5 +1,5 @@
 /**
- * @fileoverview Behavioral coverage for fake results. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ * @fileoverview Sanitized normalized result fixtures shared by command and TUI tests.
  */
 import type {CodexLimitsResult, CouponResult, CouponSummary} from "@/package/core/types";
 

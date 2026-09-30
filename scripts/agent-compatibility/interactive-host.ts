@@ -230,7 +230,7 @@ export async function probeInteractiveHost({
     const onExit = (code: number | null): void => {
       finish(
         new Error(
-          `The real host exited with code ${code ?? 1}. Output: ${boundedTerminalOutput(harness, output)}`
+          `The interactive host wrapper ended before expected output (exit code ${code ?? 1}). Output: ${boundedTerminalOutput(harness, output)}`
         )
       );
     };

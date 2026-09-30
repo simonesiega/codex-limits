@@ -7,6 +7,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {getResetCoupons} from "@/package/core/coupons/reset-coupons";
 import type {FetchLike} from "@/package/core/types";
+import {createFetchResponse} from "@tests/helpers/fetch-response";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 test("getResetCoupons fetches live coupons with explicit env credentials", async () => {
@@ -17,31 +18,28 @@ test("getResetCoupons fetches live coupons with explicit env credentials", async
       accountId: init.headers["ChatGPT-Account-ID"] ?? "",
     });
 
-    return {
-      ok: true,
-      status: 200,
-      text: async () =>
-        JSON.stringify({
-          available_count: 2,
-          total_earned_count: 3,
-          credits: [
-            {
-              id: "RateLimitResetCredit_test-1",
-              reset_type: "codex_rate_limits",
-              status: "available",
-              granted_at: "2026-06-11T20:38:07Z",
-              expires_at: "2026-07-17T18:42:45Z",
-            },
-            {
-              id: "RateLimitResetCredit_test-2",
-              reset_type: "codex_rate_limits",
-              status: "available",
-              granted_at: "2026-06-17T18:42:45Z",
-              expires_at: "2026-07-11T20:38:07Z",
-            },
-          ],
-        }),
-    };
+    return createFetchResponse(
+      JSON.stringify({
+        available_count: 2,
+        total_earned_count: 3,
+        credits: [
+          {
+            id: "RateLimitResetCredit_test-1",
+            reset_type: "codex_rate_limits",
+            status: "available",
+            granted_at: "2026-06-11T20:38:07Z",
+            expires_at: "2026-07-17T18:42:45Z",
+          },
+          {
+            id: "RateLimitResetCredit_test-2",
+            reset_type: "codex_rate_limits",
+            status: "available",
+            granted_at: "2026-06-17T18:42:45Z",
+            expires_at: "2026-07-11T20:38:07Z",
+          },
+        ],
+      })
+    );
   };
 
   const result = await getResetCoupons({
@@ -236,12 +234,10 @@ test("getResetCoupons reads detected Codex auth file without exposing secrets", 
     const result = await getResetCoupons({
       env: {CODEX_LIMITS_HOME: home},
       homeDirectory: join(home, "unused"),
-      fetch: async () => ({
-        ok: true,
-        status: 200,
-        text: async () =>
-          JSON.stringify({credits: [{status: "available", expires_at: "2026-07-11T20:38:07Z"}]}),
-      }),
+      fetch: async () =>
+        createFetchResponse(
+          JSON.stringify({credits: [{status: "available", expires_at: "2026-07-11T20:38:07Z"}]})
+        ),
       now: new Date("2026-07-10T20:38:07Z"),
     });
 

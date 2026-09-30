@@ -1,5 +1,5 @@
 /**
- * @fileoverview Behavioral coverage for http server. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ * @fileoverview Loopback HTTP server helper for exercising real network transports in tests.
  */
 import {createServer, type RequestListener} from "node:http";
 

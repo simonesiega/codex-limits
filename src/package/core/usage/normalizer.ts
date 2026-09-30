@@ -360,7 +360,7 @@ function isCompleteWindow(window: UsageWindow | null): boolean {
 }
 
 // Local state shapes vary across Codex versions, so searches are recursive but depth-bounded.
-/** Performs a depth- and breadth-bounded search for a matching nested record. */
+/** Performs a depth-bounded search for a matching nested record. */
 function findRecord(
   value: Record<string, unknown>,
   keys: readonly string[],

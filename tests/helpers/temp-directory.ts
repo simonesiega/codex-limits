@@ -1,5 +1,5 @@
 /**
- * @fileoverview Behavioral coverage for temp directory. The cases document the supported contract and isolate filesystem, network, or host state where applicable.
+ * @fileoverview Temporary-directory helper that cleans up test files after each callback.
  */
 import {mkdtemp, rm} from "node:fs/promises";
 import {tmpdir} from "node:os";

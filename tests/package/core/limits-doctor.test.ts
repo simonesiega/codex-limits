@@ -6,6 +6,7 @@ import {mkdir, writeFile} from "node:fs/promises";
 import {join} from "node:path";
 import {getCodexDiagnostics} from "@/package/core/doctor";
 import {getCodexLimits} from "@/package/core/limits";
+import {createFetchResponse} from "@tests/helpers/fetch-response";
 import {withTempDirectory} from "@tests/helpers/temp-directory";
 
 test("getCodexDiagnostics reports safe local, authentication, and endpoint checks", async () => {
@@ -154,10 +155,8 @@ test("getCodexLimits combines local usage and live coupons", async () => {
       },
       homeDirectory: join(home, "unused"),
       now: new Date("2026-01-01T00:00:00.000Z"),
-      fetch: async () => ({
-        ok: true,
-        status: 200,
-        text: async () =>
+      fetch: async () =>
+        createFetchResponse(
           JSON.stringify({
             available_count: 1,
             credits: [
@@ -168,8 +167,8 @@ test("getCodexLimits combines local usage and live coupons", async () => {
                 expires_at: "2026-01-02T00:00:00.000Z",
               },
             ],
-          }),
-      }),
+          })
+        ),
     });
 
     expect(result.windows.fiveHour?.remainingPercent).toBe(88);

@@ -16,9 +16,10 @@ All notable changes to codex-limits are documented in this file.
 
 ### Security
 
-## [1.3.1] - 2026-09-23
+- Kept authenticated response parsing bounded by rejecting non-streaming fetch bodies rather than reading them without a size limit.
+- Updated locked `brace-expansion`, `fast-uri`, and `undici` dependencies to patched releases.
 
-### Breaking Changes
+## [1.3.1] - 2026-09-23
 
 ### Added
 
@@ -34,8 +35,6 @@ All notable changes to codex-limits are documented in this file.
 - Fixed native completion-parser validation timing out under slower CI load or invoking unusable shell launchers.
 - Fixed local session fallback to select the newest timestamped rate-limit event even when records within one session file are out of order.
 - Restored Node.js 20 type checks so development validation matches the CLI's minimum supported runtime.
-
-### Removed
 
 ### Security
 

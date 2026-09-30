@@ -1,5 +1,5 @@
 /**
- * @fileoverview Shared core logic for unknown. This module is part of the canonical data, normalization, or safety layer reused by commands, the TUI, and agent adapters.
+ * @fileoverview Type guards for untrusted JSON values from local files, network responses, and agent configuration.
  */
 /** Narrows untrusted input to a plain object-like record, excluding null and arrays. */
 export function isRecord(value: unknown): value is Record<string, unknown> {

@@ -6,7 +6,13 @@ import {
   authenticatedJsonGet,
   authenticatedJsonRequest,
 } from "@/package/core/network/authenticated-json-get";
-import type {AuthenticatedJsonRequest, FetchLike, JsonGetFailureCode} from "@/package/core/types";
+import type {
+  AuthenticatedJsonRequest,
+  FetchLike,
+  FetchResponseLike,
+  JsonGetFailureCode,
+} from "@/package/core/types";
+import {createFetchResponse} from "@tests/helpers/fetch-response";
 import {withLoopbackServer} from "@tests/helpers/http-server";
 
 const HEADERS = {
@@ -32,7 +38,7 @@ test("authenticatedJsonGet validates endpoints before sending credentials", asyn
   let calls = 0;
   const fetch: FetchLike = async () => {
     calls += 1;
-    return {ok: true, status: 200, json: async () => ({})};
+    return createFetchResponse("{}");
   };
 
   const cases = [
@@ -53,12 +59,7 @@ test("authenticatedJsonGet returns bounded fetch JSON without exposing headers",
   const result = await authenticatedJsonGet(
     request(async (_url, init) => {
       expect(init.redirect).toBe("error");
-      return {
-        ok: true,
-        status: 200,
-        text: async () => JSON.stringify({value: 42}),
-        json: async () => ({value: 42}),
-      };
+      return createFetchResponse(JSON.stringify({value: 42}));
     })
   );
 
@@ -94,9 +95,19 @@ test("authenticatedJsonGet parses bounded streamed fetch JSON", async () => {
 });
 
 test("authenticatedJsonGet rejects a fetch response without a readable bounded body", async () => {
-  const result = await authenticatedJsonGet(request(async () => ({ok: true, status: 200})));
+  let unboundedTextReads = 0;
+  const response = {
+    ok: true,
+    status: 200,
+    text: async () => {
+      unboundedTextReads += 1;
+      return JSON.stringify({value: 42});
+    },
+  } as unknown as FetchResponseLike;
+  const result = await authenticatedJsonGet(request(async () => response));
 
   expect(result).toEqual({ok: false, code: "invalid-json", status: null});
+  expect(unboundedTextReads).toBe(0);
 });
 
 test("authenticatedJsonGet cancels a streamed fetch body that exceeds its byte limit", async () => {
@@ -170,20 +181,13 @@ test("authenticatedJsonGet classifies HTTP, malformed, oversized, timeout, and a
   }> = [
     {
       name: "http",
-      request: request(async () => ({ok: false, status: 503, json: async () => ({})})),
+      request: request(async () => createFetchResponse("", 503)),
       code: "http-error",
       status: 503,
     },
     {
       name: "malformed JSON",
-      request: request(async () => ({
-        ok: true,
-        status: 200,
-        text: async () => "not-json",
-        json: async () => {
-          throw new Error("not-json");
-        },
-      })),
+      request: request(async () => createFetchResponse("not-json")),
       code: "invalid-json",
     },
     {
@@ -250,7 +254,7 @@ test("authenticatedJsonGet propagates an abort during signal setup", async () =>
         if (init.signal.aborted) {
           throw new Error("aborted");
         }
-        return {ok: true, status: 200, text: async () => "{}"};
+        return createFetchResponse("{}");
       },
       {signal: callerSignal, timeoutMs: 1_000}
     )

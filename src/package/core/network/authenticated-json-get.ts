@@ -180,15 +180,7 @@ async function readFetchJson(response: FetchResponseLike, maxBytes: number): Pro
     return parseJson(body);
   }
 
-  if (response.text) {
-    const body = await response.text();
-    if (Buffer.byteLength(body, "utf8") > maxBytes) {
-      throw new ResponseTooLargeError();
-    }
-    return parseJson(body);
-  }
-
-  // A response without a readable body cannot be size-bounded safely.
+  // A response without a readable stream cannot be size-bounded safely.
   throw new InvalidJsonError();
 }
 
