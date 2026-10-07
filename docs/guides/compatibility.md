@@ -184,7 +184,7 @@ The integration depends on Copilot CLI's experimental extension mechanism, which
 
 The host must provide `@github/copilot-sdk/extension` to the extension process.
 
-The adapter is type-checked against `@github/copilot-sdk` 1.0.8. Automated tests cover registration, timeline output, and safe failures.
+The adapter is type-checked against `@github/copilot-sdk` 1.0.16. Automated tests cover registration, timeline output, and safe failures.
 
 The real-host compatibility matrix additionally installs the packed extension into the latest Copilot CLI npm release, dispatches `/codex-limits`, requires its local timeline summary to appear without model authentication, and verifies safe removal through packed diagnostics.
 
