@@ -39,6 +39,7 @@ export function probeCopilot({
     environment,
     readiness: /commands|Please use \/login/i,
     expectedOutput: /Live usage requires Codex authentication/i,
+    commandCompletion: /Check Codex limits, resets, and credits/i,
     startupConfirmation: /Do you trust the files in this folder\?/i,
     useTmux: true,
   });

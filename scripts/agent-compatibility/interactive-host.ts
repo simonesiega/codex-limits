@@ -13,6 +13,7 @@ interface InteractiveHostProbeOptions {
   environment: NodeJS.ProcessEnv;
   readiness: RegExp;
   expectedOutput: RegExp;
+  commandCompletion?: RegExp;
   registryRequests?: string[];
   startupConfirmation?: RegExp;
   useTmux?: boolean;
@@ -30,6 +31,7 @@ export async function probeInteractiveHost({
   environment,
   readiness,
   expectedOutput,
+  commandCompletion,
   registryRequests,
   startupConfirmation,
   useTmux = false,
@@ -150,7 +152,7 @@ export async function probeInteractiveHost({
       void harness
         .writeProcessInput(host, "/codex-limits")
         .then(() => {
-          if (!settled && !commandSubmitted) {
+          if (!settled && !commandSubmitted && !commandCompletion) {
             // Interactive hosts expose no shared completion event, so submit after a bounded
             // fallback only when the rendered command echo is unavailable.
             submitFallback = setTimeout(submitCommand, 2_000);
@@ -219,7 +221,7 @@ export async function probeInteractiveHost({
       if (
         commandTyped &&
         !commandSubmitted &&
-        /\/codex-limits/i.test(stripTerminalControls(commandTypedOutput))
+        (commandCompletion ?? /\/codex-limits/i).test(stripTerminalControls(commandTypedOutput))
       ) {
         submitCommand();
       }

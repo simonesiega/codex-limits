@@ -10,12 +10,17 @@ All notable changes to codex-limits are documented in this file.
 
 ### Changed
 
+- Updated Copilot SDK, OpenCode plugin, and Prettier dependencies and the pinned CodeQL scanning action.
+
 ### Fixed
+
+- Fixed Copilot CLI compatibility checks submitting `/codex-limits` before the host finished registering the extension command.
 
 ### Removed
 
 ### Security
 
+- Updated the transitive `shell-quote` dependency to fix a command-injection vulnerability.
 - Kept authenticated response parsing bounded by rejecting non-streaming fetch bodies rather than reading them without a size limit.
 - Updated locked `brace-expansion`, `fast-uri`, and `undici` dependencies to patched releases.
 
