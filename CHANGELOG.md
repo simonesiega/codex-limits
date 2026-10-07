@@ -14,6 +14,8 @@ All notable changes to codex-limits are documented in this file.
 
 ### Fixed
 
+- Fixed Copilot CLI compatibility checks submitting `/codex-limits` before the host finished registering the extension command.
+
 ### Removed
 
 ### Security
