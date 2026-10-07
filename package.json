@@ -114,7 +114,7 @@
   },
   "devDependencies": {
     "@earendil-works/pi-coding-agent": "^0.86.0",
-    "@earendil-works/pi-tui": "^0.86.0",
+    "@earendil-works/pi-tui": "^1.0.1",
     "@github/copilot-sdk": "^1.0.8",
     "@opencode-ai/plugin": "^1.18.4",
     "@types/node": "^20.19.43",
