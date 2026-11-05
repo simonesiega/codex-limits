@@ -11,10 +11,13 @@ All notable changes to codex-limits are documented in this file.
 ### Changed
 
 - Updated Copilot SDK, OpenCode plugin, and Prettier dependencies and the pinned CodeQL scanning action.
+- Updated pi host SDKs, React, and Bun type definitions while preserving Node.js 20 CLI compatibility.
+- Kept automated Node.js type updates on the supported Node.js 20 major version.
 
 ### Fixed
 
 - Fixed Copilot CLI compatibility checks submitting `/codex-limits` before the host finished registering the extension command.
+- Fixed current Copilot CLI compatibility checks aborting on removed remote-session startup flags.
 
 ### Removed
 
@@ -23,6 +26,7 @@ All notable changes to codex-limits are documented in this file.
 - Updated the transitive `shell-quote` dependency to fix a command-injection vulnerability.
 - Kept authenticated response parsing bounded by rejecting non-streaming fetch bodies rather than reading them without a size limit.
 - Updated locked `brace-expansion`, `fast-uri`, and `undici` dependencies to patched releases.
+- Updated vulnerable `minimatch`, `fast-uri`, `toml`, `undici`, and `zod` dependencies to restore the CI security-audit gate.
 
 ## [1.3.1] - 2026-09-23
 

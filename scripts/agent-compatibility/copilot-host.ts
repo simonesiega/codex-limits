@@ -25,8 +25,6 @@ export function probeCopilot({
       "--experimental",
       "--disable-builtin-mcps",
       "--no-auto-update",
-      "--no-remote",
-      "--no-remote-export",
       "--no-custom-instructions",
       "--no-color",
       "--no-mouse",

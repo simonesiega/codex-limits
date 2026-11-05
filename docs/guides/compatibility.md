@@ -170,7 +170,7 @@ See the [OpenCode integration guide](agents/opencode.md) for canonical installat
 
 ## pi compatibility
 
-The extension is type-checked against `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 0.86.x, which require Node.js 22.19 or newer. The real-host matrix also checks compatibility with pi 0.81.1. Those optional peers are supplied by the pi host and do not change the standalone CLI's Node.js 20 requirement.
+The extension is type-checked against `@earendil-works/pi-coding-agent` and `@earendil-works/pi-tui` 1.5.0, which require Node.js 22.19 or newer. The real-host matrix also checks compatibility with pi 0.81.1. Those optional peers are supplied by the pi host and do not change the standalone CLI's Node.js 20 requirement.
 
 Automated real-host checks install the packed package into pi 0.81.1 and the latest npm release, verify that the host discovers `/codex-limits` as an extension command, dispatch it through pi's RPC command path without creating a model-conversation message, uninstall it, and verify that a fresh pi host no longer discovers the command.
 
@@ -184,7 +184,7 @@ The integration depends on Copilot CLI's experimental extension mechanism, which
 
 The host must provide `@github/copilot-sdk/extension` to the extension process.
 
-The adapter is type-checked against `@github/copilot-sdk` 1.0.16. Automated tests cover registration, timeline output, and safe failures.
+The adapter is type-checked against `@github/copilot-sdk` 1.0.28. Automated tests cover registration, timeline output, and safe failures.
 
 The real-host compatibility matrix additionally installs the packed extension into the latest Copilot CLI npm release, dispatches `/codex-limits`, requires its local timeline summary to appear without model authentication, and verifies safe removal through packed diagnostics.
 

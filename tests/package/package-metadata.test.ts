@@ -129,9 +129,11 @@ test("package metadata includes runtime and offline reference files only", async
   expect(packageJson.dependencies ?? {}).toEqual({});
   expect(packageJson.overrides).toMatchObject({
     "brace-expansion": "5.0.12",
-    "fast-uri": "3.1.8",
-    toml: "4.3.0",
-    undici: "8.10.2",
+    "fast-uri": "3.1.9",
+    "shell-quote": "1.12.0",
+    toml: "5.0.1",
+    undici: "8.12.4",
+    zod: "4.6.7",
   });
   expect(packageJson.peerDependencies).toEqual({
     "@earendil-works/pi-coding-agent": "*",
